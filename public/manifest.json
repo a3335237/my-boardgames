@@ -1,0 +1,8 @@
+{
+  "short_name": "我的桌遊",
+  "name": "我的桌遊收藏庫 BoardGame Collection",
+  "start_url": "/",
+  "background_color": "#111827",
+  "theme_color": "#4f46e5",
+  "display": "standalone"
+}
