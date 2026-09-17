@@ -34,10 +34,13 @@ body.dark-theme {
   --modal-overlay: rgba(0, 0, 0, 0.75);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 body {
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
   font-family: 'jf-open-huninn', 'jf open 粉圓', sans-serif;
   line-height: 1.6;
   background-color: var(--bg-main);
@@ -45,190 +48,75 @@ body {
   min-height: 100vh;
 }
 
-.app { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
-
-/* Header */
-.header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); margin-bottom: 2rem;
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
 }
-.logo { display: flex; align-items: center; gap: 0.8rem; font-size: 1.8rem; }
-.logo strong { font-size: 1.4rem; letter-spacing: 1px; }
-.logo small { display: block; font-size: 0.75rem; color: var(--text-muted); }
 
-.header-actions { display: flex; gap: 1rem; align-items: center; }
+/* ==================== Header ==================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.8rem;
+}
+
+.logo strong {
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+}
+
+.logo small {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
 
 .theme-toggle-btn {
-  background: var(--bg-card); color: var(--text-main);
-  border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 12px; cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
 }
 
 .add-game-btn {
-  background-color: var(--accent-blue); color: white; border: none;
-  padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: bold; cursor: pointer;
+  background-color: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
-/* Hero */
-.hero {
-  display: flex; justify-content: space-between; align-items: center;
-  background: var(--hero-bg); border: 1px solid var(--hero-border);
-  padding: 2.5rem; border-radius: 20px; margin-bottom: 2rem;
-}
-.hero h1 { font-size: 2.5rem; margin: 0 0 1rem 0; line-height: 1.2; }
-.hero h1 span { color: var(--accent-blue); }
-.random-button {
-  background-color: #319795; color: white; border: none;
-  padding: 0.8rem 1.8rem; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-}
-
-.hero-card {
-  background: var(--bg-card); padding: 2rem; border-radius: 20px;
-  display: flex; align-items: center; gap: 1.5rem; border: 1px solid var(--border-color);
-}
-.hero-dice { font-size: 3.5rem; }
-.hero-card strong { display: block; font-size: 2.5rem; color: var(--accent-blue); }
-
-/* 🔍 篩選與排序控制列 */
-.filter-panel {
-  background: var(--bg-card); padding: 1.5rem; border-radius: 16px;
-  border: 1px solid var(--border-color); margin-bottom: 2rem;
-  display: flex; flex-direction: column; gap: 1.2rem; box-shadow: var(--card-shadow);
-}
-
-.filter-row {
-  display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
-}
-
-.search-box {
-  display: flex; align-items: center; background: var(--bg-main);
-  border: 1px solid var(--input-border); border-radius: 12px; padding: 0.5rem 1rem; flex: 1; min-width: 220px;
-}
-.search-box input {
-  background: transparent; border: none; color: var(--text-main); outline: none; width: 100%; margin-left: 0.5rem; font-family: inherit;
-}
-
-.filter-group { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
-.filter-group select {
-  background: var(--bg-main); color: var(--text-main); border: 1px solid var(--input-border);
-  padding: 0.5rem; border-radius: 10px; font-family: inherit; outline: none;
-}
-
-.categories { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.categories button {
-  background: var(--bg-main); border: 1px solid var(--input-border);
-  padding: 0.4rem 1rem; border-radius: 20px; color: var(--text-muted); cursor: pointer;
-}
-.categories button.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-
-/* 🏷️ 標籤列 */
-.tag-filter-bar { display: flex; items-center: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.9rem; }
-.tag-chip {
-  background: transparent; border: 1px dashed var(--input-border);
-  color: var(--text-muted); padding: 0.2rem 0.6rem; border-radius: 12px; cursor: pointer; font-size: 0.85rem;
-}
-.tag-chip.active { background: #319795; color: white; border-style: solid; border-color: #319795; }
-
-/* 隨機抽結果 */
-.random-result {
-  display: flex; align-items: center; gap: 1.5rem; background: var(--bg-card);
-  border: 2px solid #fbd38d; padding: 1.2rem 1.8rem; border-radius: 16px; margin-bottom: 2rem;
-}
-
-/* 卡片與列表 */
-.section-title { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
-.game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
-
-.game-card {
-  position: relative; background: var(--bg-card); border-radius: 16px;
-  border: 1px solid var(--border-color); overflow: hidden; cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease; display: flex; flex-direction: column;
-}
-.game-card:hover { transform: translateY(-6px); box-shadow: var(--card-hover-shadow); border-color: var(--accent-blue); }
-
-.card-actions {
-  position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 10;
-  opacity: 0; transition: opacity 0.2s;
-}
-.game-card:hover .card-actions { opacity: 1; }
-.edit-btn, .delete-btn {
-  width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: white; cursor: pointer;
-}
-
-.cover {
-  height: 150px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; position: relative;
-}
-.cover-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* 改為 contain 完整呈現，不裁切 */
-  background-color: #f8fafc; /* 兩側留白時補上乾淨淺灰底色 */
-}
-.cover-emoji { font-size: 3.5rem; }
-.category-tag {
-  position: absolute; bottom: 8px; left: 8px; background: var(--bg-card);
-  padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; color: var(--accent-blue); font-weight: bold;
-}
-
-.game-info { padding: 1rem; display: flex; flex-direction: column; flex-grow: 1; }
-.game-info h3 { margin: 0; font-size: 1.1rem; }
-.game-info .english { margin: 0.2rem 0 0.5rem 0; font-size: 0.8rem; color: var(--text-muted); }
-
-.card-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
-.card-tag { font-size: 0.75rem; color: #319795; background: rgba(49, 151, 149, 0.1); padding: 0.1rem 0.4rem; border-radius: 6px; }
-
-.game-details { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-.rating { margin-top: auto; color: #d69e2e; font-size: 0.9rem; }
-
-/* 📖 詳細資料 Modal */
-.detail-modal-content {
-  background: var(--bg-card); padding: 2rem; border-radius: 20px; width: 90%; max-width: 600px;
-  position: relative; border: 1px solid var(--border-color);
-}
-.close-detail-btn { position: absolute; top: 15px; right: 20px; background: transparent; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
-.detail-header { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
-.detail-cover { width: 120px; max-height: 180px; background: var(--bg-main); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.detail-cover img { width: 100%; height: 100%; object-fit: contain; }
-.detail-category { background: var(--accent-blue); color: white; padding: 0.2rem 0.6rem; border-radius: 8px; font-size: 0.8rem; }
-.detail-english { color: var(--text-muted); margin-top: 0.2rem; }
-.detail-stats { display: flex; gap: 1rem; font-size: 0.9rem; margin-top: 0.5rem; color: var(--text-muted); }
-.detail-tags { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-.detail-tags span { background: rgba(49, 151, 149, 0.15); color: #319795; padding: 0.2rem 0.6rem; border-radius: 10px; font-size: 0.85rem; }
-.detail-body p { white-space: pre-line; color: var(--text-main); }
-.video-link-box { margin-top: 1.5rem; text-align: center; }
-.video-link-box a { display: inline-block; background: #e53e3e; color: white; padding: 0.6rem 1.2rem; border-radius: 10px; text-decoration: none; font-weight: bold; }
-
-/* 彈窗 Common */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--modal-overlay); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: var(--bg-card); padding: 2rem; border-radius: 20px; width: 90%; max-width: 520px; max-height: 90vh; overflow-y: auto; border: 1px solid var(--border-color); }
-.form-group { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.8rem; }
-.form-group input, .form-group select, .form-group textarea { background: var(--bg-main); color: var(--text-main); padding: 0.5rem; border: 1px solid var(--input-border); border-radius: 8px; font-family: inherit; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
-.submit-btn { background: var(--accent-blue); color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; }
-.cancel-btn { background: var(--border-color); color: var(--text-main); border: none; padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; }
-
-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; color: var(--text-light); }
-/* 讓彈窗內的所有圖片完整展示，不裁切、不變形 */
-.detail-modal-content img,
-.modal-content img {
-  width: auto !important;
-  max-width: 100% !important;
-  max-height: 420px !important;
-  height: auto !important;
-  object-fit: contain !important;
-  display: block !important;
-  margin: 0 auto 1.5rem auto !important;
-}
-/* ===== 頂部功能按鈕（暗黑模式 / 站長登入）立體膠囊風 ===== */
+/* 頂部功能按鈕立體膠囊風 */
 .theme-btn,
 .admin-login-btn,
 .header-actions button,
 header button {
-  border-radius: 50px !important; /* 膠囊圓角 */
+  border-radius: 50px !important;
   padding: 0.55rem 1.1rem !important;
   font-weight: 600 !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important; /* 立體浮雕光澤 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   cursor: pointer !important;
 }
@@ -237,7 +125,7 @@ header button {
 .admin-login-btn:hover,
 .header-actions button:hover,
 header button:hover {
-  transform: translateY(-2px) scale(1.02) !important; /* 懸浮微浮起 */
+  transform: translateY(-2px) scale(1.02) !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22) !important;
 }
 
@@ -245,31 +133,144 @@ header button:hover {
 .admin-login-btn:active,
 .header-actions button:active,
 header button:active {
-  transform: translateY(1px) !important; /* 點擊按壓反饋 */
+  transform: translateY(1px) !important;
 }
 
-/* ===== 搜尋列下方的分類標籤按鈕美化 ===== */
-/* 直接抓取主要內容區內的所有 button，強制洗掉預設方框 */
+/* ==================== Hero ==================== */
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--hero-bg);
+  border: 1px solid var(--hero-border);
+  padding: 2.5rem;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.hero h1 span {
+  color: var(--accent-blue);
+}
+
+.random-button {
+  background-color: #319795;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.hero-card {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.hero-dice {
+  font-size: 3.5rem;
+}
+
+.hero-card strong {
+  display: block;
+  font-size: 2.5rem;
+  color: var(--accent-blue);
+}
+
+/* ==================== 篩選與排序控制列 ==================== */
+.filter-panel {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-shadow: var(--card-shadow);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-main);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  flex: 1;
+  min-width: 220px;
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  outline: none;
+  width: 100%;
+  margin-left: 0.5rem;
+  font-family: inherit;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.filter-group select {
+  background: var(--bg-main);
+  color: var(--text-main);
+  border: 1px solid var(--input-border);
+  padding: 0.5rem;
+  border-radius: 10px;
+  font-family: inherit;
+  outline: none;
+}
+
+/* 分類標籤樣式 */
+.categories {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 main button,
+.categories button,
 .search-container + div button,
 .search-box + div button,
 .filters button,
 .category-filter button {
-  all: unset; /* 完全洗掉瀏覽器預設的灰色方框與邊框 */
+  all: unset;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
-  /* 膠囊造型與間距 */
   border-radius: 9999px !important;
   padding: 8px 18px !important;
   margin: 4px !important;
   font-size: 0.9rem !important;
   font-weight: 500 !important;
   cursor: pointer !important;
-  
-  /* 柔和輕奢色調 */
   background: #f1f5f9 !important;
   color: #475569 !important;
   border: 1px solid #e2e8f0 !important;
@@ -277,8 +278,8 @@ main button,
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* 滑鼠懸浮微浮起 */
 main button:hover,
+.categories button:hover,
 .search-container + div button:hover,
 .filters button:hover {
   background: #e2e8f0 !important;
@@ -287,8 +288,8 @@ main button:hover,
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* 點選啟動時（Active）立體感與漸層藍紫色高亮 */
 main button.active,
+.categories button.active,
 .filters button.active,
 .category-filter button.active {
   background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
@@ -297,11 +298,226 @@ main button.active,
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
   transform: translateY(-1px) !important;
 }
-/* ===== 修復編輯彈窗寬度與移除水平拉桿 ===== */
+
+/* 標籤過濾列 */
+.tag-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+}
+
+.tag-chip {
+  background: transparent;
+  border: 1px dashed var(--input-border);
+  color: var(--text-muted);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.tag-chip.active {
+  background: #319795;
+  color: white;
+  border-style: solid;
+  border-color: #319795;
+}
+
+.random-result {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--bg-card);
+  border: 2px solid #fbd38d;
+  padding: 1.2rem 1.8rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+/* ==================== 卡片與列表 ==================== */
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.game-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--accent-blue);
+}
+
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.game-card:hover .card-actions {
+  opacity: 1;
+}
+
+.edit-btn,
+.delete-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  cursor: pointer;
+}
+
+/* 封面與標籤定位 */
+.cover {
+  height: 150px;
+  background: var(--bg-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #f8fafc;
+}
+
+.cover-emoji {
+  font-size: 3.5rem;
+}
+
+.category-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: var(--bg-card);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: var(--accent-blue);
+  font-weight: bold;
+}
+
+/* 擴充標籤單行膠囊 */
+.expansion-badge {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 0.75rem !important;
+  padding: 3px 8px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+  background: #f59e0b;
+  color: #ffffff;
+  border-radius: 6px;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+}
+
+.game-info {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.game-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.game-info .english {
+  margin: 0.2rem 0 0.5rem 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.card-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.card-tag {
+  font-size: 0.75rem;
+  color: #319795;
+  background: rgba(49, 151, 149, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+}
+
+.game-details {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.rating {
+  margin-top: auto;
+  color: #d69e2e;
+  font-size: 0.9rem;
+}
+
+/* ==================== 彈窗系列 (Modals) ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
 .modal-content {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 20px;
   width: 95% !important;
-  max-width: 680px !important; /* 寬度加大，欄位不擁擠 */
-  overflow-x: hidden !important; /* 強制移除左右滾動軸 */
+  max-width: 680px !important;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden !important;
+  border: 1px solid var(--border-color);
   box-sizing: border-box !important;
 }
 
@@ -313,136 +529,180 @@ main button.active,
   box-sizing: border-box !important;
 }
 
-/* 確保三欄輸入框在寬度不足時自動壓縮或換行 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--bg-main);
+  color: var(--text-main);
+  padding: 0.5rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
 .form-group[style*="gridTemplateColumns"] {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
 }
-/* ===== 修復擴充標籤被擠成兩行 ===== */
-.expansion-badge {
-  white-space: nowrap !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  font-size: 0.75rem !important;
-  padding: 3px 8px !important;
-  line-height: 1 !important;
-  letter-spacing: 0 !important;
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
 }
-/* ===== 手機專屬排版修復 (Mobile First Polish) ===== */
-@media screen and (max-width: 768px) {
-  /* 1. 防止 iOS Safari 自動亂調整字體大小 */
-  html, body {
-    -webkit-text-size-adjust: 100%;
-    overflow-x: hidden;
-  }
 
-  /* 2. 主容器邊距自適應手機邊框 */
-  .app {
-    padding: 8px !important;
-  }
-
-  /* 3. 頂部 Header 改為好點擊的緊湊排版 */
-  .header {
-    flex-direction: column !important;
-    gap: 10px !important;
-    padding: 10px !important;
-  }
-
-  .header-actions {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-
-  .action-btn, .add-game-btn {
-    padding: 6px 10px !important;
-    font-size: 0.78rem !important;
-  }
-
-  /* 4. Hero 區塊改為上下堆疊，小工具在手機端撐滿寬度 */
-  .hero {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-    padding: 14px 10px !important;
-  }
-
-  /* 5. 頂部 3 個統計篩選按鈕手機上橫向等寬平均分佈 */
-  .hero > div:first-child > div:first-of-type {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-
-  .hero button[type="button"] span {
-    font-size: 18px !important;
-  }
-
-  /* 6. 卡片網格：手機端維持精緻雙欄 */
-  .game-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .game-card {
-    padding: 8px !important;
-  }
-
-  /* 7. 解決中英文標題折行破版：單行截斷加省略號 */
-  .game-info h3 {
-    font-size: 0.88rem !important;
-    line-height: 1.25 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    margin-bottom: 2px !important;
-  }
-
-  .game-info .english {
-    font-size: 0.72rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* 8. 關鍵修復：卡片人數/最佳/時間改為多行微型標籤，不再水平擠爆 */
-  .game-details {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 3px !important;
-    font-size: 10.5px !important;
-    margin: 6px 0 !important;
-  }
-
-  .game-details span {
-    white-space: nowrap !important;
-  }
-
-  /* 9. 標籤列水平微滑動，不破壞卡片高度 */
-  .card-tags {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: hidden !important;
-    gap: 4px !important;
-  }
-
-  .card-tags span {
-    font-size: 9.5px !important;
-    padding: 1px 4px !important;
-    white-space: nowrap !important;
-  }
-
-  /* 10. 彈窗最大高度限制，防止超出手機可視區域 */
-  .detail-modal-content, .modal-content {
-    width: 92vw !important;
-    max-height: 85vh !important;
-    padding: 1.2rem !important;
-  }
+.submit-btn {
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
 }
-/* ===== 3D 實體卡牌立體翻牌效果 (Card Flip 3D Reveal) ===== */
+
+.cancel-btn {
+  background: var(--border-color);
+  color: var(--text-main);
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 詳細資料 Modal */
+.detail-modal-content {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.close-detail-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.detail-header {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.detail-cover {
+  width: 120px;
+  max-height: 180px;
+  background: var(--bg-main);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.detail-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.detail-category {
+  background: var(--accent-blue);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.detail-english {
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.detail-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+}
+
+.detail-tags {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-tags span {
+  background: rgba(49, 151, 149, 0.15);
+  color: #319795;
+  padding: 0.2rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.detail-body p {
+  white-space: pre-line;
+  color: var(--text-main);
+}
+
+.video-link-box {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.video-link-box a {
+  display: inline-block;
+  background: #e53e3e;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.detail-modal-content img,
+.modal-content img {
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: 420px !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto 1.5rem auto !important;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-light);
+}
+
+/* ==================== 3D 實體卡牌翻牌效果 ==================== */
 .card-flip-scene {
   width: 220px;
   height: 290px;
@@ -462,7 +722,6 @@ main button.active,
   transform: rotateY(180deg);
 }
 
-/* 卡片雙面共用屬性 */
 .card-face {
   position: absolute;
   width: 100%;
@@ -470,8 +729,8 @@ main button.active,
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 18px;
-  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -480,9 +739,8 @@ main button.active,
   box-sizing: border-box;
 }
 
-/* 卡片背面（蓋牌狀態） */
 .card-face-back {
-  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
   color: #fff;
   border: 2px dashed rgba(255, 255, 255, 0.25);
 }
@@ -495,16 +753,14 @@ main button.active,
   animation: pulse 1.5s infinite;
 }
 
-/* 卡片正面（開牌結果） */
 .card-face-front {
   background: var(--bg-card, #ffffff);
   color: inherit;
   transform: rotateY(180deg);
-  border: 2px solid #6366F1;
+  border: 2px solid #6366f1;
   box-shadow: 0 16px 36px rgba(99, 102, 241, 0.25);
 }
 
-/* 洗牌劇烈搖晃動畫 */
 .shuffle-shake {
   animation: cardShuffle 0.15s infinite;
 }
@@ -515,4 +771,259 @@ main button.active,
   50% { transform: translate(4px, 2px) rotate(2deg); }
   75% { transform: translate(-3px, 3px) rotate(-1deg); }
   100% { transform: translate(2px, -2px) rotate(3deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ==================== 手機專屬排版優化 (RWD) ==================== */
+@media screen and (max-width: 768px) {
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  .app {
+    padding: 8px !important;
+  }
+
+  .header {
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .header-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .action-btn,
+  .add-game-btn {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .hero {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding: 14px 10px !important;
+  }
+
+  .hero > div:first-child > div:first-of-type {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .hero button[type="button"] span {
+    font-size: 18px !important;
+  }
+
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .game-card {
+    padding: 8px !important;
+  }
+
+  /* 封套設定與防切邊修復 */
+  .cover {
+    position: relative !important;
+    overflow: hidden !important;
+    height: 125px !important;
+  }
+
+  .expansion-badge {
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+    z-index: 2 !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .category-tag {
+    position: absolute !important;
+    bottom: 6px !important;
+    left: 6px !important;
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    z-index: 2 !important;
+  }
+
+  .game-info h3 {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-bottom: 2px !important;
+  }
+
+  .game-info .english {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .game-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    font-size: 10.5px !important;
+    margin: 6px 0 !important;
+  }
+
+  .game-details span {
+    white-space: nowrap !important;
+  }
+
+  .card-tags {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    gap: 4px !important;
+  }
+
+  .card-tags span {
+    font-size: 9.5px !important;
+    padding: 1px 4px !important;
+    white-space: nowrap !important;
+  }
+
+  .detail-modal-content,
+  .modal-content {
+    width: 92vw !important;
+    max-height: 85vh !important;
+    padding: 1.2rem !important;
+  }
+}
+/* ===== 徹底修復手機版封面標籤與評分排版 ===== */
+
+/* 1. 確保封面容器具備相對定位 */
+.cover {
+  position: relative !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* 2. 擴充標籤改為絕對定位，穩固貼在右上角 */
+.expansion-badge {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  background: rgba(16, 185, 129, 0.9) !important;
+  color: #ffffff !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  z-index: 2 !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* 3. 左側分類標籤（例如：派對）位置微調，避免遮擋 */
+.category-tag {
+  position: absolute !important;
+  bottom: 8px !important;
+  left: 8px !important;
+  z-index: 2 !important;
+  font-size: 0.72rem !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+}
+
+/* 4. 手機版卡片底部評分與燒腦度自適應排版 */
+@media screen and (max-width: 768px) {
+  .expansion-badge {
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .category-tag {
+    bottom: 6px !important;
+    left: 6px !important;
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* 解決截圖中評分與燒腦度重疊折行的問題 */
+  .game-card .rating-complexity-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+    margin-top: 4px !important;
+  }
+
+  .game-card .rating-complexity-row .rating {
+    font-size: 0.85rem !important;
+  }
+
+  .game-card .rating-complexity-row .complexity-badge {
+    font-size: 10px !important;
+  }
+}
+.hero {
+  align-items: center !important;
+  gap: 2rem !important;
+  padding: 1.8rem 2rem !important; /* 確保左右有充足留白，不再貼齊歪邊 */
+  box-sizing: border-box !important;
+}
+@media screen and (max-width: 768px) {
+  .hero {
+    padding: 1.2rem 1rem !important;
+  }
+}
+/* 讓「幫我選一款」成為吸睛大按鈕，填補左側空間 */
+.random-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 14px 32px !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3) !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  margin-top: 10px !important;
+}
+
+.random-button:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.4) !important;
+}
+
+.random-button:active {
+  transform: translateY(0) scale(0.98) !important;
 }

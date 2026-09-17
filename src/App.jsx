@@ -3,43 +3,43 @@ import './App.css'
 import { supabase } from './supabaseClients'
 
 const initialGames = [
-  { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.0, complexity: 1.5, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', isExpansion: false, parentId: null },
-  { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.1, complexity: 1.2, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 3, name: '機密代號：裡應外合', englishName: 'Codenames: Duet', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 25, category: '合作', rating: 8.3, complexity: 2.0, emoji: '🕵️', imageUrl: '', tags: ['雙人首選', '聯想燒腦'], description: '雙人合作版的機密代號，透過一個詞彙給予提示，找出所有特務。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 4, name: '格格不入', englishName: 'Blokus', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '策略', rating: 7.8, complexity: 1.8, emoji: '🟩', imageUrl: '', tags: ['抽象棋類', '易學難精'], description: '經典的版塊放置遊戲，盡可能把自己的方塊全部拼上棋盤！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 5, name: '璀璨寶石：漫威版', englishName: 'Splendor Marvel', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '策略', rating: 8.4, complexity: 2.2, emoji: '💎', imageUrl: '', tags: ['引擎建構', '漫威IP'], description: '招募超級英雄，收集無限寶石，搶先完成無限手套！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 6, name: '炸彈競技場：口袋版', englishName: 'Bomb Arena', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '陣營', rating: 7.5, complexity: 1.3, emoji: '💣', imageUrl: '', tags: ['快節奏', '互相傷害'], description: '炸彈隨時爆發，利用手中的牌轉移炸彈或陷害對手。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 7, name: '三千世界鴉殺盡', englishName: 'Crow Killers', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '派對', rating: 7.6, complexity: 1.5, emoji: '🦅', imageUrl: '', tags: ['日系畫風', '心機'], description: '充滿日式風情的輕度心理戰遊戲。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 8, name: '鴿爆了', englishName: 'Pigeon Explode', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 20, category: '派對', rating: 7.4, complexity: 1.0, emoji: '🕊️', imageUrl: '', tags: ['派對', '搞笑'], description: '充滿歡笑與意外的派對卡牌遊戲。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 9, name: '你是不是沒朋友', englishName: 'No Friends', minPlayers: 1, maxPlayers: 5, bestPlayers: '3-4', time: 25, category: '派對', rating: 7.3, complexity: 1.0, emoji: '😜', imageUrl: '', tags: ['自嘲搞笑', '單人可玩'], description: '適合邊聊天邊玩的邊緣人派對桌遊。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 10, name: '無限手套：情書', englishName: 'Infinity Gauntlet', minPlayers: 2, maxPlayers: 6, bestPlayers: '6', time: 15, category: '陣營', rating: 8.0, complexity: 1.5, emoji: '🥊', imageUrl: '', tags: ['1對多', '陣營對決'], description: '一名玩家扮演薩諾斯，其他人扮演復仇者聯盟進行對決！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 11, name: '爆炸貓桌遊版', englishName: 'Exploding Kittens', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 7.8, complexity: 1.1, emoji: '💥', imageUrl: '', tags: ['心機抽牌', '新手推薦'], description: '像俄羅斯輪盤一樣的抽牌遊戲，抽到爆炸貓就淘汰！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 12, name: '爆炸貓 + 黑洞貓擴充', englishName: 'Exploding Kittens: Streaking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 8.0, complexity: 1.3, emoji: '🐱', imageUrl: '', tags: ['擴充版', '更多玩法'], description: '加入了黑洞貓與更多特殊功能卡，讓遊戲更混亂更有趣！', videoUrl: '', isExpansion: true, parentId: 11 },
-  { id: 13, name: '德國蟑螂 皇家版', englishName: 'Cockroach Poker Royal', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-5', time: 20, category: '吹牛', rating: 7.9, complexity: 1.2, emoji: '🪲', imageUrl: '', tags: ['經典吹牛', '看穿心機'], description: '看著對方的眼睛吹牛，皇家版多了皇冠動物與特殊卡牌！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 14, name: '字字轉機', englishName: 'Anomia', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 25, category: '派對', rating: 7.7, complexity: 1.1, emoji: '🔤', imageUrl: '', tags: ['反應力', '聯想力'], description: '符號對對碰！當卡牌符號相同時，必須搶先喊出對方卡牌類別的單字！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 15, name: '夜市人蔘', englishName: 'Night Market', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 30, category: '輕策略', rating: 7.8, complexity: 1.8, emoji: '🍢', imageUrl: '', tags: ['台灣在地', '美食擺攤'], description: '體驗台灣夜市擺攤樂趣！收集食材組合出美味的夜市小吃。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 16, name: '搞怪運動會', englishName: 'Wacky Sports', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 7.2, complexity: 1.0, emoji: '🏅', imageUrl: '', tags: ['歡樂動作', '派對爆笑'], description: '各種搞怪刺激的運動會項目，考驗大家的反應與肢體協調！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 17, name: '情書：六人版', englishName: 'Love Letter: Premium', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 20, category: '輕策略', rating: 8.0, complexity: 1.4, emoji: '💌', imageUrl: '', tags: ['經典推理', '支援6人'], description: '手牌只有一張！利用角色能力猜測他人手牌並將情書送到公主手中。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 18, name: '政變疑雲', englishName: 'Coup', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '吹牛', rating: 8.1, complexity: 1.5, emoji: '👑', imageUrl: '', tags: ['吹牛陣營', '快節奏'], description: '即使你沒有那個角色的能力，也可以假裝有！看誰能吹牛到最後。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 19, name: '墨敵賽', englishName: 'Modisai', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 20, category: '輕策略', rating: 7.3, complexity: 1.6, emoji: '🐙', imageUrl: '', tags: ['卡牌對決', '簡單易學'], description: '充滿戰略趣味的卡牌對決遊戲，運用墨水敵人打敗對手！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 20, name: '吸爆鬆餅', englishName: 'Pancake Stack', minPlayers: 2, maxPlayers: 5, time: 15, bestPlayers: '4-5', category: '派對', rating: 7.4, complexity: 1.1, emoji: '🥞', imageUrl: '', tags: ['反應搶答', '輕鬆搞笑'], description: '疊高鬆餅吸爆對手！節奏快速且充滿歡笑的輕度派對遊戲。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 21, name: '犯人在跳舞', englishName: 'Criminal Dance', minPlayers: 3, maxPlayers: 8, bestPlayers: '6-8', time: 15, category: '陣營', rating: 8.0, complexity: 1.2, emoji: '🕺', imageUrl: '', tags: ['手牌交換', '新手必玩'], description: '犯人卡會在大家手中不斷轉移，偵探能否在遊戲結束前抓到犯人？', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 22, name: 'Who怕Who !?', englishName: 'Who Pa Who', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '派對', rating: 7.3, complexity: 1.1, emoji: '👊', imageUrl: '', tags: ['互相傷害', '熱鬧歡樂'], description: '充滿挑釁與互踩樂趣的歡樂派對卡牌遊戲！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 23, name: '神吐槽', englishName: 'God Reaction', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-8', time: 25, category: '派對', rating: 7.8, complexity: 1.2, emoji: '🗣️', imageUrl: '', tags: ['吐槽搞笑', '文字遊戲'], description: '面對各種奇葩情境，給出最具創意與爆點的神吐槽！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 24, name: '驚爆倫敦', englishName: 'Time Bomb', minPlayers: 4, maxPlayers: 8, bestPlayers: '6-8', time: 20, category: '陣營', rating: 8.2, complexity: 1.6, emoji: '💣', imageUrl: '', tags: ['剪線炸彈', '陣營心機'], description: '福爾摩斯對決莫里亞蒂！剪對線解除炸彈，還是不小心引爆大樓？', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 25, name: '世界上有兩種人', englishName: 'Two Kinds of People', minPlayers: 2, maxPlayers: 8, bestPlayers: '5-8', time: 20, category: '派對', rating: 7.6, complexity: 1.0, emoji: '☯️', imageUrl: '', tags: ['價值觀對立', '聊天神開場'], description: '香菜吃不吃？折摺還是捲牙膏？迅速了解朋友隱藏性格的派對遊戲！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 26, name: '瞎掰王：看圖掰', englishName: 'Fake That Picture', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.1, complexity: 1.4, emoji: '🖼️', imageUrl: '', tags: ['看圖說故事', '胡說八道'], description: '看著怪異圖片發揮創意一本正經地胡說八道，騙過所有玩家！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 27, name: '腦洞量表：沒有下限', englishName: 'Top Ten Uncensored', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.3, complexity: 1.2, emoji: '🔞', imageUrl: '', tags: ['限制級搞笑', '默契評估'], description: '腦洞量表無下限版！根據題目表演 1 到 10 的程度，越浮誇越好！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 28, name: '瞎掰王', englishName: 'Fake That', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.4, complexity: 1.5, emoji: '🤥', imageUrl: '', tags: ['派對熱門', '一本正經胡說八道'], description: '只有一個人知道冷知識真相，其他人要發揮演技瞎掰搶答！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 29, name: '腦洞量表', englishName: 'Top Ten', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.2, complexity: 1.2, emoji: '💡', imageUrl: '', tags: ['合作默契', '熱鬧歡樂'], description: '隊長提出題目，每個人根據手中的數字表演對應程度，讓隊長排序！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 30, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 8.6, complexity: 2.4, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', isExpansion: false, parentId: null },
-  { id: 31, name: '黃牌', englishName: 'Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.0, complexity: 1.0, emoji: '🟨', imageUrl: '', tags: ['填空搞笑', '黃暴歡樂'], description: '填空題卡牌遊戲，用最無厘頭或地獄的答案獲得裁判青睞！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 32, name: '試個好遊戲', englishName: 'We Didn\'t Playtest This At All', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.5, complexity: 1.0, emoji: '🃏', imageUrl: '', tags: ['超快節奏', '無厘頭勝負'], description: '幾秒鐘就能結束一局！規則隨時在變，抽到什麼牌就照著做。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 33, name: '還試好遊戲', englishName: 'We Didn\'t Playtest This Either', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.5, complexity: 1.0, emoji: '🎴', imageUrl: '', tags: ['續作擴充', '無厘頭'], description: '《試個好遊戲》續作，更多荒繆搞笑的勝利條件與淘汰規則！', videoUrl: '', isExpansion: true, parentId: 32 },
-  { id: 34, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 8.1, complexity: 1.4, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 35, name: '梗圖黃牌', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.1, complexity: 1.1, emoji: '🖼️', imageUrl: '', tags: ['梗圖搭配', '地獄迷因'], description: '將熱門迷因梗圖搭配超欠扁台詞，製作出最搞笑的梗圖組合！', videoUrl: '', isExpansion: true, parentId: 31 },
-  { id: 36, name: '獵巫鎮 1692', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 8.4, complexity: 2.1, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.2, complexity: 1.0, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', isExpansion: false, parentId: null }
+  { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', isExpansion: false, parentId: null },
+  { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.10, complexity: 1.20, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 3, name: '機密代號：裡應外合', englishName: 'Codenames: Duet', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 25, category: '合作', rating: 8.30, complexity: 2.00, emoji: '🕵️', imageUrl: '', tags: ['雙人首選', '聯想燒腦'], description: '雙人合作版的機密代號，透過一個詞彙給予提示，找出所有特務。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 4, name: '格格不入', englishName: 'Blokus', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '策略', rating: 7.80, complexity: 1.80, emoji: '🟩', imageUrl: '', tags: ['抽象棋類', '易學難精'], description: '經典的版塊放置遊戲，盡可能把自己的方塊全部拼上棋盤！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 5, name: '璀璨寶石：漫威版', englishName: 'Splendor Marvel', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '策略', rating: 8.40, complexity: 2.20, emoji: '💎', imageUrl: '', tags: ['引擎建構', '漫威IP'], description: '招募超級英雄，收集無限寶石，搶先完成無限手套！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 6, name: '炸彈競技場：口袋版', englishName: 'Bomb Arena', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '陣營', rating: 7.50, complexity: 1.30, emoji: '💣', imageUrl: '', tags: ['快節奏', '互相傷害'], description: '炸彈隨時爆發，利用手中的牌轉移炸彈或陷害對手。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 7, name: '三千世界鴉殺盡', englishName: 'Crow Killers', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '派對', rating: 7.60, complexity: 1.50, emoji: '🦅', imageUrl: '', tags: ['日系畫風', '心機'], description: '充滿日式風情的輕度心理戰遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 8, name: '鴿爆了', englishName: 'Pigeon Explode', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 20, category: '派對', rating: 7.40, complexity: 1.00, emoji: '🕊️', imageUrl: '', tags: ['派對', '搞笑'], description: '充滿歡笑與意外的派對卡牌遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 9, name: '你是不是沒朋友', englishName: 'No Friends', minPlayers: 1, maxPlayers: 5, bestPlayers: '3-4', time: 25, category: '派對', rating: 7.30, complexity: 1.00, emoji: '😜', imageUrl: '', tags: ['自嘲搞笑', '單人可玩'], description: '適合邊聊天邊玩的邊緣人派對桌遊。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 10, name: '無限手套：情書', englishName: 'Infinity Gauntlet', minPlayers: 2, maxPlayers: 6, bestPlayers: '6', time: 15, category: '陣營', rating: 8.00, complexity: 1.50, emoji: '🥊', imageUrl: '', tags: ['1對多', '陣營對決'], description: '一名玩家扮演薩諾斯，其他人扮演復仇者聯盟進行對決！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 11, name: '爆炸貓桌遊版', englishName: 'Exploding Kittens', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 7.80, complexity: 1.10, emoji: '💥', imageUrl: '', tags: ['心機抽牌', '新手推薦'], description: '像俄羅斯輪盤一樣的抽牌遊戲，抽到爆炸貓就淘汰！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 12, name: '爆炸貓 + 黑洞貓擴充', englishName: 'Exploding Kittens: Streaking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 8.00, complexity: 1.30, emoji: '🐱', imageUrl: '', tags: ['擴充版', '更多玩法'], description: '加入了黑洞貓與更多特殊功能卡，讓遊戲更混亂更有趣！', videoUrl: '', isExpansion: true, parentId: 11 },
+  { id: 13, name: '德國蟑螂 皇家版', englishName: 'Cockroach Poker Royal', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-5', time: 20, category: '吹牛', rating: 7.90, complexity: 1.20, emoji: '🪲', imageUrl: '', tags: ['經典吹牛', '看穿心機'], description: '看著對方的眼睛吹牛，皇家版多了皇冠動物與特殊卡牌！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 14, name: '字字轉機', englishName: 'Anomia', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 25, category: '派對', rating: 7.70, complexity: 1.10, emoji: '🔤', imageUrl: '', tags: ['反應力', '聯想力'], description: '符號對對碰！當卡牌符號相同時，必須搶先喊出對方卡牌類別的單字！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 15, name: '夜市人蔘', englishName: 'Night Market', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 30, category: '輕策略', rating: 7.80, complexity: 1.80, emoji: '🍢', imageUrl: '', tags: ['台灣在地', '美食擺攤'], description: '體驗台灣夜市擺攤樂趣！收集食材組合出美味的夜市小吃。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 16, name: '搞怪運動會', englishName: 'Wacky Sports', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 7.20, complexity: 1.00, emoji: '🏅', imageUrl: '', tags: ['歡樂動作', '派對爆笑'], description: '各種搞怪刺激的運動會項目，考驗大家的反應與肢體協調！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 17, name: '情書：六人版', englishName: 'Love Letter: Premium', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 20, category: '輕策略', rating: 8.00, complexity: 1.40, emoji: '💌', imageUrl: '', tags: ['經典推理', '支援6人'], description: '手牌只有一張！利用角色能力猜測他人手牌並將情書送到公主手中。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 18, name: '政變疑雲', englishName: 'Coup', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '吹牛', rating: 8.10, complexity: 1.50, emoji: '👑', imageUrl: '', tags: ['吹牛陣營', '快節奏'], description: '即使你沒有那個角色的能力，也可以假裝有！看誰能吹牛到最後。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 19, name: '墨敵賽', englishName: 'Modisai', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 20, category: '輕策略', rating: 7.30, complexity: 1.60, emoji: '🐙', imageUrl: '', tags: ['卡牌對決', '簡單易學'], description: '充滿戰略趣味的卡牌對決遊戲，運用墨水敵人打敗對手！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 20, name: '吸爆鬆餅', englishName: 'Pancake Stack', minPlayers: 2, maxPlayers: 5, time: 15, bestPlayers: '4-5', category: '派對', rating: 7.40, complexity: 1.10, emoji: '🥞', imageUrl: '', tags: ['反應搶答', '輕鬆搞笑'], description: '疊高鬆餅吸爆對手！節奏快速且充滿歡笑的輕度派對遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 21, name: '犯人在跳舞', englishName: 'Criminal Dance', minPlayers: 3, maxPlayers: 8, bestPlayers: '6-8', time: 15, category: '陣營', rating: 8.00, complexity: 1.20, emoji: '🕺', imageUrl: '', tags: ['手牌交換', '新手必玩'], description: '犯人卡會在大家手中不斷轉移，偵探能否在遊戲結束前抓到犯人？', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 22, name: 'Who怕Who !?', englishName: 'Who Pa Who', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '派對', rating: 7.30, complexity: 1.10, emoji: '👊', imageUrl: '', tags: ['互相傷害', '熱鬧歡樂'], description: '充滿挑釁與互踩樂趣的歡樂派對卡牌遊戲！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 23, name: '神吐槽', englishName: 'God Reaction', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-8', time: 25, category: '派對', rating: 7.80, complexity: 1.20, emoji: '🗣️', imageUrl: '', tags: ['吐槽搞笑', '文字遊戲'], description: '面對各種奇葩情境，給出最具創意與爆點的神吐槽！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 24, name: '驚爆倫敦', englishName: 'Time Bomb', minPlayers: 4, maxPlayers: 8, bestPlayers: '6-8', time: 20, category: '陣營', rating: 8.20, complexity: 1.60, emoji: '💣', imageUrl: '', tags: ['剪線炸彈', '陣營心機'], description: '福爾摩斯對決莫里亞蒂！剪對線解除炸彈，還是不小心引爆大樓？', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 25, name: '世界上有兩種人', englishName: 'Two Kinds of People', minPlayers: 2, maxPlayers: 8, bestPlayers: '5-8', time: 20, category: '派對', rating: 7.60, complexity: 1.00, emoji: '☯️', imageUrl: '', tags: ['價值觀對立', '聊天神開場'], description: '香菜吃不吃？折摺還是捲牙膏？迅速了解朋友隱藏性格的派對遊戲！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 26, name: '瞎掰王：看圖掰', englishName: 'Fake That Picture', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.10, complexity: 1.40, emoji: '🖼️', imageUrl: '', tags: ['看圖說故事', '胡說八道'], description: '看著怪異圖片發揮創意一本正經地胡說八道，騙過所有玩家！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 27, name: '腦洞量表：沒有下限', englishName: 'Top Ten Uncensored', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.30, complexity: 1.20, emoji: '🔞', imageUrl: '', tags: ['限制級搞笑', '默契評估'], description: '腦洞量表無下限版！根據題目表演 1 到 10 的程度，越浮誇越好！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 28, name: '瞎掰王', englishName: 'Fake That', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.40, complexity: 1.50, emoji: '🤥', imageUrl: '', tags: ['派對熱門', '一本正經胡說八道'], description: '只有一個人知道冷知識真相，其他人要發揮演技瞎掰搶答！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 29, name: '腦洞量表', englishName: 'Top Ten', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.20, complexity: 1.20, emoji: '💡', imageUrl: '', tags: ['合作默契', '熱鬧歡樂'], description: '隊長提出題目，每個人根據手中的數字表演對應程度，讓隊長排序！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 30, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 8.60, complexity: 2.40, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', isExpansion: false, parentId: null },
+  { id: 31, name: '黃牌', englishName: 'Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.00, complexity: 1.00, emoji: '🟨', imageUrl: '', tags: ['填空搞笑', '黃暴歡樂'], description: '填空題卡牌遊戲，用最無厘頭或地獄的答案獲得裁判青睞！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 32, name: '試個好遊戲', englishName: 'We Didn\'t Playtest This At All', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.50, complexity: 1.00, emoji: '🃏', imageUrl: '', tags: ['超快節奏', '無厘頭勝負'], description: '幾秒鐘就能結束一局！規則隨時在變，抽到什麼牌就照著做。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 33, name: '還試好遊戲', englishName: 'We Didn\'t Playtest This Either', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.50, complexity: 1.00, emoji: '🎴', imageUrl: '', tags: ['續作擴充', '無厘頭'], description: '《試個好遊戲》續作，更多荒繆搞笑的勝利條件與淘汰規則！', videoUrl: '', isExpansion: true, parentId: 32 },
+  { id: 34, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 8.10, complexity: 1.40, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 35, name: '梗圖黃牌', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.10, complexity: 1.10, emoji: '🖼️', imageUrl: '', tags: ['梗圖搭配', '地獄迷因'], description: '將熱門迷因梗圖搭配超欠扁台詞，製作出最搞笑的梗圖組合！', videoUrl: '', isExpansion: true, parentId: 31 },
+  { id: 36, name: '獵巫鎮 1692', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 8.40, complexity: 2.10, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.20, complexity: 1.00, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', isExpansion: false, parentId: null }
 ]
 
 const ADMIN_PASSWORD = '1234'
@@ -78,15 +78,12 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // 🎴 3D 抽卡動畫狀態
   const [randomGame, setRandomGame] = useState(null)
   const [isRevealed, setIsRevealed] = useState(false)
   const [isShuffling, setIsShuffling] = useState(false)
 
-  // 右側小工具分頁
   const [widgetTab, setWidgetTab] = useState('starter')
 
-  // 同步玩家名單
   const [sharedPlayers, setSharedPlayers] = useState([
     { id: 1, name: '玩家 1', score: 0 },
     { id: 2, name: '玩家 2', score: 0 },
@@ -95,26 +92,21 @@ export default function App() {
   ])
   const [inputPlayerName, setInputPlayerName] = useState('')
 
-  // 1. 先攻狀態
   const [starterWinner, setStarterWinner] = useState(null)
   const [isPickingStarter, setIsPickingStarter] = useState(false)
 
-  // 2. 倒數計時狀態
   const [timeLeft, setTimeLeft] = useState(60)
   const [timerRunning, setTimerRunning] = useState(false)
 
-  // 3. 骰子與硬幣狀態
   const [diceResult, setDiceResult] = useState('🎲 點擊擲骰')
   const [coinResult, setCoinResult] = useState('🪙 點擊翻面')
   const [isRollingDice, setIsRollingDice] = useState(false)
   const [isFlippingCoin, setIsFlippingCoin] = useState(false)
   const [coinDegree, setCoinDegree] = useState(0)
 
-  // 4. 分隊狀態
   const [teamA, setTeamA] = useState([])
   const [teamB, setTeamB] = useState([])
 
-  // Modal 狀態
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(emptyForm)
@@ -142,24 +134,16 @@ export default function App() {
     setLoading(false)
   }
 
-  // 📳 原生觸覺震動回饋
   function triggerHaptic(type = 'light') {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       try {
-        if (type === 'light') {
-          navigator.vibrate(12)
-        } else if (type === 'medium') {
-          navigator.vibrate([20, 30, 20])
-        } else if (type === 'heavy') {
-          navigator.vibrate([40, 50, 100])
-        }
-      } catch (e) {
-        // 忽略不支援環境
-      }
+        if (type === 'light') navigator.vibrate(12)
+        else if (type === 'medium') navigator.vibrate([20, 30, 20])
+        else if (type === 'heavy') navigator.vibrate([40, 50, 100])
+      } catch (e) {}
     }
   }
 
-  // 🔊 Web Audio API 音效產生器
   function playSound(type) {
     if (!soundEnabled) return
     try {
@@ -168,7 +152,6 @@ export default function App() {
       const gain = audioCtx.createGain()
       osc.connect(gain)
       gain.connect(audioCtx.destination)
-
       const now = audioCtx.currentTime
 
       if (type === 'dice') {
@@ -214,9 +197,7 @@ export default function App() {
         osc.start(now)
         osc.stop(now + 0.6)
       }
-    } catch (e) {
-      // 忽略阻擋
-    }
+    } catch (e) {}
   }
 
   useEffect(() => {
@@ -340,7 +321,6 @@ export default function App() {
     setTeamB(shuffled.slice(mid))
   }
 
-  // 🎴 3D 實體卡牌洗牌與翻面抽卡
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
     if (pool.length === 0) {
@@ -482,8 +462,8 @@ export default function App() {
           minPlayers: parseInt(rest.minPlayers, 10) || 1,
           maxPlayers: parseInt(rest.maxPlayers, 10) || 4,
           time: parseInt(rest.time, 10) || 30,
-          rating: parseFloat(rest.rating) || 8.0,
-          complexity: parseFloat(rest.complexity) || 2.0,
+          rating: parseFloat(rest.rating) || 8.00,
+          complexity: parseFloat(rest.complexity) || 2.00,
           isExpansion: !!rest.isExpansion,
           parentId: rest.parentId ? parseInt(rest.parentId, 10) : null
         }))
@@ -552,8 +532,8 @@ export default function App() {
       bestPlayers: game.bestPlayers || '',
       time: game.time || 30,
       category: game.category || '派對',
-      rating: Number(game.rating || 8.0).toFixed(2),
-      complexity: Number(game.complexity || 2.0).toFixed(2),
+      rating: game.rating ? Number(game.rating).toFixed(2) : '8.00',
+      complexity: game.complexity ? Number(game.complexity).toFixed(2) : '2.00',
       emoji: game.emoji || '🎲',
       imageUrl: game.imageUrl || '',
       tagsInput: Array.isArray(game.tags) ? game.tags.join(', ') : '',
@@ -581,8 +561,8 @@ export default function App() {
       bestPlayers: formData.bestPlayers.trim() || `${formData.minPlayers}-${formData.maxPlayers}`,
       time: parseInt(formData.time, 10) || 30,
       category: formData.category.trim() || '未分類',
-      rating: parseFloat(Number(formData.rating).toFixed(2)) || 8.0,
-      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 2.0,
+      rating: parseFloat(Number(formData.rating).toFixed(2)) || 8.00,
+      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 2.00,
       emoji: formData.emoji,
       imageUrl: formData.imageUrl,
       tags: tagsArray,
@@ -709,97 +689,111 @@ export default function App() {
 
       <main>
         {/* 橫幅區域 */}
-        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'flex-start' }}>
-          <div>
-            <p className="eyebrow">MY BOARD GAME LIBRARY</p>
-            <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
+        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', padding: '0 8px' }}>
+            <div>
+              <p className="eyebrow" style={{ margin: '0 0 6px 0' }}>MY BOARD GAME LIBRARY</p>
+              <h1 style={{ margin: 0, lineHeight: 1.25 }}>今天聚會，<br /><span style={{ color: '#4F46E5' }}>玩哪一款？</span></h1>
+            </div>
             
-            {/* 頂部統計快速篩選按鈕區 */}
-            <div style={{ display: 'inline-flex', gap: '12px', margin: '18px 0 20px 0', flexWrap: 'wrap' }}>
+            {/* 統計篩選膠囊：實心飽和色彩切換，極度明顯，文字純白不遮擋 */}
+            <div style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0', userSelect: 'none' }}>
+              {/* 總收藏量按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
                 style={{
-                  background: expansionFilter === 'all' ? 'rgba(79, 70, 229, 0.16)' : 'rgba(79, 70, 229, 0.06)',
-                  border: expansionFilter === 'all' ? '2px solid #4F46E5' : '1px solid rgba(79, 70, 229, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  padding: '10px 18px',
+                  background: expansionFilter === 'all' ? '#4F46E5' : 'var(--bg-card, #ffffff)',
+                  border: expansionFilter === 'all' ? '2px solid #4F46E5' : '2px solid rgba(0,0,0,0.08)',
+                  padding: '8px 16px',
                   borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
                   cursor: 'pointer',
-                  transform: expansionFilter === 'all' ? 'scale(1.04)' : 'scale(1)',
-                  transition: 'all 0.2s ease',
-                  boxShadow: expansionFilter === 'all' ? '0 4px 12px rgba(79, 70, 229, 0.25)' : 'none'
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  boxSizing: 'border-box',
+                  boxShadow: expansionFilter === 'all' ? '0 6px 16px rgba(79, 70, 229, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
+                  transition: 'all 0.18s ease'
                 }}
               >
-                <span style={{ fontSize: '22px' }}>📦</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>總收藏量 {expansionFilter === 'all' && '✓'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#4F46E5' }}>{totalCount} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>款</span></div>
+                <span style={{ fontSize: '20px' }}>📦</span>
+                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
+                  <div style={{ fontSize: '11px', color: expansionFilter === 'all' ? '#E0E7FF' : '#64748B', fontWeight: 'bold' }}>總收藏量</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'all' ? '#FFFFFF' : '#4F46E5' }}>
+                    {totalCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'all' ? '#E0E7FF' : '#64748B' }}>款</span>
+                  </div>
                 </div>
               </button>
 
+              {/* 主遊戲按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}
                 style={{
-                  background: expansionFilter === 'main' ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.06)',
-                  border: expansionFilter === 'main' ? '2px solid #10B981' : '1px solid rgba(16, 185, 129, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  padding: '10px 18px',
+                  background: expansionFilter === 'main' ? '#10B981' : 'var(--bg-card, #ffffff)',
+                  border: expansionFilter === 'main' ? '2px solid #10B981' : '2px solid rgba(0,0,0,0.08)',
+                  padding: '8px 16px',
                   borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
                   cursor: 'pointer',
-                  transform: expansionFilter === 'main' ? 'scale(1.04)' : 'scale(1)',
-                  transition: 'all 0.2s ease',
-                  boxShadow: expansionFilter === 'main' ? '0 4px 12px rgba(16, 185, 129, 0.25)' : 'none'
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  boxSizing: 'border-box',
+                  boxShadow: expansionFilter === 'main' ? '0 6px 16px rgba(16, 185, 129, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
+                  transition: 'all 0.18s ease'
                 }}
               >
-                <span style={{ fontSize: '22px' }}>🎮</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>主遊戲 {expansionFilter === 'main' && '✓'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#10B981' }}>{mainCount} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>款</span></div>
+                <span style={{ fontSize: '20px' }}>🎮</span>
+                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
+                  <div style={{ fontSize: '11px', color: expansionFilter === 'main' ? '#D1FAE5' : '#64748B', fontWeight: 'bold' }}>主遊戲</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'main' ? '#FFFFFF' : '#10B981' }}>
+                    {mainCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'main' ? '#D1FAE5' : '#64748B' }}>款</span>
+                  </div>
                 </div>
               </button>
 
+              {/* 擴充包按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion'); }}
                 style={{
-                  background: expansionFilter === 'expansion' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(245, 158, 11, 0.06)',
-                  border: expansionFilter === 'expansion' ? '2px solid #F59E0B' : '1px solid rgba(245, 158, 11, 0.2)',
-                  backdropFilter: 'blur(8px)',
-                  padding: '10px 18px',
+                  background: expansionFilter === 'expansion' ? '#F59E0B' : 'var(--bg-card, #ffffff)',
+                  border: expansionFilter === 'expansion' ? '2px solid #F59E0B' : '2px solid rgba(0,0,0,0.08)',
+                  padding: '8px 16px',
                   borderRadius: '14px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
                   cursor: 'pointer',
-                  transform: expansionFilter === 'expansion' ? 'scale(1.04)' : 'scale(1)',
-                  transition: 'all 0.2s ease',
-                  boxShadow: expansionFilter === 'expansion' ? '0 4px 12px rgba(245, 158, 11, 0.25)' : 'none'
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  boxSizing: 'border-box',
+                  boxShadow: expansionFilter === 'expansion' ? '0 6px 16px rgba(245, 158, 11, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
+                  transition: 'all 0.18s ease'
                 }}
               >
-                <span style={{ fontSize: '22px' }}>🧩</span>
-                <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '11px', color: '#666', fontWeight: 'bold' }}>擴充包 {expansionFilter === 'expansion' && '✓'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '800', color: '#F59E0B' }}>{expansionCount} <span style={{ fontSize: '12px', fontWeight: 'normal' }}>款</span></div>
+                <span style={{ fontSize: '20px' }}>🧩</span>
+                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
+                  <div style={{ fontSize: '11px', color: expansionFilter === 'expansion' ? '#FEF3C7' : '#64748B', fontWeight: 'bold' }}>擴充包</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'expansion' ? '#FFFFFF' : '#D97706' }}>
+                    {expansionCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'expansion' ? '#FEF3C7' : '#64748B' }}>款</span>
+                  </div>
                 </div>
               </button>
             </div>
 
-            <p className="hero-text">支援最佳人數過濾、BGG 兩位小數評分與 JSON 備份！</p>
+            {/* 核心抽卡按鈕 */}
             <button 
               type="button" 
               className={`random-button ${isShuffling ? 'spinning' : ''}`} 
               onClick={chooseRandomWithAnimation} 
               disabled={isShuffling}
             >
-              {isShuffling ? '🎴 命運洗牌中...' : '🎲 幫我選一款'}
+              {isShuffling ? '🎴 命運洗牌中...' : '🎲 幫我選一款桌遊'}
             </button>
           </div>
 
@@ -1155,7 +1149,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 篩選面板（已移除下方的標籤列） */}
+        {/* 篩選面板 */}
         <section className="filter-panel">
           <div className="filter-row">
             <div className="search-box">
@@ -1208,7 +1202,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '6px 0 0 0' }}>
+          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '14px 0 0 0' }}>
             {categories.map(cat => (
               <button 
                 key={cat} 
@@ -1234,7 +1228,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 收藏列表（卡片上的標籤完整保留，評分與燒腦為兩位小數） */}
+        {/* 收藏列表 */}
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => (
@@ -1253,15 +1247,7 @@ export default function App() {
                     <span className="cover-emoji">{game.emoji}</span>
                   )}
                   {game.isExpansion && (
-                    <span 
-                      className="expansion-badge" 
-                      style={{ 
-                        whiteSpace: 'nowrap', 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: '4px' 
-                      }}
-                    >
+                    <span className="expansion-badge">
                       🧩 擴充
                     </span>
                   )}
@@ -1272,7 +1258,6 @@ export default function App() {
                   <h3>{game.name}</h3>
                   <p className="english">{game.englishName}</p>
                   
-                  {/* 遊戲標籤保留 */}
                   {Array.isArray(game.tags) && game.tags.length > 0 && (
                     <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
                       {game.tags.map(t => (
@@ -1302,11 +1287,10 @@ export default function App() {
                     <span>⏱️ {game.time}分</span>
                   </div>
 
-                  {/* 評分與燒腦度格式化為 BGG 兩位小數 */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                  <div className="rating-complexity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                     <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
-                    <div style={{ fontSize: '11.5px', color: '#6366F1', fontWeight: 'bold' }}>
-                      🧠 燒腦: {Number(game.complexity || 2.0).toFixed(2)} / 5.00
+                    <div className="complexity-badge" style={{ fontSize: '11px', color: '#6366F1', fontWeight: 'bold' }}>
+                      🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -1316,7 +1300,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* 3D 實體卡牌立體翻面彈窗 */}
+      {/* 3D 抽卡立體翻面彈窗：圖片容器高度自適應，不再裁切頂部與底部 */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
@@ -1351,10 +1335,11 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="card-face card-face-front">
-                  <div style={{ width: '100%', height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
+                <div className="card-face card-face-front" style={{ padding: '12px 10px' }}>
+                  {/* 🌟 修正：放寬圖片高度限制並採用 contain，避免任何盒裝比例被裁切 🌟 */}
+                  <div style={{ width: '100%', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
                     {randomGame.imageUrl ? (
-                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
                     ) : (
                       <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span>
                     )}
@@ -1364,7 +1349,7 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
-                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.0).toFixed(2)}</span>
+                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -1485,7 +1470,7 @@ export default function App() {
                   <span style={{ color: '#D97706', fontWeight: 'bold' }}>👑 最佳人數：{viewDetailGame.bestPlayers || '未設定'} 人</span>
                   <span>⏱️ 時間：{viewDetailGame.time} 分鐘</span>
                   <span>⭐ 評分：{Number(viewDetailGame.rating || 0).toFixed(2)} 分</span>
-                  <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 2.0).toFixed(2)} / 5.00</span>
+                  <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 2.00).toFixed(2)} / 5.00</span>
                 </div>
 
                 {viewDetailGame.isExpansion && viewDetailGame.parentId && (
@@ -1514,7 +1499,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 彈窗內的標籤保留 */}
                 {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.length > 0 && (
                   <div style={{ margin: '8px 0', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {viewDetailGame.tags.map(t => (
@@ -1578,7 +1562,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal (步進支援 0.01 兩位小數) */}
+      {/* 新增/編輯 Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
@@ -1609,18 +1593,18 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
                   <label>遊戲時間 (分鐘)</label>
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
                 </div>
                 <div>
-                  <label>評分 (0.00~10.00)</label>
-                  <input type="number" step="0.01" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
+                  <label>⭐ 評分 (0.00~10.00)</label>
+                  <input type="number" step="0.01" min="0.00" max="10.00" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
                 </div>
                 <div>
                   <label>🧠 燒腦度 (1.00~5.00)</label>
-                  <input type="number" step="0.01" min="1.0" max="5.0" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
+                  <input type="number" step="0.01" min="1.00" max="5.00" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
                 </div>
               </div>
 
@@ -1656,7 +1640,6 @@ export default function App() {
                 <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
               </div>
 
-              {/* 編輯表單內的標籤輸入欄位保留 */}
               <div className="form-group">
                 <label>🏷️ 標籤 (以逗號分隔，例如: 新手推薦, 快節奏)</label>
                 <input type="text" placeholder="例如: 派對, 爆笑, 雙人首選" value={formData.tagsInput} onChange={(e) => setFormData({...formData, tagsInput: e.target.value})} />
