@@ -52,8 +52,8 @@ const emptyForm = {
   bestPlayers: '4',
   time: 30,
   category: '派對',
-  rating: '8.0',
-  complexity: '2.0',
+  rating: '8.00',
+  complexity: '2.00',
   emoji: '🎲',
   imageUrl: '',
   tagsInput: '',
@@ -72,7 +72,6 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('全部')
-  const [selectedTags, setSelectedTags] = useState([])
   const [playerFilter, setPlayerFilter] = useState('all')
   const [bestPlayerFilter, setBestPlayerFilter] = useState('all')
   const [maxTimeFilter, setMaxTimeFilter] = useState('all')
@@ -81,8 +80,8 @@ export default function App() {
 
   // 🎴 3D 抽卡動畫狀態
   const [randomGame, setRandomGame] = useState(null)
-  const [isRevealed, setIsRevealed] = useState(false) // 是否翻開為正面
-  const [isShuffling, setIsShuffling] = useState(false) // 是否正在洗牌抖動
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [isShuffling, setIsShuffling] = useState(false)
 
   // 右側小工具分頁
   const [widgetTab, setWidgetTab] = useState('starter')
@@ -143,19 +142,19 @@ export default function App() {
     setLoading(false)
   }
 
-  // 📳 原生觸覺震動回饋 (Haptic Feedback)
+  // 📳 原生觸覺震動回饋
   function triggerHaptic(type = 'light') {
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       try {
         if (type === 'light') {
-          navigator.vibrate(12) // 微按鍵感
+          navigator.vibrate(12)
         } else if (type === 'medium') {
-          navigator.vibrate([20, 30, 20]) // 擲骰滾動感
+          navigator.vibrate([20, 30, 20])
         } else if (type === 'heavy') {
-          navigator.vibrate([40, 50, 100]) // 翻牌/獲勝震撼感
+          navigator.vibrate([40, 50, 100])
         }
       } catch (e) {
-        // 忽視不支援環境
+        // 忽略不支援環境
       }
     }
   }
@@ -189,7 +188,6 @@ export default function App() {
         osc.start(now)
         osc.stop(now + 0.2)
       } else if (type === 'flip') {
-        // 洗牌卡片翻動聲
         osc.type = 'sawtooth'
         osc.frequency.setValueAtTime(450, now)
         osc.frequency.exponentialRampToValueAtTime(180, now + 0.12)
@@ -198,12 +196,11 @@ export default function App() {
         osc.start(now)
         osc.stop(now + 0.12)
       } else if (type === 'victory') {
-        // 獲勝金光號角
         osc.type = 'triangle'
-        osc.frequency.setValueAtTime(523.25, now) // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.12) // E5
-        osc.frequency.setValueAtTime(783.99, now + 0.24) // G5
-        osc.frequency.setValueAtTime(1046.50, now + 0.36) // C6
+        osc.frequency.setValueAtTime(523.25, now)
+        osc.frequency.setValueAtTime(659.25, now + 0.12)
+        osc.frequency.setValueAtTime(783.99, now + 0.24)
+        osc.frequency.setValueAtTime(1046.50, now + 0.36)
         gain.gain.setValueAtTime(0.25, now)
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6)
         osc.start(now)
@@ -218,7 +215,7 @@ export default function App() {
         osc.stop(now + 0.6)
       }
     } catch (e) {
-      // 忽略音效阻擋
+      // 忽略阻擋
     }
   }
 
@@ -343,7 +340,7 @@ export default function App() {
     setTeamB(shuffled.slice(mid))
   }
 
-  // 🎴 3D 實體卡牌洗牌與震撼翻面效果 (Card Flip 3D Reveal)
+  // 🎴 3D 實體卡牌洗牌與翻面抽卡
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
     if (pool.length === 0) {
@@ -351,17 +348,14 @@ export default function App() {
       return
     }
 
-    // 重設為背面蓋牌狀態，開啟洗牌動畫
     setIsRevealed(false)
     setIsShuffling(true)
     triggerHaptic('medium')
     playSound('flip')
 
-    // 先挑好命運桌遊
     const picked = pool[Math.floor(Math.random() * pool.length)]
     setRandomGame(picked)
 
-    // 洗牌 650ms 後立體 3D 震撼翻面
     setTimeout(() => {
       setIsShuffling(false)
       setIsRevealed(true)
@@ -383,16 +377,6 @@ export default function App() {
       }
     })
     return ['全部', ...Array.from(catSet)]
-  }, [games])
-
-  const allTags = useMemo(() => {
-    const tagSet = new Set()
-    games.forEach(g => {
-      if (Array.isArray(g.tags)) {
-        g.tags.forEach(t => tagSet.add(t))
-      }
-    })
-    return Array.from(tagSet)
   }, [games])
 
   useEffect(() => {
@@ -417,19 +401,6 @@ export default function App() {
     return parseInt(cleanStr, 10) === targetNum
   }
 
-  function handleTagToggle(tag) {
-    triggerHaptic('light')
-    if (tag === '') {
-      setSelectedTags([])
-      return
-    }
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag) 
-        : [...prev, tag]
-    )
-  }
-
   const filteredGames = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     let result = games.filter((game) => {
@@ -439,10 +410,6 @@ export default function App() {
         (game.englishName && game.englishName.toLowerCase().includes(keyword))
 
       const matchCategory = category === '全部' || game.category === category
-
-      const matchTags =
-        selectedTags.length === 0 ||
-        (Array.isArray(game.tags) && selectedTags.every(t => game.tags.includes(t)))
 
       let matchPlayers = true
       if (playerFilter !== 'all') {
@@ -468,7 +435,7 @@ export default function App() {
         matchExpansion = !!game.isExpansion
       }
 
-      return matchSearch && matchCategory && matchTags && matchPlayers && matchBestPlayers && matchTime && matchExpansion
+      return matchSearch && matchCategory && matchPlayers && matchBestPlayers && matchTime && matchExpansion
     })
 
     return result.sort((a, b) => {
@@ -479,7 +446,7 @@ export default function App() {
       if (sortBy === 'newest') return b.id - a.id
       return 0
     })
-  }, [games, search, category, selectedTags, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter])
+  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter])
 
   function handleExportJSON() {
     const jsonString = JSON.stringify(games, null, 2)
@@ -585,8 +552,8 @@ export default function App() {
       bestPlayers: game.bestPlayers || '',
       time: game.time || 30,
       category: game.category || '派對',
-      rating: game.rating ? String(game.rating) : '8.0',
-      complexity: game.complexity ? String(game.complexity) : '2.0',
+      rating: Number(game.rating || 8.0).toFixed(2),
+      complexity: Number(game.complexity || 2.0).toFixed(2),
       emoji: game.emoji || '🎲',
       imageUrl: game.imageUrl || '',
       tagsInput: Array.isArray(game.tags) ? game.tags.join(', ') : '',
@@ -614,8 +581,8 @@ export default function App() {
       bestPlayers: formData.bestPlayers.trim() || `${formData.minPlayers}-${formData.maxPlayers}`,
       time: parseInt(formData.time, 10) || 30,
       category: formData.category.trim() || '未分類',
-      rating: parseFloat(formData.rating) || 8.0,
-      complexity: parseFloat(formData.complexity) || 2.0,
+      rating: parseFloat(Number(formData.rating).toFixed(2)) || 8.0,
+      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 2.0,
       emoji: formData.emoji,
       imageUrl: formData.imageUrl,
       tags: tagsArray,
@@ -825,7 +792,7 @@ export default function App() {
               </button>
             </div>
 
-            <p className="hero-text">支援最佳人數過濾、燒腦度標註與 JSON 備份！</p>
+            <p className="hero-text">支援最佳人數過濾、BGG 兩位小數評分與 JSON 備份！</p>
             <button 
               type="button" 
               className={`random-button ${isShuffling ? 'spinning' : ''}`} 
@@ -1188,7 +1155,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 篩選面板 */}
+        {/* 篩選面板（已移除下方的標籤列） */}
         <section className="filter-panel">
           <div className="filter-row">
             <div className="search-box">
@@ -1241,7 +1208,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '14px 0 10px 0' }}>
+          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '6px 0 0 0' }}>
             {categories.map(cat => (
               <button 
                 key={cat} 
@@ -1265,59 +1232,9 @@ export default function App() {
               </button>
             ))}
           </div>
-
-          {allTags.length > 0 && (
-            <div className="tag-bar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '6px 0', alignItems: 'center' }}>
-              <button 
-                type="button"
-                className={`tag-chip ${selectedTags.length === 0 ? 'active' : ''}`}
-                onClick={() => handleTagToggle('')}
-                style={{ 
-                  padding: '5px 14px', 
-                  borderRadius: '20px', 
-                  border: selectedTags.length === 0 ? '1px solid #10B981' : '1px solid #D1D5DB', 
-                  cursor: 'pointer', 
-                  whiteSpace: 'nowrap',
-                  fontSize: '0.85rem',
-                  fontWeight: selectedTags.length === 0 ? '600' : 'normal',
-                  backgroundColor: selectedTags.length === 0 ? '#10B981' : 'transparent',
-                  color: selectedTags.length === 0 ? '#fff' : 'inherit',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                🏷️ 全部標籤
-              </button>
-              {allTags.map(tag => {
-                const isSelected = selectedTags.includes(tag)
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`tag-chip ${isSelected ? 'active' : ''}`}
-                    onClick={() => handleTagToggle(tag)}
-                    style={{ 
-                      padding: '5px 13px', 
-                      borderRadius: '20px', 
-                      border: isSelected ? '1px solid #4F46E5' : '1px solid #E2E8F0', 
-                      cursor: 'pointer', 
-                      whiteSpace: 'nowrap',
-                      fontSize: '0.85rem',
-                      fontWeight: isSelected ? '600' : 'normal',
-                      backgroundColor: isSelected ? '#4F46E5' : 'rgba(0,0,0,0.03)',
-                      color: isSelected ? '#fff' : 'inherit',
-                      boxShadow: isSelected ? '0 3px 10px rgba(79, 70, 229, 0.25)' : 'none',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    #{tag} {isSelected && '✓'}
-                  </button>
-                )
-              })}
-            </div>
-          )}
         </section>
 
-        {/* 收藏列表 */}
+        {/* 收藏列表（卡片上的標籤完整保留，評分與燒腦為兩位小數） */}
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => (
@@ -1355,6 +1272,7 @@ export default function App() {
                   <h3>{game.name}</h3>
                   <p className="english">{game.englishName}</p>
                   
+                  {/* 遊戲標籤保留 */}
                   {Array.isArray(game.tags) && game.tags.length > 0 && (
                     <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
                       {game.tags.map(t => (
@@ -1384,10 +1302,11 @@ export default function App() {
                     <span>⏱️ {game.time}分</span>
                   </div>
 
+                  {/* 評分與燒腦度格式化為 BGG 兩位小數 */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                    <div className="rating">⭐ <strong>{game.rating}</strong></div>
+                    <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
                     <div style={{ fontSize: '11.5px', color: '#6366F1', fontWeight: 'bold' }}>
-                      🧠 燒腦: {game.complexity || '2.0'} / 5
+                      🧠 燒腦: {Number(game.complexity || 2.0).toFixed(2)} / 5.00
                     </div>
                   </div>
                 </div>
@@ -1397,7 +1316,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* 🌟 3D 實體卡牌立體翻面彈窗 (Card Flip 3D Reveal) 🌟 */}
+      {/* 3D 實體卡牌立體翻面彈窗 */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
@@ -1423,10 +1342,8 @@ export default function App() {
               {isShuffling ? '🎴 命運牌堆洗牌中...' : '✨ 命中注定就是它！'}
             </span>
 
-            {/* 3D 翻轉卡牌容器 */}
             <div className={`card-flip-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1.2rem auto' }}>
               <div className={`card-flip-inner ${isRevealed ? 'is-flipped' : ''}`}>
-                {/* 卡片背面（蓋牌） */}
                 <div className="card-face card-face-back">
                   <div className="card-back-pattern">
                     <span style={{ fontSize: '3rem' }}>🔮</span>
@@ -1434,7 +1351,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 卡片正面（開牌結果） */}
                 <div className="card-face card-face-front">
                   <div style={{ width: '100%', height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
                     {randomGame.imageUrl ? (
@@ -1448,13 +1364,12 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
-                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {randomGame.complexity || '2.0'}</span>
+                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 按鈕組 */}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1.2rem' }}>
               <button 
                 type="button" 
@@ -1569,8 +1484,8 @@ export default function App() {
                   <span>👥 可玩人數：{viewDetailGame.minPlayers}–{viewDetailGame.maxPlayers} 人</span>
                   <span style={{ color: '#D97706', fontWeight: 'bold' }}>👑 最佳人數：{viewDetailGame.bestPlayers || '未設定'} 人</span>
                   <span>⏱️ 時間：{viewDetailGame.time} 分鐘</span>
-                  <span>⭐ 評分：{viewDetailGame.rating} 分</span>
-                  <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{viewDetailGame.complexity || '2.0'} / 5.0</span>
+                  <span>⭐ 評分：{Number(viewDetailGame.rating || 0).toFixed(2)} 分</span>
+                  <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 2.0).toFixed(2)} / 5.00</span>
                 </div>
 
                 {viewDetailGame.isExpansion && viewDetailGame.parentId && (
@@ -1599,6 +1514,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 彈窗內的標籤保留 */}
                 {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.length > 0 && (
                   <div style={{ margin: '8px 0', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {viewDetailGame.tags.map(t => (
@@ -1662,7 +1578,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal */}
+      {/* 新增/編輯 Modal (步進支援 0.01 兩位小數) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
@@ -1699,12 +1615,12 @@ export default function App() {
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
                 </div>
                 <div>
-                  <label>評分 (0.0~10.0)</label>
-                  <input type="number" step="0.1" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
+                  <label>評分 (0.00~10.00)</label>
+                  <input type="number" step="0.01" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
                 </div>
                 <div>
-                  <label>🧠 燒腦度 (1.0~5.0)</label>
-                  <input type="number" step="0.1" min="1.0" max="5.0" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
+                  <label>🧠 燒腦度 (1.00~5.00)</label>
+                  <input type="number" step="0.01" min="1.0" max="5.0" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
                 </div>
               </div>
 
@@ -1740,6 +1656,7 @@ export default function App() {
                 <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
               </div>
 
+              {/* 編輯表單內的標籤輸入欄位保留 */}
               <div className="form-group">
                 <label>🏷️ 標籤 (以逗號分隔，例如: 新手推薦, 快節奏)</label>
                 <input type="text" placeholder="例如: 派對, 爆笑, 雙人首選" value={formData.tagsInput} onChange={(e) => setFormData({...formData, tagsInput: e.target.value})} />
