@@ -317,3 +317,14 @@ main button.active,
 .form-group[style*="gridTemplateColumns"] {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
 }
+/* ===== 修復擴充標籤被擠成兩行 ===== */
+.expansion-badge {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 0.75rem !important;
+  padding: 3px 8px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}

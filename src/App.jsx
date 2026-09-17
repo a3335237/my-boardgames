@@ -68,14 +68,14 @@ export default function App() {
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // 管理者權限模式狀態（預設 false 關閉）
+  // 管理者權限模式狀態
   const [isAdmin, setIsAdmin] = useState(false)
 
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme_mode') === 'dark')
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('全部')
   
-  // 支援多選（複選）標籤狀態陣列
+  // 支援多選標籤狀態
   const [selectedTags, setSelectedTags] = useState([])
 
   const [playerFilter, setPlayerFilter] = useState('all')
@@ -83,9 +83,23 @@ export default function App() {
   const [maxTimeFilter, setMaxTimeFilter] = useState('all')
   const [sortBy, setSortBy] = useState('rating-desc')
 
-  // 轉盤動畫狀態
+  // 轉盤抽桌遊狀態
   const [randomGame, setRandomGame] = useState(null)
   const [isSpinning, setIsSpinning] = useState(false)
+
+  // 右側卡片內部分頁 ('starter' | 'scoreboard')
+  const [widgetTab, setWidgetTab] = useState('starter')
+
+  // 雙向同步的玩家狀態（姓名 + 分數）
+  const [sharedPlayers, setSharedPlayers] = useState([
+    { id: 1, name: '玩家 1', score: 0 },
+    { id: 2, name: '玩家 2', score: 0 },
+    { id: 3, name: '玩家 3', score: 0 },
+    { id: 4, name: '玩家 4', score: 0 }
+  ])
+  const [inputPlayerName, setInputPlayerName] = useState('')
+  const [starterWinner, setStarterWinner] = useState(null)
+  const [isPickingStarter, setIsPickingStarter] = useState(false)
 
   // Modal 狀態
   const [showModal, setShowModal] = useState(false)
@@ -115,7 +129,6 @@ export default function App() {
     setLoading(false)
   }
 
-  // 站長一鍵登入/登出功能
   function handleAdminToggle() {
     if (isAdmin) {
       setIsAdmin(false)
@@ -130,6 +143,49 @@ export default function App() {
     } else if (inputPass !== null) {
       alert('❌ 密碼錯誤！')
     }
+  }
+
+  // 同步玩家管理操作
+  function handleAddSharedPlayer(e) {
+    if (e) e.preventDefault()
+    const name = inputPlayerName.trim()
+    if (!name) return
+    if (sharedPlayers.some(p => p.name === name)) return alert('玩家名稱已存在！')
+    const newId = sharedPlayers.length > 0 ? Math.max(...sharedPlayers.map(p => p.id)) + 1 : 1
+    setSharedPlayers([...sharedPlayers, { id: newId, name, score: 0 }])
+    setInputPlayerName('')
+  }
+
+  function handleRemoveSharedPlayer(idToRemove) {
+    if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！')
+    setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove))
+  }
+
+  // 起始玩家抽取邏輯
+  function pickStarterPlayer() {
+    if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
+    setIsPickingStarter(true)
+    setStarterWinner(null)
+
+    let count = 0
+    const interval = setInterval(() => {
+      const tempIdx = Math.floor(Math.random() * sharedPlayers.length)
+      setStarterWinner(sharedPlayers[tempIdx].name)
+      count++
+      if (count >= 16) {
+        clearInterval(interval)
+        setIsPickingStarter(false)
+      }
+    }, 80)
+  }
+
+  // 計分助手操作
+  function changeScore(id, delta) {
+    setSharedPlayers(sharedPlayers.map(p => p.id === id ? { ...p, score: p.score + delta } : p))
+  }
+
+  function resetAllScores(val = 0) {
+    setSharedPlayers(sharedPlayers.map(p => ({ ...p, score: val })))
   }
 
   // 統計數量計算
@@ -182,7 +238,6 @@ export default function App() {
     return parseInt(cleanStr, 10) === targetNum
   }
 
-  // 標籤複選切換邏輯
   function handleTagToggle(tag) {
     if (tag === '') {
       setSelectedTags([])
@@ -205,7 +260,6 @@ export default function App() {
 
       const matchCategory = category === '全部' || game.category === category
 
-      // 複選標籤比對：需滿足所有選取的標籤
       const matchTags =
         selectedTags.length === 0 ||
         (Array.isArray(game.tags) && selectedTags.every(t => game.tags.includes(t)))
@@ -239,7 +293,6 @@ export default function App() {
     })
   }, [games, search, category, selectedTags, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy])
 
-  // 升級版「幫我選一款」：支援回退與置中彈窗
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
 
@@ -249,7 +302,6 @@ export default function App() {
     }
 
     setIsSpinning(true)
-    // 立即打開彈窗展示轉盤過程
     setRandomGame(pool[Math.floor(Math.random() * pool.length)])
 
     let count = 0
@@ -293,7 +345,6 @@ export default function App() {
           return
         }
 
-        // 1. 去除舊的自訂 id，由 Supabase 自動遞增
         const cleanPayload = importedData.map(({ id, created_at, ...rest }) => ({
           ...rest,
           minPlayers: parseInt(rest.minPlayers, 10) || 1,
@@ -304,7 +355,6 @@ export default function App() {
           parentId: rest.parentId ? parseInt(rest.parentId, 10) : null
         }))
 
-        // 2. 批次寫入 Supabase
         const { error } = await supabase.from('boardgames').insert(cleanPayload)
 
         if (error) {
@@ -462,7 +512,6 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          {/* 只有在站長登入模式下才顯示匯入功能 */}
           {isAdmin && (
             <>
               <input 
@@ -486,7 +535,6 @@ export default function App() {
             {darkMode ? '☀️ 淺色' : '🌙 暗黑'}
           </button>
 
-          {/* 站長一鍵登入/登出切換按鈕 */}
           <button 
             type="button" 
             className="action-btn" 
@@ -501,7 +549,6 @@ export default function App() {
             {isAdmin ? '🔒 登出管理' : '🔑 站長登入'}
           </button>
 
-          {/* 只有登入後才顯示新增桌遊 */}
           {isAdmin && (
             <button type="button" className="add-game-btn" onClick={handleOpenAddModal}>
               ➕ 新增桌遊
@@ -511,7 +558,8 @@ export default function App() {
       </header>
 
       <main>
-        <section className="hero">
+        {/* 橫幅區域：左側統計與抽桌遊、右側【同步的起始玩家 / 計分血量】卡片 */}
+        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'flex-start' }}>
           <div>
             <p className="eyebrow">MY BOARD GAME LIBRARY</p>
             <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
@@ -552,6 +600,212 @@ export default function App() {
               {isSpinning ? '🎡 轉盤滾動中...' : '🎲 幫我選一款'}
             </button>
           </div>
+
+          {/* 右側雙分頁聚會小卡片 */}
+          <div className="starter-card" style={{
+            background: 'var(--bg-card, #ffffff)',
+            borderRadius: '20px',
+            padding: '1.4rem',
+            border: '1px solid var(--border-color, rgba(0,0,0,0.08))',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+            position: 'relative'
+          }}>
+            {/* 卡片頂部微型分頁按鈕 */}
+            <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.05)', padding: '4px', borderRadius: '14px', marginBottom: '14px' }}>
+              <button
+                type="button"
+                onClick={() => setWidgetTab('starter')}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '10px',
+                  border: 'none',
+                  fontSize: '0.86rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  background: widgetTab === 'starter' ? '#4F46E5' : 'transparent',
+                  color: widgetTab === 'starter' ? '#fff' : 'inherit',
+                  transition: 'all 0.2s'
+                }}
+              >
+                👑 起始玩家
+              </button>
+              <button
+                type="button"
+                onClick={() => setWidgetTab('scoreboard')}
+                style={{
+                  flex: 1,
+                  padding: '6px 0',
+                  borderRadius: '10px',
+                  border: 'none',
+                  fontSize: '0.86rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  background: widgetTab === 'scoreboard' ? '#4F46E5' : 'transparent',
+                  color: widgetTab === 'scoreboard' ? '#fff' : 'inherit',
+                  transition: 'all 0.2s'
+                }}
+              >
+                📝 計分 / 血量
+              </button>
+            </div>
+
+            {/* 子分頁一：起始玩家 */}
+            {widgetTab === 'starter' && (
+              <>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', minHeight: '36px', marginBottom: '12px', alignItems: 'center' }}>
+                  {sharedPlayers.map((p) => (
+                    <span 
+                      key={p.id}
+                      onClick={() => handleRemoveSharedPlayer(p.id)}
+                      title="點擊刪除此玩家"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        background: starterWinner === p.name ? '#4F46E5' : 'rgba(79, 70, 229, 0.08)',
+                        color: starterWinner === p.name ? '#ffffff' : '#4F46E5',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontSize: '0.82rem',
+                        fontWeight: starterWinner === p.name ? '700' : '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        border: starterWinner === p.name ? '1px solid #4F46E5' : '1px solid transparent'
+                      }}
+                    >
+                      {p.name} ✕
+                    </span>
+                  ))}
+                </div>
+
+                <form onSubmit={handleAddSharedPlayer} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="輸入玩家名字..." 
+                    value={inputPlayerName} 
+                    onChange={(e) => setInputPlayerName(e.target.value)}
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none' }}
+                  />
+                  <button 
+                    type="submit" 
+                    style={{ background: '#6366F1', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    + 加入
+                  </button>
+                </form>
+
+                <div style={{
+                  background: isPickingStarter ? 'rgba(79, 70, 229, 0.05)' : (starterWinner ? 'rgba(16, 185, 129, 0.08)' : 'rgba(0,0,0,0.02)'),
+                  border: starterWinner && !isPickingStarter ? '1px dashed #10B981' : '1px dashed #CBD5E1',
+                  borderRadius: '12px',
+                  padding: '10px',
+                  textAlign: 'center',
+                  marginBottom: '12px'
+                }}>
+                  {isPickingStarter && <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#4F46E5' }}>🎲 輪動中... {starterWinner}</div>}
+                  {!isPickingStarter && starterWinner && <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>🎉 先攻由 <u>{starterWinner}</u> 開始！</div>}
+                  {!isPickingStarter && !starterWinner && <div style={{ fontSize: '0.82rem', color: '#888' }}>點擊下方按鈕選出首位玩家！</div>}
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={pickStarterPlayer} 
+                  disabled={isPickingStarter}
+                  style={{
+                    width: '100%',
+                    padding: '9px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                    cursor: isPickingStarter ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
+                  }}
+                >
+                  {isPickingStarter ? '⚡ 決定中...' : '🎯 抽出起始玩家'}
+                </button>
+              </>
+            )}
+
+            {/* 子分頁二：計分 / 血量小助手 */}
+            {widgetTab === 'scoreboard' && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#666' }}>快速重設：</span>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>0分</button>
+                    <button type="button" onClick={() => resetAllScores(20)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>20血</button>
+                    <button type="button" onClick={() => resetAllScores(40)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>40血</button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px', marginBottom: '10px' }}>
+                  {sharedPlayers.map(p => (
+                    <div 
+                      key={p.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: 'rgba(0,0,0,0.03)',
+                        borderRadius: '10px',
+                        padding: '6px 10px',
+                        border: '1px solid rgba(0,0,0,0.04)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span 
+                          onClick={() => handleRemoveSharedPlayer(p.id)} 
+                          style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '0.75rem' }} 
+                          title="刪除玩家"
+                        >
+                          ✕
+                        </span>
+                        <strong style={{ fontSize: '0.88rem' }}>{p.name}</strong>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button type="button" onClick={() => changeScore(p.id, -5)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>-5</button>
+                        <button type="button" onClick={() => changeScore(p.id, -1)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>-1</button>
+                        
+                        <span style={{ 
+                          minWidth: '36px', 
+                          textAlign: 'center', 
+                          fontWeight: '800', 
+                          fontSize: '1rem',
+                          color: p.score < 0 ? '#EF4444' : (p.score > 0 ? '#10B981' : 'inherit')
+                        }}>
+                          {p.score}
+                        </span>
+
+                        <button type="button" onClick={() => changeScore(p.id, 1)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#D1FAE5', color: '#059669', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>+1</button>
+                        <button type="button" onClick={() => changeScore(p.id, 5)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#D1FAE5', color: '#059669', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>+5</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleAddSharedPlayer} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="新增玩家 (兩邊同步)..." 
+                    value={inputPlayerName} 
+                    onChange={(e) => setInputPlayerName(e.target.value)}
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none' }}
+                  />
+                  <button 
+                    type="submit" 
+                    style={{ background: '#10B981', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    + 新增
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </section>
 
         <section className="filter-panel">
@@ -566,7 +820,9 @@ export default function App() {
               <select value={playerFilter} onChange={(e) => setPlayerFilter(e.target.value)}>
                 <option value="all">不限</option>
                 <option value="2">2 人</option>
+                <option value="3">3 人</option>
                 <option value="4">4 人</option>
+                <option value="5">5 人</option>
                 <option value="6">6 人以上</option>
               </select>
             </div>
@@ -574,15 +830,15 @@ export default function App() {
             <div className="filter-group">
               <label>👑 最佳人數：</label>
               <select value={bestPlayerFilter} onChange={(e) => setBestPlayerFilter(e.target.value)}>
-  <option value="all">不限</option>
-  <option value="2">最佳 2 人</option>
-  <option value="3">最佳 3 人</option>
-  <option value="4">最佳 4 人</option>
-  <option value="5">最佳 5 人</option>
-  <option value="6">最佳 6 人</option>
-  <option value="7">最佳 7 人</option>
-  <option value="8">最佳 8 人</option>
-</select>
+                <option value="all">不限</option>
+                <option value="2">最佳 2 人</option>
+                <option value="3">最佳 3 人</option>
+                <option value="4">最佳 4 人</option>
+                <option value="5">最佳 5 人</option>
+                <option value="6">最佳 6 人</option>
+                <option value="7">最佳 7 人</option>
+                <option value="8">最佳 8 人</option>
+              </select>
             </div>
 
             <div className="filter-group">
@@ -603,7 +859,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* 分類按鈕列 */}
           <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '14px 0 10px 0' }}>
             {categories.map(cat => (
               <button 
@@ -629,7 +884,6 @@ export default function App() {
             ))}
           </div>
 
-          {/* 標籤列（支援複選） */}
           {allTags.length > 0 && (
             <div className="tag-bar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '6px 0', alignItems: 'center' }}>
               <button 
@@ -685,7 +939,6 @@ export default function App() {
           <div className="game-grid">
             {filteredGames.map((game) => (
               <article className="game-card" key={game.id} onClick={() => setViewDetailGame(game)}>
-                {/* 只有在站長登入模式下才顯示編輯與刪除鈕 */}
                 {isAdmin && (
                   <div className="card-actions">
                     <button type="button" className="edit-btn" onClick={(e) => handleOpenEditModal(e, game)}>✏️</button>
@@ -699,7 +952,20 @@ export default function App() {
                   ) : (
                     <span className="cover-emoji">{game.emoji}</span>
                   )}
-                  {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
+                  {/* 加入 whiteSpace: 'nowrap' 與 display 保證標籤絕對不分行 */}
+                  {game.isExpansion && (
+                    <span 
+                      className="expansion-badge" 
+                      style={{ 
+                        whiteSpace: 'nowrap', 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '4px' 
+                      }}
+                    >
+                      🧩 擴充
+                    </span>
+                  )}
                   <span className="category-tag">{game.category}</span>
                 </div>
 
@@ -826,7 +1092,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal */}
+      {/* 詳細資料 Modal (含主遊戲/擴充雙向跳轉) */}
       {viewDetailGame && (
         <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -857,6 +1123,34 @@ export default function App() {
               <span>⭐ 評分：{viewDetailGame.rating} 分</span>
             </div>
 
+            {/* 若當前遊戲是擴充包，提供回到本體主遊戲的跳轉捷徑 */}
+            {viewDetailGame.isExpansion && viewDetailGame.parentId && (
+              <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>
+                  🧩 此為擴充包，需搭配主遊戲遊玩
+                </span>
+                {games.find(g => g.id === viewDetailGame.parentId) && (
+                  <button
+                    type="button"
+                    onClick={() => setViewDetailGame(games.find(g => g.id === viewDetailGame.parentId))}
+                    style={{
+                      border: 'none',
+                      background: '#F59E0B',
+                      color: '#fff',
+                      padding: '5px 12px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.82rem',
+                      fontWeight: 'bold',
+                      boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)'
+                    }}
+                  >
+                    📦 查看主遊戲：{games.find(g => g.id === viewDetailGame.parentId).name} →
+                  </button>
+                )}
+              </div>
+            )}
+
             {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.length > 0 && (
               <div style={{ margin: '8px 0', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {viewDetailGame.tags.map(t => (
@@ -873,14 +1167,34 @@ export default function App() {
               </a>
             )}
 
+            {/* 若當前遊戲是主遊戲，附屬擴充包支援點擊直接切換至擴充詳情 */}
             {games.filter(g => g.parentId === viewDetailGame.id).length > 0 && (
               <div className="expansion-list" style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                <h4>🧩 附屬擴充包：</h4>
-                <ul>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem' }}>🧩 附屬擴充包（點擊查看詳情）：</h4>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {games.filter(g => g.parentId === viewDetailGame.id).map(exp => (
-                    <li key={exp.id}>✨ {exp.name}</li>
+                    <button
+                      key={exp.id}
+                      type="button"
+                      onClick={() => setViewDetailGame(exp)}
+                      style={{
+                        border: '1px solid #CBD5E1',
+                        background: 'var(--bg-card, #fff)',
+                        color: 'inherit',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.82rem',
+                        fontWeight: '500',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      ✨ {exp.name} →
+                    </button>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
