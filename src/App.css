@@ -219,3 +219,61 @@ footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--bord
   display: block !important;
   margin: 0 auto 1.5rem auto !important;
 }
+/* ===== 頂部功能按鈕（暗黑模式 / 站長登入）立體膠囊風 ===== */
+.theme-btn,
+.admin-login-btn,
+.header-actions button,
+header button {
+  border-radius: 50px !important; /* 膠囊圓角 */
+  padding: 0.55rem 1.1rem !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important; /* 立體浮雕光澤 */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+.theme-btn:hover,
+.admin-login-btn:hover,
+.header-actions button:hover,
+header button:hover {
+  transform: translateY(-2px) scale(1.02) !important; /* 懸浮微浮起 */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22) !important;
+}
+
+.theme-btn:active,
+.admin-login-btn:active,
+.header-actions button:active,
+header button:active {
+  transform: translateY(1px) !important; /* 點擊按壓反饋 */
+}
+
+/* ===== 分類按鈕／標籤 立體圓潤風 ===== */
+.category-btn,
+.categories button,
+.filter-tabs button,
+.tag-btn {
+  border-radius: 12px !important; /* 微圓角 */
+  padding: 0.5rem 1rem !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.category-btn:hover,
+.categories button:hover,
+.filter-tabs button:hover,
+.tag-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 選取中的分類按鈕高亮與深立體感 */
+.category-btn.active,
+.categories button.active,
+.filter-tabs button.active {
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid transparent !important;
+}
