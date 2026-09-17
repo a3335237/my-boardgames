@@ -248,32 +248,52 @@ header button:active {
   transform: translateY(1px) !important; /* 點擊按壓反饋 */
 }
 
-/* ===== 分類按鈕／標籤 立體圓潤風 ===== */
-.category-btn,
-.categories button,
-.filter-tabs button,
-.tag-btn {
-  border-radius: 12px !important; /* 微圓角 */
-  padding: 0.5rem 1rem !important;
+/* ===== 搜尋列下方的分類標籤按鈕美化 ===== */
+/* 直接抓取主要內容區內的所有 button，強制洗掉預設方框 */
+main button,
+.search-container + div button,
+.search-box + div button,
+.filters button,
+.category-filter button {
+  all: unset; /* 完全洗掉瀏覽器預設的灰色方框與邊框 */
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* 膠囊造型與間距 */
+  border-radius: 9999px !important;
+  padding: 8px 18px !important;
+  margin: 4px !important;
+  font-size: 0.9rem !important;
   font-weight: 500 !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.2s ease !important;
   cursor: pointer !important;
+  
+  /* 柔和輕奢色調 */
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-.category-btn:hover,
-.categories button:hover,
-.filter-tabs button:hover,
-.tag-btn:hover {
+/* 滑鼠懸浮微浮起 */
+main button:hover,
+.search-container + div button:hover,
+.filters button:hover {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* 選取中的分類按鈕高亮與深立體感 */
-.category-btn.active,
-.categories button.active,
-.filter-tabs button.active {
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
-  border: 1px solid transparent !important;
+/* 點選啟動時（Active）立體感與漸層藍紫色高亮 */
+main button.active,
+.filters button.active,
+.category-filter button.active {
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
+  transform: translateY(-1px) !important;
 }

@@ -74,7 +74,9 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme_mode') === 'dark')
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('全部')
-  const [selectedTag, setSelectedTag] = useState('')
+  
+  // 支援多選（複選）標籤狀態陣列
+  const [selectedTags, setSelectedTags] = useState([])
 
   const [playerFilter, setPlayerFilter] = useState('all')
   const [bestPlayerFilter, setBestPlayerFilter] = useState('all')
@@ -180,6 +182,19 @@ export default function App() {
     return parseInt(cleanStr, 10) === targetNum
   }
 
+  // 標籤複選切換邏輯
+  function handleTagToggle(tag) {
+    if (tag === '') {
+      setSelectedTags([])
+      return
+    }
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag) 
+        : [...prev, tag]
+    )
+  }
+
   const filteredGames = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     let result = games.filter((game) => {
@@ -189,7 +204,11 @@ export default function App() {
         (game.englishName && game.englishName.toLowerCase().includes(keyword))
 
       const matchCategory = category === '全部' || game.category === category
-      const matchTag = !selectedTag || (Array.isArray(game.tags) && game.tags.includes(selectedTag))
+
+      // 複選標籤比對：需滿足所有選取的標籤
+      const matchTags =
+        selectedTags.length === 0 ||
+        (Array.isArray(game.tags) && selectedTags.every(t => game.tags.includes(t)))
 
       let matchPlayers = true
       if (playerFilter !== 'all') {
@@ -208,7 +227,7 @@ export default function App() {
         matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
       }
 
-      return matchSearch && matchCategory && matchTag && matchPlayers && matchBestPlayers && matchTime
+      return matchSearch && matchCategory && matchTags && matchPlayers && matchBestPlayers && matchTime
     })
 
     return result.sort((a, b) => {
@@ -218,21 +237,31 @@ export default function App() {
       if (sortBy === 'newest') return b.id - a.id
       return 0
     })
-  }, [games, search, category, selectedTag, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy])
+  }, [games, search, category, selectedTags, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy])
 
+  // 升級版「幫我選一款」：支援回退與置中彈窗
   function chooseRandomWithAnimation() {
-    if (filteredGames.length === 0) return
+    const pool = filteredGames.length > 0 ? filteredGames : games
+
+    if (pool.length === 0) {
+      alert('⚠️ 資料庫中尚無任何桌遊資料！')
+      return
+    }
+
     setIsSpinning(true)
+    // 立即打開彈窗展示轉盤過程
+    setRandomGame(pool[Math.floor(Math.random() * pool.length)])
+
     let count = 0
     const interval = setInterval(() => {
-      const index = Math.floor(Math.random() * filteredGames.length)
-      setRandomGame(filteredGames[index])
+      const index = Math.floor(Math.random() * pool.length)
+      setRandomGame(pool[index])
       count++
-      if (count >= 15) {
+      if (count >= 16) {
         clearInterval(interval)
         setIsSpinning(false)
       }
-    }, 100)
+    }, 80)
   }
 
   function handleExportJSON() {
@@ -545,12 +574,15 @@ export default function App() {
             <div className="filter-group">
               <label>👑 最佳人數：</label>
               <select value={bestPlayerFilter} onChange={(e) => setBestPlayerFilter(e.target.value)}>
-                <option value="all">不限</option>
-                <option value="2">最佳 2 人</option>
-                <option value="4">最佳 4 人</option>
-                <option value="6">最佳 6 人</option>
-                <option value="8">最佳 8 人</option>
-              </select>
+  <option value="all">不限</option>
+  <option value="2">最佳 2 人</option>
+  <option value="3">最佳 3 人</option>
+  <option value="4">最佳 4 人</option>
+  <option value="5">最佳 5 人</option>
+  <option value="6">最佳 6 人</option>
+  <option value="7">最佳 7 人</option>
+  <option value="8">最佳 8 人</option>
+</select>
             </div>
 
             <div className="filter-group">
@@ -571,45 +603,80 @@ export default function App() {
             </div>
           </div>
 
-          <div className="category-bar">
+          {/* 分類按鈕列 */}
+          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '14px 0 10px 0' }}>
             {categories.map(cat => (
               <button 
                 key={cat} 
+                type="button"
                 className={`cat-btn ${category === cat ? 'active' : ''}`}
                 onClick={() => setCategory(cat)}
+                style={{
+                  borderRadius: '12px',
+                  padding: '7px 16px',
+                  fontSize: '0.92rem',
+                  fontWeight: '600',
+                  border: category === cat ? '1px solid #4F46E5' : '1px solid #E2E8F0',
+                  backgroundColor: category === cat ? '#4F46E5' : 'var(--bg-card, #ffffff)',
+                  color: category === cat ? '#ffffff' : 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: category === cat ? '0 4px 12px rgba(79, 70, 229, 0.3)' : '0 2px 4px rgba(0,0,0,0.03)',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 {cat}
               </button>
             ))}
           </div>
 
+          {/* 標籤列（支援複選） */}
           {allTags.length > 0 && (
-            <div className="tag-bar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '8px 0', marginTop: '8px' }}>
+            <div className="tag-bar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '6px 0', alignItems: 'center' }}>
               <button 
-                className={`tag-chip ${selectedTag === '' ? 'active' : ''}`}
-                onClick={() => setSelectedTag('')}
-                style={{ padding: '4px 12px', borderRadius: '16px', border: '1px solid #ccc', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                type="button"
+                className={`tag-chip ${selectedTags.length === 0 ? 'active' : ''}`}
+                onClick={() => handleTagToggle('')}
+                style={{ 
+                  padding: '5px 14px', 
+                  borderRadius: '20px', 
+                  border: selectedTags.length === 0 ? '1px solid #10B981' : '1px solid #D1D5DB', 
+                  cursor: 'pointer', 
+                  whiteSpace: 'nowrap',
+                  fontSize: '0.85rem',
+                  fontWeight: selectedTags.length === 0 ? '600' : 'normal',
+                  backgroundColor: selectedTags.length === 0 ? '#10B981' : 'transparent',
+                  color: selectedTags.length === 0 ? '#fff' : 'inherit',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 🏷️ 全部標籤
               </button>
-              {allTags.map(tag => (
-                <button
-                  key={tag}
-                  className={`tag-chip ${selectedTag === tag ? 'active' : ''}`}
-                  onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
-                  style={{ 
-                    padding: '4px 12px', 
-                    borderRadius: '16px', 
-                    border: '1px solid #ccc', 
-                    cursor: 'pointer', 
-                    whiteSpace: 'nowrap',
-                    backgroundColor: selectedTag === tag ? '#4F46E5' : 'transparent',
-                    color: selectedTag === tag ? '#fff' : 'inherit'
-                  }}
-                >
-                  #{tag}
-                </button>
-              ))}
+              {allTags.map(tag => {
+                const isSelected = selectedTags.includes(tag)
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`tag-chip ${isSelected ? 'active' : ''}`}
+                    onClick={() => handleTagToggle(tag)}
+                    style={{ 
+                      padding: '5px 13px', 
+                      borderRadius: '20px', 
+                      border: isSelected ? '1px solid #4F46E5' : '1px solid #E2E8F0', 
+                      cursor: 'pointer', 
+                      whiteSpace: 'nowrap',
+                      fontSize: '0.85rem',
+                      fontWeight: isSelected ? '600' : 'normal',
+                      backgroundColor: isSelected ? '#4F46E5' : 'rgba(0,0,0,0.03)',
+                      color: isSelected ? '#fff' : 'inherit',
+                      boxShadow: isSelected ? '0 3px 10px rgba(79, 70, 229, 0.25)' : 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    #{tag} {isSelected && '✓'}
+                  </button>
+                )
+              })}
             </div>
           )}
         </section>
@@ -677,23 +744,86 @@ export default function App() {
         </section>
       </main>
 
-      {/* 隨機挑選結果 Modal */}
+      {/* 隨機挑選結果 Modal (置中浮動彈窗) */}
       {randomGame && (
-        <section className={`random-result ${isSpinning ? 'animating' : ''}`}>
-          <div className="random-icon">
-            {randomGame.imageUrl ? (
-              <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
-            ) : (
-              randomGame.emoji
-            )}
+        <div className="modal-overlay" onClick={() => !isSpinning && setRandomGame(null)}>
+          <div 
+            className="detail-modal-content" 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ textAlign: 'center', maxWidth: '420px', padding: '2rem', borderRadius: '20px' }}
+          >
+            <button 
+              className="close-detail-btn" 
+              onClick={() => setRandomGame(null)}
+              disabled={isSpinning}
+            >
+              ✕
+            </button>
+
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#6366F1', letterSpacing: '1px' }}>
+              {isSpinning ? '🎡 命運之輪旋轉中...' : '🎯 命中注定就是它！'}
+            </span>
+
+            <div style={{ margin: '1.2rem auto', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.04)', borderRadius: '16px', overflow: 'hidden' }}>
+              {randomGame.imageUrl ? (
+                <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <span style={{ fontSize: '4.5rem' }}>{randomGame.emoji || '🎲'}</span>
+              )}
+            </div>
+
+            <h2 style={{ fontSize: '1.4rem', margin: '0.5rem 0' }}>{randomGame.name}</h2>
+            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.2rem' }}>{randomGame.englishName}</p>
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '0.85rem', color: '#555', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+              <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
+              <span>👑 最佳 {randomGame.bestPlayers || randomGame.maxPlayers}人</span>
+              <span>⏱️ {randomGame.time} 分鐘</span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button 
+                type="button" 
+                onClick={chooseRandomWithAnimation} 
+                disabled={isSpinning}
+                style={{
+                  background: '#4F46E5',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '25px',
+                  padding: '10px 22px',
+                  fontWeight: 'bold',
+                  cursor: isSpinning ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+                }}
+              >
+                {isSpinning ? '抽取中...' : '🎲 再抽一次'}
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => {
+                  const target = randomGame
+                  setRandomGame(null)
+                  setViewDetailGame(target)
+                }}
+                disabled={isSpinning}
+                style={{
+                  background: '#10B981',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '25px',
+                  padding: '10px 22px',
+                  fontWeight: 'bold',
+                  cursor: isSpinning ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                📖 查看詳情
+              </button>
+            </div>
           </div>
-          <div>
-            <span>🎯 幸運抽中</span>
-            <h2>{randomGame.name}</h2>
-            <p>{randomGame.englishName} · {randomGame.minPlayers}–{randomGame.maxPlayers}人 (👑最佳 {randomGame.bestPlayers || randomGame.maxPlayers}人) · {randomGame.time} 分鐘</p>
-          </div>
-          <button type="button" onClick={chooseRandomWithAnimation} disabled={isSpinning}>再抽一次</button>
-        </section>
+        </div>
       )}
 
       {/* 詳細資料 Modal */}
@@ -703,7 +833,18 @@ export default function App() {
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
             
             {viewDetailGame.imageUrl && (
-              <img src={viewDetailGame.imageUrl} alt={viewDetailGame.name} style={{ width: '100%', maxHeight: '250px', objectFit: 'cover', borderRadius: '12px', marginBottom: '12px' }} />
+              <img 
+                src={viewDetailGame.imageUrl} 
+                alt={viewDetailGame.name} 
+                style={{ 
+                  width: '100%', 
+                  maxHeight: '380px', 
+                  objectFit: 'contain', 
+                  borderRadius: '12px', 
+                  marginBottom: '14px',
+                  display: 'block'
+                }} 
+              />
             )}
 
             <h2>{viewDetailGame.emoji} {viewDetailGame.name}</h2>
