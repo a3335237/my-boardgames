@@ -297,3 +297,23 @@ main button.active,
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35) !important;
   transform: translateY(-1px) !important;
 }
+/* ===== 修復編輯彈窗寬度與移除水平拉桿 ===== */
+.modal-content {
+  width: 95% !important;
+  max-width: 680px !important; /* 寬度加大，欄位不擁擠 */
+  overflow-x: hidden !important; /* 強制移除左右滾動軸 */
+  box-sizing: border-box !important;
+}
+
+.modal-content form,
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 確保三欄輸入框在寬度不足時自動壓縮或換行 */
+.form-group[style*="gridTemplateColumns"] {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+}
