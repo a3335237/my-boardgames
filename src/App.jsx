@@ -495,17 +495,27 @@ export default function App() {
       img.onload = () => {
         const canvas = document.createElement('canvas')
         const ctx = canvas.getContext('2d')
-        const size = 400
-        canvas.width = size
-        canvas.height = size
+        const maxSize = 600
+        let width = img.width
+        let height = img.height
 
-        const minDim = Math.min(img.width, img.height)
-        const sx = (img.width - minDim) / 2
-        const sy = (img.height - minDim) / 2
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width)
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height)
+            height = maxSize
+          }
+        }
 
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size)
-        const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85)
-        setFormData(prev => ({ ...prev, imageUrl: croppedBase64 }))
+        canvas.width = width
+        canvas.height = height
+        ctx.drawImage(img, 0, 0, width, height)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85)
+        setFormData(prev => ({ ...prev, imageUrl: compressedBase64 }))
       }
     }
     reader.readAsDataURL(file)
@@ -688,105 +698,59 @@ export default function App() {
       </header>
 
       <main>
-        {/* 橫幅區域 */}
-        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'center' }}>
+        {/* 🌟 橫幅區域：鎖定 alignItems: 'flex-start'，左邊永遠不動 🌟 */}
+        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', padding: '0 8px' }}>
             <div>
               <p className="eyebrow" style={{ margin: '0 0 6px 0' }}>MY BOARD GAME LIBRARY</p>
               <h1 style={{ margin: 0, lineHeight: 1.25 }}>今天聚會，<br /><span style={{ color: '#4F46E5' }}>玩哪一款？</span></h1>
             </div>
             
-            {/* 統計篩選膠囊：實心飽和色彩切換，極度明顯，文字純白不遮擋 */}
-            <div style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0', userSelect: 'none' }}>
-              {/* 總收藏量按鈕 */}
+            {/* 統計篩選膠囊 */}
+            <div style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0' }}>
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
-                style={{
-                  background: expansionFilter === 'all' ? '#4F46E5' : 'var(--bg-card, #ffffff)',
-                  border: expansionFilter === 'all' ? '2px solid #4F46E5' : '2px solid rgba(0,0,0,0.08)',
-                  padding: '8px 16px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  boxSizing: 'border-box',
-                  boxShadow: expansionFilter === 'all' ? '0 6px 16px rgba(79, 70, 229, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
-                  transition: 'all 0.18s ease'
-                }}
+                className={`stat-filter-btn ${expansionFilter === 'all' ? 'active-all' : ''}`}
               >
                 <span style={{ fontSize: '20px' }}>📦</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: expansionFilter === 'all' ? '#E0E7FF' : '#64748B', fontWeight: 'bold' }}>總收藏量</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'all' ? '#FFFFFF' : '#4F46E5' }}>
-                    {totalCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'all' ? '#E0E7FF' : '#64748B' }}>款</span>
+                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>總收藏量</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#4F46E5' }}>
+                    {totalCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
 
-              {/* 主遊戲按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}
-                style={{
-                  background: expansionFilter === 'main' ? '#10B981' : 'var(--bg-card, #ffffff)',
-                  border: expansionFilter === 'main' ? '2px solid #10B981' : '2px solid rgba(0,0,0,0.08)',
-                  padding: '8px 16px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  boxSizing: 'border-box',
-                  boxShadow: expansionFilter === 'main' ? '0 6px 16px rgba(16, 185, 129, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
-                  transition: 'all 0.18s ease'
-                }}
+                className={`stat-filter-btn ${expansionFilter === 'main' ? 'active-main' : ''}`}
               >
                 <span style={{ fontSize: '20px' }}>🎮</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: expansionFilter === 'main' ? '#D1FAE5' : '#64748B', fontWeight: 'bold' }}>主遊戲</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'main' ? '#FFFFFF' : '#10B981' }}>
-                    {mainCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'main' ? '#D1FAE5' : '#64748B' }}>款</span>
+                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>主遊戲</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#10B981' }}>
+                    {mainCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
 
-              {/* 擴充包按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion'); }}
-                style={{
-                  background: expansionFilter === 'expansion' ? '#F59E0B' : 'var(--bg-card, #ffffff)',
-                  border: expansionFilter === 'expansion' ? '2px solid #F59E0B' : '2px solid rgba(0,0,0,0.08)',
-                  padding: '8px 16px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  boxSizing: 'border-box',
-                  boxShadow: expansionFilter === 'expansion' ? '0 6px 16px rgba(245, 158, 11, 0.35)' : '0 2px 5px rgba(0,0,0,0.04)',
-                  transition: 'all 0.18s ease'
-                }}
+                className={`stat-filter-btn ${expansionFilter === 'expansion' ? 'active-expansion' : ''}`}
               >
                 <span style={{ fontSize: '20px' }}>🧩</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: expansionFilter === 'expansion' ? '#FEF3C7' : '#64748B', fontWeight: 'bold' }}>擴充包</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: expansionFilter === 'expansion' ? '#FFFFFF' : '#D97706' }}>
-                    {expansionCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: expansionFilter === 'expansion' ? '#FEF3C7' : '#64748B' }}>款</span>
+                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>擴充包</div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#D97706' }}>
+                    {expansionCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
             </div>
 
-            {/* 核心抽卡按鈕 */}
             <button 
               type="button" 
               className={`random-button ${isShuffling ? 'spinning' : ''}`} 
@@ -1300,7 +1264,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* 3D 抽卡立體翻面彈窗：圖片容器高度自適應，不再裁切頂部與底部 */}
+      {/* 3D 抽卡立體翻面彈窗 */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
@@ -1335,18 +1299,17 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="card-face card-face-front" style={{ padding: '12px 10px' }}>
-                  {/* 🌟 修正：放寬圖片高度限制並採用 contain，避免任何盒裝比例被裁切 🌟 */}
-                  <div style={{ width: '100%', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
+                <div className="card-face card-face-front" style={{ padding: '12px 10px', height: '100%' }}>
+                  <div style={{ flex: 1, width: '100%', minHeight: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
                     {randomGame.imageUrl ? (
-                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
                     ) : (
                       <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '1.2rem', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{randomGame.name}</h3>
-                  <p style={{ color: '#888', fontSize: '0.8rem', margin: '0 0 8px 0' }}>{randomGame.englishName}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap' }}>
+                  <h3 style={{ fontSize: '1.2rem', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
+                  <p style={{ color: '#888', fontSize: '0.8rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap', width: '100%', marginBottom: '4px' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
                     <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
@@ -1636,7 +1599,7 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>或 上傳圖片 (自動 1:1 裁切)</label>
+                <label>或 上傳圖片 (自動縮放不裁切)</label>
                 <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
               </div>
 
