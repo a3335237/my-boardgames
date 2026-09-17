@@ -730,19 +730,20 @@ export default function App() {
               </>
             )}
 
-            {/* 子分頁二：計分 / 血量小助手 */}
+            {/* 子分頁二：計分 / 血量（快速重設已改為：歸零 / 10血 / 20血） */}
             {widgetTab === 'scoreboard' && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontSize: '0.8rem', color: '#666' }}>快速重設：</span>
                   <div style={{ display: 'flex', gap: '4px' }}>
-                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>0分</button>
+                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>歸零</button>
+                    <button type="button" onClick={() => resetAllScores(10)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>10血</button>
                     <button type="button" onClick={() => resetAllScores(20)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>20血</button>
-                    <button type="button" onClick={() => resetAllScores(40)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>40血</button>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px', marginBottom: '10px' }}>
+                {/* 玩家分數列表：完全展開無內滾拉桿 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
                   {sharedPlayers.map(p => (
                     <div 
                       key={p.id}
@@ -952,7 +953,6 @@ export default function App() {
                   ) : (
                     <span className="cover-emoji">{game.emoji}</span>
                   )}
-                  {/* 加入 whiteSpace: 'nowrap' 與 display 保證標籤絕對不分行 */}
                   {game.isExpansion && (
                     <span 
                       className="expansion-badge" 
@@ -1010,7 +1010,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* 隨機挑選結果 Modal (置中浮動彈窗) */}
+      {/* 隨機挑選結果 Modal */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isSpinning && setRandomGame(null)}>
           <div 
@@ -1123,7 +1123,6 @@ export default function App() {
               <span>⭐ 評分：{viewDetailGame.rating} 分</span>
             </div>
 
-            {/* 若當前遊戲是擴充包，提供回到本體主遊戲的跳轉捷徑 */}
             {viewDetailGame.isExpansion && viewDetailGame.parentId && (
               <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 <span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>
@@ -1167,7 +1166,6 @@ export default function App() {
               </a>
             )}
 
-            {/* 若當前遊戲是主遊戲，附屬擴充包支援點擊直接切換至擴充詳情 */}
             {games.filter(g => g.parentId === viewDetailGame.id).length > 0 && (
               <div className="expansion-list" style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
                 <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem' }}>🧩 附屬擴充包（點擊查看詳情）：</h4>
