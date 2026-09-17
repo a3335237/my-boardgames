@@ -208,3 +208,14 @@ body {
 .cancel-btn { background: var(--border-color); color: var(--text-main); border: none; padding: 0.5rem 1.2rem; border-radius: 8px; cursor: pointer; }
 
 footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; color: var(--text-light); }
+/* 讓彈窗內的所有圖片完整展示，不裁切、不變形 */
+.detail-modal-content img,
+.modal-content img {
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: 420px !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto 1.5rem auto !important;
+}
