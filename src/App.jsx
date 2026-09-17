@@ -4,8 +4,42 @@ import { supabase } from './supabaseClients'
 
 const initialGames = [
   { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.0, complexity: 1.5, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', isExpansion: false, parentId: null },
-  { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.1, complexity: 1.2, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\.2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 30, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 8.6, complexity: 2.4, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', isExpansion: false, parentId: null }
+  { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.1, complexity: 1.2, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 3, name: '機密代號：裡應外合', englishName: 'Codenames: Duet', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 25, category: '合作', rating: 8.3, complexity: 2.0, emoji: '🕵️', imageUrl: '', tags: ['雙人首選', '聯想燒腦'], description: '雙人合作版的機密代號，透過一個詞彙給予提示，找出所有特務。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 4, name: '格格不入', englishName: 'Blokus', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '策略', rating: 7.8, complexity: 1.8, emoji: '🟩', imageUrl: '', tags: ['抽象棋類', '易學難精'], description: '經典的版塊放置遊戲，盡可能把自己的方塊全部拼上棋盤！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 5, name: '璀璨寶石：漫威版', englishName: 'Splendor Marvel', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '策略', rating: 8.4, complexity: 2.2, emoji: '💎', imageUrl: '', tags: ['引擎建構', '漫威IP'], description: '招募超級英雄，收集無限寶石，搶先完成無限手套！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 6, name: '炸彈競技場：口袋版', englishName: 'Bomb Arena', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '陣營', rating: 7.5, complexity: 1.3, emoji: '💣', imageUrl: '', tags: ['快節奏', '互相傷害'], description: '炸彈隨時爆發，利用手中的牌轉移炸彈或陷害對手。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 7, name: '三千世界鴉殺盡', englishName: 'Crow Killers', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '派對', rating: 7.6, complexity: 1.5, emoji: '🦅', imageUrl: '', tags: ['日系畫風', '心機'], description: '充滿日式風情的輕度心理戰遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 8, name: '鴿爆了', englishName: 'Pigeon Explode', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 20, category: '派對', rating: 7.4, complexity: 1.0, emoji: '🕊️', imageUrl: '', tags: ['派對', '搞笑'], description: '充滿歡笑與意外的派對卡牌遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 9, name: '你是不是沒朋友', englishName: 'No Friends', minPlayers: 1, maxPlayers: 5, bestPlayers: '3-4', time: 25, category: '派對', rating: 7.3, complexity: 1.0, emoji: '😜', imageUrl: '', tags: ['自嘲搞笑', '單人可玩'], description: '適合邊聊天邊玩的邊緣人派對桌遊。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 10, name: '無限手套：情書', englishName: 'Infinity Gauntlet', minPlayers: 2, maxPlayers: 6, bestPlayers: '6', time: 15, category: '陣營', rating: 8.0, complexity: 1.5, emoji: '🥊', imageUrl: '', tags: ['1對多', '陣營對決'], description: '一名玩家扮演薩諾斯，其他人扮演復仇者聯盟進行對決！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 11, name: '爆炸貓桌遊版', englishName: 'Exploding Kittens', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 7.8, complexity: 1.1, emoji: '💥', imageUrl: '', tags: ['心機抽牌', '新手推薦'], description: '像俄羅斯輪盤一樣的抽牌遊戲，抽到爆炸貓就淘汰！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 12, name: '爆炸貓 + 黑洞貓擴充', englishName: 'Exploding Kittens: Streaking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 8.0, complexity: 1.3, emoji: '🐱', imageUrl: '', tags: ['擴充版', '更多玩法'], description: '加入了黑洞貓與更多特殊功能卡，讓遊戲更混亂更有趣！', videoUrl: '', isExpansion: true, parentId: 11 },
+  { id: 13, name: '德國蟑螂 皇家版', englishName: 'Cockroach Poker Royal', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-5', time: 20, category: '吹牛', rating: 7.9, complexity: 1.2, emoji: '🪲', imageUrl: '', tags: ['經典吹牛', '看穿心機'], description: '看著對方的眼睛吹牛，皇家版多了皇冠動物與特殊卡牌！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 14, name: '字字轉機', englishName: 'Anomia', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 25, category: '派對', rating: 7.7, complexity: 1.1, emoji: '🔤', imageUrl: '', tags: ['反應力', '聯想力'], description: '符號對對碰！當卡牌符號相同時，必須搶先喊出對方卡牌類別的單字！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 15, name: '夜市人蔘', englishName: 'Night Market', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 30, category: '輕策略', rating: 7.8, complexity: 1.8, emoji: '🍢', imageUrl: '', tags: ['台灣在地', '美食擺攤'], description: '體驗台灣夜市擺攤樂趣！收集食材組合出美味的夜市小吃。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 16, name: '搞怪運動會', englishName: 'Wacky Sports', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 7.2, complexity: 1.0, emoji: '🏅', imageUrl: '', tags: ['歡樂動作', '派對爆笑'], description: '各種搞怪刺激的運動會項目，考驗大家的反應與肢體協調！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 17, name: '情書：六人版', englishName: 'Love Letter: Premium', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 20, category: '輕策略', rating: 8.0, complexity: 1.4, emoji: '💌', imageUrl: '', tags: ['經典推理', '支援6人'], description: '手牌只有一張！利用角色能力猜測他人手牌並將情書送到公主手中。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 18, name: '政變疑雲', englishName: 'Coup', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '吹牛', rating: 8.1, complexity: 1.5, emoji: '👑', imageUrl: '', tags: ['吹牛陣營', '快節奏'], description: '即使你沒有那個角色的能力，也可以假裝有！看誰能吹牛到最後。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 19, name: '墨敵賽', englishName: 'Modisai', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 20, category: '輕策略', rating: 7.3, complexity: 1.6, emoji: '🐙', imageUrl: '', tags: ['卡牌對決', '簡單易學'], description: '充滿戰略趣味的卡牌對決遊戲，運用墨水敵人打敗對手！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 20, name: '吸爆鬆餅', englishName: 'Pancake Stack', minPlayers: 2, maxPlayers: 5, time: 15, bestPlayers: '4-5', category: '派對', rating: 7.4, complexity: 1.1, emoji: '🥞', imageUrl: '', tags: ['反應搶答', '輕鬆搞笑'], description: '疊高鬆餅吸爆對手！節奏快速且充滿歡笑的輕度派對遊戲。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 21, name: '犯人在跳舞', englishName: 'Criminal Dance', minPlayers: 3, maxPlayers: 8, bestPlayers: '6-8', time: 15, category: '陣營', rating: 8.0, complexity: 1.2, emoji: '🕺', imageUrl: '', tags: ['手牌交換', '新手必玩'], description: '犯人卡會在大家手中不斷轉移，偵探能否在遊戲結束前抓到犯人？', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 22, name: 'Who怕Who !?', englishName: 'Who Pa Who', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '派對', rating: 7.3, complexity: 1.1, emoji: '👊', imageUrl: '', tags: ['互相傷害', '熱鬧歡樂'], description: '充滿挑釁與互踩樂趣的歡樂派對卡牌遊戲！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 23, name: '神吐槽', englishName: 'God Reaction', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-8', time: 25, category: '派對', rating: 7.8, complexity: 1.2, emoji: '🗣️', imageUrl: '', tags: ['吐槽搞笑', '文字遊戲'], description: '面對各種奇葩情境，給出最具創意與爆點的神吐槽！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 24, name: '驚爆倫敦', englishName: 'Time Bomb', minPlayers: 4, maxPlayers: 8, bestPlayers: '6-8', time: 20, category: '陣營', rating: 8.2, complexity: 1.6, emoji: '💣', imageUrl: '', tags: ['剪線炸彈', '陣營心機'], description: '福爾摩斯對決莫里亞蒂！剪對線解除炸彈，還是不小心引爆大樓？', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 25, name: '世界上有兩種人', englishName: 'Two Kinds of People', minPlayers: 2, maxPlayers: 8, bestPlayers: '5-8', time: 20, category: '派對', rating: 7.6, complexity: 1.0, emoji: '☯️', imageUrl: '', tags: ['價值觀對立', '聊天神開場'], description: '香菜吃不吃？折摺還是捲牙膏？迅速了解朋友隱藏性格的派對遊戲！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 26, name: '瞎掰王：看圖掰', englishName: 'Fake That Picture', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.1, complexity: 1.4, emoji: '🖼️', imageUrl: '', tags: ['看圖說故事', '胡說八道'], description: '看著怪異圖片發揮創意一本正經地胡說八道，騙過所有玩家！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 27, name: '腦洞量表：沒有下限', englishName: 'Top Ten Uncensored', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.3, complexity: 1.2, emoji: '🔞', imageUrl: '', tags: ['限制級搞笑', '默契評估'], description: '腦洞量表無下限版！根據題目表演 1 到 10 的程度，越浮誇越好！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 28, name: '瞎掰王', englishName: 'Fake That', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.4, complexity: 1.5, emoji: '🤥', imageUrl: '', tags: ['派對熱門', '一本正經胡說八道'], description: '只有一個人知道冷知識真相，其他人要發揮演技瞎掰搶答！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 29, name: '腦洞量表', englishName: 'Top Ten', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.2, complexity: 1.2, emoji: '💡', imageUrl: '', tags: ['合作默契', '熱鬧歡樂'], description: '隊長提出題目，每個人根據手中的數字表演對應程度，讓隊長排序！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 30, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 8.6, complexity: 2.4, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', isExpansion: false, parentId: null },
+  { id: 31, name: '黃牌', englishName: 'Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.0, complexity: 1.0, emoji: '🟨', imageUrl: '', tags: ['填空搞笑', '黃暴歡樂'], description: '填空題卡牌遊戲，用最無厘頭或地獄的答案獲得裁判青睞！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 32, name: '試個好遊戲', englishName: 'We Didn\'t Playtest This At All', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.5, complexity: 1.0, emoji: '🃏', imageUrl: '', tags: ['超快節奏', '無厘頭勝負'], description: '幾秒鐘就能結束一局！規則隨時在變，抽到什麼牌就照著做。', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 33, name: '還試好遊戲', englishName: 'We Didn\'t Playtest This Either', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.5, complexity: 1.0, emoji: '🎴', imageUrl: '', tags: ['續作擴充', '無厘頭'], description: '《試個好遊戲》續作，更多荒繆搞笑的勝利條件與淘汰規則！', videoUrl: '', isExpansion: true, parentId: 32 },
+  { id: 34, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 8.1, complexity: 1.4, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 35, name: '梗圖黃牌', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.1, complexity: 1.1, emoji: '🖼️', imageUrl: '', tags: ['梗圖搭配', '地獄迷因'], description: '將熱門迷因梗圖搭配超欠扁台詞，製作出最搞笑的梗圖組合！', videoUrl: '', isExpansion: true, parentId: 31 },
+  { id: 36, name: '獵巫鎮 1692', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 8.4, complexity: 2.1, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', videoUrl: '', isExpansion: false, parentId: null },
+  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.2, complexity: 1.0, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', isExpansion: false, parentId: null }
 ]
 
 const ADMIN_PASSWORD = '1234'
@@ -35,7 +69,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme_mode') === 'dark')
-  const [soundEnabled, setSoundEnabled] = useState(true) // 🔊 聚會音效開關
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('全部')
   const [selectedTags, setSelectedTags] = useState([])
@@ -45,10 +79,10 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // 抽卡洗牌動畫狀態
+  // 🎴 3D 抽卡動畫狀態
   const [randomGame, setRandomGame] = useState(null)
-  const [isSpinning, setIsSpinning] = useState(false)
-  const [cardFlipAnim, setCardFlipAnim] = useState(false)
+  const [isRevealed, setIsRevealed] = useState(false) // 是否翻開為正面
+  const [isShuffling, setIsShuffling] = useState(false) // 是否正在洗牌抖動
 
   // 右側小工具分頁
   const [widgetTab, setWidgetTab] = useState('starter')
@@ -86,7 +120,7 @@ export default function App() {
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(emptyForm)
   const [viewDetailGame, setViewDetailGame] = useState(null)
-  const [detailTab, setDetailTab] = useState('info') // 'info' | 'cheatSheet'
+  const [detailTab, setDetailTab] = useState('info')
 
   const fileInputRef = useRef(null)
 
@@ -107,6 +141,23 @@ export default function App() {
       setGames(data.length > 0 ? data : initialGames)
     }
     setLoading(false)
+  }
+
+  // 📳 原生觸覺震動回饋 (Haptic Feedback)
+  function triggerHaptic(type = 'light') {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        if (type === 'light') {
+          navigator.vibrate(12) // 微按鍵感
+        } else if (type === 'medium') {
+          navigator.vibrate([20, 30, 20]) // 擲骰滾動感
+        } else if (type === 'heavy') {
+          navigator.vibrate([40, 50, 100]) // 翻牌/獲勝震撼感
+        }
+      } catch (e) {
+        // 忽視不支援環境
+      }
+    }
   }
 
   // 🔊 Web Audio API 音效產生器
@@ -137,15 +188,26 @@ export default function App() {
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
         osc.start(now)
         osc.stop(now + 0.2)
-      } else if (type === 'victory') {
-        osc.type = 'square'
-        osc.frequency.setValueAtTime(523.25, now) // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.1) // E5
-        osc.frequency.setValueAtTime(783.99, now + 0.2) // G5
-        gain.gain.setValueAtTime(0.2, now)
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45)
+      } else if (type === 'flip') {
+        // 洗牌卡片翻動聲
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(450, now)
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.12)
+        gain.gain.setValueAtTime(0.12, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
         osc.start(now)
-        osc.stop(now + 0.45)
+        osc.stop(now + 0.12)
+      } else if (type === 'victory') {
+        // 獲勝金光號角
+        osc.type = 'triangle'
+        osc.frequency.setValueAtTime(523.25, now) // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.12) // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.24) // G5
+        osc.frequency.setValueAtTime(1046.50, now + 0.36) // C6
+        gain.gain.setValueAtTime(0.25, now)
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6)
+        osc.start(now)
+        osc.stop(now + 0.6)
       } else if (type === 'alarm') {
         osc.type = 'sine'
         osc.frequency.setValueAtTime(880, now)
@@ -156,7 +218,7 @@ export default function App() {
         osc.stop(now + 0.6)
       }
     } catch (e) {
-      console.log('音效播放失敗')
+      // 忽略音效阻擋
     }
   }
 
@@ -169,11 +231,13 @@ export default function App() {
     } else if (timeLeft === 0 && timerRunning) {
       setTimerRunning(false)
       playSound('alarm')
+      triggerHaptic('heavy')
     }
     return () => clearInterval(interval)
   }, [timerRunning, timeLeft])
 
   function handleAdminToggle() {
+    triggerHaptic('light')
     if (isAdmin) {
       setIsAdmin(false)
       alert('🔒 已退出管理模式！')
@@ -190,6 +254,7 @@ export default function App() {
 
   function handleAddSharedPlayer(e) {
     if (e) e.preventDefault()
+    triggerHaptic('light')
     const name = inputPlayerName.trim()
     if (!name) return
     if (sharedPlayers.some(p => p.name === name)) return alert('玩家名稱已存在！')
@@ -199,6 +264,7 @@ export default function App() {
   }
 
   function handleRemoveSharedPlayer(idToRemove) {
+    triggerHaptic('light')
     if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！')
     setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove))
   }
@@ -207,31 +273,37 @@ export default function App() {
     if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
     setIsPickingStarter(true)
     setStarterWinner(null)
+    triggerHaptic('medium')
 
     let count = 0
     const interval = setInterval(() => {
       const tempIdx = Math.floor(Math.random() * sharedPlayers.length)
       setStarterWinner(sharedPlayers[tempIdx].name)
+      playSound('flip')
       count++
       if (count >= 16) {
         clearInterval(interval)
         setIsPickingStarter(false)
         playSound('victory')
+        triggerHaptic('heavy')
       }
     }, 80)
   }
 
   function changeScore(id, delta) {
+    triggerHaptic('light')
     setSharedPlayers(sharedPlayers.map(p => p.id === id ? { ...p, score: p.score + delta } : p))
   }
 
   function resetAllScores(val = 0) {
+    triggerHaptic('medium')
     setSharedPlayers(sharedPlayers.map(p => ({ ...p, score: val })))
   }
 
   function rollDice(sides = 6) {
     setIsRollingDice(true)
     playSound('dice')
+    triggerHaptic('medium')
     let count = 0
     const interval = setInterval(() => {
       const temp = Math.floor(Math.random() * sides) + 1
@@ -240,6 +312,7 @@ export default function App() {
       if (count >= 10) {
         clearInterval(interval)
         setIsRollingDice(false)
+        triggerHaptic('light')
       }
     }, 60)
   }
@@ -248,7 +321,8 @@ export default function App() {
     if (isFlippingCoin) return
     setIsFlippingCoin(true)
     playSound('coin')
-    setCoinResult('🪙 洗牌旋轉中...')
+    triggerHaptic('medium')
+    setCoinResult('🪙 翻轉中...')
     const nextDegree = coinDegree + 720 + (Math.random() < 0.5 ? 0 : 180)
     setCoinDegree(nextDegree)
 
@@ -256,10 +330,12 @@ export default function App() {
       const outcome = (nextDegree % 360 === 0) ? '🪙 正面（人頭）' : '🪙 反面（字）'
       setCoinResult(outcome)
       setIsFlippingCoin(false)
+      triggerHaptic('light')
     }, 600)
   }
 
   function handleSplitTeams() {
+    triggerHaptic('medium')
     if (sharedPlayers.length < 2) return alert('至少需要 2 位玩家才能分隊！')
     const shuffled = [...sharedPlayers].sort(() => Math.random() - 0.5)
     const mid = Math.ceil(shuffled.length / 2)
@@ -267,7 +343,7 @@ export default function App() {
     setTeamB(shuffled.slice(mid))
   }
 
-  // 🌟 洗牌抽卡動畫（幫我選一款）
+  // 🎴 3D 實體卡牌洗牌與震撼翻面效果 (Card Flip 3D Reveal)
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
     if (pool.length === 0) {
@@ -275,23 +351,23 @@ export default function App() {
       return
     }
 
-    setIsSpinning(true)
-    setCardFlipAnim(true)
-    setRandomGame(pool[Math.floor(Math.random() * pool.length)])
+    // 重設為背面蓋牌狀態，開啟洗牌動畫
+    setIsRevealed(false)
+    setIsShuffling(true)
+    triggerHaptic('medium')
+    playSound('flip')
 
-    let count = 0
-    const interval = setInterval(() => {
-      const index = Math.floor(Math.random() * pool.length)
-      setRandomGame(pool[index])
-      setCardFlipAnim(prev => !prev)
-      count++
-      if (count >= 18) {
-        clearInterval(interval)
-        setIsSpinning(false)
-        setCardFlipAnim(false)
-        playSound('victory')
-      }
-    }, 70)
+    // 先挑好命運桌遊
+    const picked = pool[Math.floor(Math.random() * pool.length)]
+    setRandomGame(picked)
+
+    // 洗牌 650ms 後立體 3D 震撼翻面
+    setTimeout(() => {
+      setIsShuffling(false)
+      setIsRevealed(true)
+      playSound('victory')
+      triggerHaptic('heavy')
+    }, 700)
   }
 
   const totalCount = games.length
@@ -342,6 +418,7 @@ export default function App() {
   }
 
   function handleTagToggle(tag) {
+    triggerHaptic('light')
     if (tag === '') {
       setSelectedTags([])
       return
@@ -489,6 +566,7 @@ export default function App() {
 
   function handleOpenAddModal() {
     if (!isAdmin) return
+    triggerHaptic('light')
     setEditingId(null)
     setFormData(emptyForm)
     setShowModal(true)
@@ -497,6 +575,7 @@ export default function App() {
   function handleOpenEditModal(e, game) {
     e.stopPropagation()
     if (!isAdmin) return
+    triggerHaptic('light')
     setEditingId(game.id)
     setFormData({
       name: game.name || '',
@@ -522,6 +601,7 @@ export default function App() {
 
   async function handleSubmitForm(e) {
     e.preventDefault()
+    triggerHaptic('medium')
     if (!formData.name.trim()) return alert('請填寫桌遊名稱！')
 
     const tagsArray = formData.tagsInput.split(',').map(t => t.trim()).filter(t => t !== '')
@@ -578,6 +658,7 @@ export default function App() {
   async function handleDeleteGame(e, id, name) {
     e.stopPropagation()
     if (!isAdmin) return
+    triggerHaptic('medium')
 
     if (window.confirm(`確定要刪除「${name}」嗎？`)) {
       const { error } = await supabase
@@ -605,11 +686,10 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          {/* 🔊 音效開關 */}
           <button 
             type="button" 
             className="action-btn" 
-            onClick={() => setSoundEnabled(!soundEnabled)}
+            onClick={() => { triggerHaptic('light'); setSoundEnabled(!soundEnabled); }}
             title="聚會音效開關"
           >
             {soundEnabled ? '🔊 聲音開' : '🔇 靜音'}
@@ -634,7 +714,7 @@ export default function App() {
             📤 匯出 JSON
           </button>
           
-          <button type="button" className="action-btn" onClick={() => setDarkMode(!darkMode)}>
+          <button type="button" className="action-btn" onClick={() => { triggerHaptic('light'); setDarkMode(!darkMode); }}>
             {darkMode ? '☀️ 淺色' : '🌙 暗黑'}
           </button>
 
@@ -667,11 +747,11 @@ export default function App() {
             <p className="eyebrow">MY BOARD GAME LIBRARY</p>
             <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             
-            {/* 頂部可點擊的統計篩選按鈕區 */}
+            {/* 頂部統計快速篩選按鈕區 */}
             <div style={{ display: 'inline-flex', gap: '12px', margin: '18px 0 20px 0', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => setExpansionFilter('all')}
+                onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
                 style={{
                   background: expansionFilter === 'all' ? 'rgba(79, 70, 229, 0.16)' : 'rgba(79, 70, 229, 0.06)',
                   border: expansionFilter === 'all' ? '2px solid #4F46E5' : '1px solid rgba(79, 70, 229, 0.2)',
@@ -696,7 +776,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main')}
+                onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}
                 style={{
                   background: expansionFilter === 'main' ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.06)',
                   border: expansionFilter === 'main' ? '2px solid #10B981' : '1px solid rgba(16, 185, 129, 0.2)',
@@ -721,7 +801,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion')}
+                onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion'); }}
                 style={{
                   background: expansionFilter === 'expansion' ? 'rgba(245, 158, 11, 0.18)' : 'rgba(245, 158, 11, 0.06)',
                   border: expansionFilter === 'expansion' ? '2px solid #F59E0B' : '1px solid rgba(245, 158, 11, 0.2)',
@@ -748,11 +828,11 @@ export default function App() {
             <p className="hero-text">支援最佳人數過濾、燒腦度標註與 JSON 備份！</p>
             <button 
               type="button" 
-              className={`random-button ${isSpinning ? 'spinning' : ''}`} 
+              className={`random-button ${isShuffling ? 'spinning' : ''}`} 
               onClick={chooseRandomWithAnimation} 
-              disabled={isSpinning}
+              disabled={isShuffling}
             >
-              {isSpinning ? '🎡 洗牌抽卡中...' : '🎲 幫我選一款'}
+              {isShuffling ? '🎴 命運洗牌中...' : '🎲 幫我選一款'}
             </button>
           </div>
 
@@ -785,7 +865,7 @@ export default function App() {
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setWidgetTab(tab.key)}
+                  onClick={() => { triggerHaptic('light'); setWidgetTab(tab.key); }}
                   style={{
                     flex: '1 1 calc(20% - 6px)',
                     minWidth: '54px',
@@ -962,15 +1042,15 @@ export default function App() {
               </>
             )}
 
-            {/* 3. 倒數計時（無 3分鐘選項） */}
+            {/* 3. 倒數計時 */}
             {widgetTab === 'timer' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', marginBottom: '14px' }}>
-                  <button type="button" onClick={() => { setTimeLeft(30); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>30秒</button>
-                  <button type="button" onClick={() => { setTimeLeft(60); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>60秒</button>
-                  <button type="button" onClick={() => { setTimeLeft(120); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>2分鐘</button>
-                  <button type="button" onClick={() => { setTimeLeft(300); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>5分鐘</button>
-                  <button type="button" onClick={() => { setTimeLeft(600); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>10分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(30); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>30秒</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(60); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>60秒</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(120); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>2分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(300); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>5分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(600); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>10分鐘</button>
                 </div>
 
                 <div style={{
@@ -987,7 +1067,7 @@ export default function App() {
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '14px' }}>
                   <button
                     type="button"
-                    onClick={() => setTimerRunning(!timerRunning)}
+                    onClick={() => { triggerHaptic('medium'); setTimerRunning(!timerRunning); }}
                     style={{
                       padding: '8px 20px',
                       borderRadius: '10px',
@@ -1002,7 +1082,7 @@ export default function App() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setTimerRunning(false); setTimeLeft(60); }}
+                    onClick={() => { triggerHaptic('light'); setTimerRunning(false); setTimeLeft(60); }}
                     style={{
                       padding: '8px 14px',
                       borderRadius: '10px',
@@ -1018,7 +1098,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 4. 骰子與 3D 翻轉硬幣 */}
+            {/* 4. 骰子與硬幣 */}
             {widgetTab === 'dice' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
@@ -1058,7 +1138,7 @@ export default function App() {
                       boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
                     }}
                   >
-                    {isFlippingCoin ? '💫 旋轉中...' : '🪙 投擲硬幣'}
+                    {isFlippingCoin ? '💫 翻轉中...' : '🪙 投擲硬幣'}
                   </button>
                 </div>
               </div>
@@ -1118,7 +1198,7 @@ export default function App() {
 
             <div className="filter-group">
               <label>👥 可玩人數：</label>
-              <select value={playerFilter} onChange={(e) => setPlayerFilter(e.target.value)}>
+              <select value={playerFilter} onChange={(e) => { triggerHaptic('light'); setPlayerFilter(e.target.value); }}>
                 <option value="all">不限</option>
                 <option value="2">2 人</option>
                 <option value="3">3 人</option>
@@ -1130,7 +1210,7 @@ export default function App() {
 
             <div className="filter-group">
               <label>👑 最佳人數：</label>
-              <select value={bestPlayerFilter} onChange={(e) => setBestPlayerFilter(e.target.value)}>
+              <select value={bestPlayerFilter} onChange={(e) => { triggerHaptic('light'); setBestPlayerFilter(e.target.value); }}>
                 <option value="all">不限</option>
                 <option value="2">最佳 2 人</option>
                 <option value="3">最佳 3 人</option>
@@ -1144,7 +1224,7 @@ export default function App() {
 
             <div className="filter-group">
               <label>⏱️ 時間：</label>
-              <select value={maxTimeFilter} onChange={(e) => setMaxTimeFilter(e.target.value)}>
+              <select value={maxTimeFilter} onChange={(e) => { triggerHaptic('light'); setMaxTimeFilter(e.target.value); }}>
                 <option value="all">不限</option>
                 <option value="15">15 分鐘內</option>
                 <option value="30">30 分鐘內</option>
@@ -1153,7 +1233,7 @@ export default function App() {
 
             <div className="filter-group">
               <label>📊 排序：</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <select value={sortBy} onChange={(e) => { triggerHaptic('light'); setSortBy(e.target.value); }}>
                 <option value="rating-desc">⭐ 評分最高</option>
                 <option value="time-asc">⏱️ 時間最短</option>
                 <option value="complexity-asc">🧠 最易學入門</option>
@@ -1167,7 +1247,7 @@ export default function App() {
                 key={cat} 
                 type="button"
                 className={`cat-btn ${category === cat ? 'active' : ''}`}
-                onClick={() => setCategory(cat)}
+                onClick={() => { triggerHaptic('light'); setCategory(cat); }}
                 style={{
                   borderRadius: '12px',
                   padding: '7px 16px',
@@ -1241,7 +1321,7 @@ export default function App() {
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => (
-              <article className="game-card box-3d-card" key={game.id} onClick={() => { setDetailTab('info'); setViewDetailGame(game); }}>
+              <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
                 {isAdmin && (
                   <div className="card-actions">
                     <button type="button" className="edit-btn" onClick={(e) => handleOpenEditModal(e, game)}>✏️</button>
@@ -1317,87 +1397,103 @@ export default function App() {
         </section>
       </main>
 
-      {/* 洗牌抽卡動畫彈窗 */}
+      {/* 🌟 3D 實體卡牌立體翻面彈窗 (Card Flip 3D Reveal) 🌟 */}
       {randomGame && (
-        <div className="modal-overlay" onClick={() => !isSpinning && setRandomGame(null)}>
+        <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
             className="detail-modal-content" 
             onClick={(e) => e.stopPropagation()} 
             style={{ 
               textAlign: 'center', 
-              maxWidth: '420px', 
-              padding: '2rem', 
-              borderRadius: '20px',
-              transform: cardFlipAnim ? 'scale(0.96) rotateY(10deg)' : 'scale(1) rotateY(0deg)',
-              transition: 'transform 0.1s ease'
+              maxWidth: '380px', 
+              padding: '1.8rem 1.4rem', 
+              borderRadius: '24px',
+              perspective: '1200px'
             }}
           >
             <button 
               className="close-detail-btn" 
               onClick={() => setRandomGame(null)}
-              disabled={isSpinning}
+              disabled={isShuffling}
             >
               ✕
             </button>
 
-            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#6366F1', letterSpacing: '1px' }}>
-              {isSpinning ? '🎴 命運抽卡洗牌中...' : '🎯 命中注定就是它！'}
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#6366F1', letterSpacing: '1px' }}>
+              {isShuffling ? '🎴 命運牌堆洗牌中...' : '✨ 命中注定就是它！'}
             </span>
 
-            <div style={{ margin: '1.2rem auto', width: '130px', height: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.04)', borderRadius: '16px', overflow: 'hidden' }}>
-              {randomGame.imageUrl ? (
-                <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              ) : (
-                <span style={{ fontSize: '4.5rem' }}>{randomGame.emoji || '🎲'}</span>
-              )}
+            {/* 3D 翻轉卡牌容器 */}
+            <div className={`card-flip-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1.2rem auto' }}>
+              <div className={`card-flip-inner ${isRevealed ? 'is-flipped' : ''}`}>
+                {/* 卡片背面（蓋牌） */}
+                <div className="card-face card-face-back">
+                  <div className="card-back-pattern">
+                    <span style={{ fontSize: '3rem' }}>🔮</span>
+                    <strong style={{ fontSize: '0.9rem', color: '#CBD5E1', letterSpacing: '2px' }}>DESTINY</strong>
+                  </div>
+                </div>
+
+                {/* 卡片正面（開牌結果） */}
+                <div className="card-face card-face-front">
+                  <div style={{ width: '100%', height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.03)', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
+                    {randomGame.imageUrl ? (
+                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.2rem', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{randomGame.name}</h3>
+                  <p style={{ color: '#888', fontSize: '0.8rem', margin: '0 0 8px 0' }}>{randomGame.englishName}</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap' }}>
+                    <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
+                    <span>⏱️ {randomGame.time}分</span>
+                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {randomGame.complexity || '2.0'}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <h2 style={{ fontSize: '1.4rem', margin: '0.5rem 0' }}>{randomGame.name}</h2>
-            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.2rem' }}>{randomGame.englishName}</p>
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '0.85rem', color: '#555', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-              <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
-              <span>👑 最佳 {randomGame.bestPlayers || randomGame.maxPlayers}人</span>
-              <span>⏱️ {randomGame.time} 分鐘</span>
-              <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦 {randomGame.complexity || '2.0'}</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            {/* 按鈕組 */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1.2rem' }}>
               <button 
                 type="button" 
                 onClick={chooseRandomWithAnimation} 
-                disabled={isSpinning}
+                disabled={isShuffling}
                 style={{
                   background: '#4F46E5',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 22px',
+                  padding: '10px 20px',
                   fontWeight: 'bold',
-                  cursor: isSpinning ? 'not-allowed' : 'pointer',
+                  fontSize: '0.88rem',
+                  cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
                 }}
               >
-                {isSpinning ? '抽卡中...' : '🎲 再抽一次'}
+                {isShuffling ? '抽卡中...' : '🎲 再抽一次'}
               </button>
               
               <button 
                 type="button" 
                 onClick={() => {
+                  triggerHaptic('light')
                   const target = randomGame
                   setRandomGame(null)
                   setDetailTab('info')
                   setViewDetailGame(target)
                 }}
-                disabled={isSpinning}
+                disabled={isShuffling}
                 style={{
                   background: '#10B981',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 22px',
+                  padding: '10px 20px',
                   fontWeight: 'bold',
-                  cursor: isSpinning ? 'not-allowed' : 'pointer',
+                  fontSize: '0.88rem',
+                  cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                 }}
               >
@@ -1408,17 +1504,16 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal (含【快速規則 / 提示卡 Cheat Sheet】分頁) */}
+      {/* 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
 
-            {/* 彈窗內部分頁：介紹 vs 快速規則 */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', borderBottom: '1px solid #E2E8F0', paddingBottom: '10px' }}>
               <button
                 type="button"
-                onClick={() => setDetailTab('info')}
+                onClick={() => { triggerHaptic('light'); setDetailTab('info'); }}
                 style={{
                   padding: '6px 14px',
                   borderRadius: '10px',
@@ -1434,7 +1529,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => setDetailTab('cheatSheet')}
+                onClick={() => { triggerHaptic('light'); setDetailTab('cheatSheet'); }}
                 style={{
                   padding: '6px 14px',
                   borderRadius: '10px',
@@ -1486,7 +1581,7 @@ export default function App() {
                     {games.find(g => g.id === viewDetailGame.parentId) && (
                       <button
                         type="button"
-                        onClick={() => setViewDetailGame(games.find(g => g.id === viewDetailGame.parentId))}
+                        onClick={() => { triggerHaptic('light'); setViewDetailGame(games.find(g => g.id === viewDetailGame.parentId)); }}
                         style={{
                           border: 'none',
                           background: '#F59E0B',
@@ -1528,7 +1623,7 @@ export default function App() {
                         <button
                           key={exp.id}
                           type="button"
-                          onClick={() => setViewDetailGame(exp)}
+                          onClick={() => { triggerHaptic('light'); setViewDetailGame(exp); }}
                           style={{
                             border: '1px solid #CBD5E1',
                             background: 'var(--bg-card, #fff)',
@@ -1548,7 +1643,6 @@ export default function App() {
                 )}
               </>
             ) : (
-              /* ⚡ 快速規則 / 提示卡 Cheat Sheet 內容 */
               <div style={{ padding: '4px 0' }}>
                 <h3 style={{ margin: '0 0 10px 0', color: '#10B981' }}>⚡ {viewDetailGame.name} 快速提示卡</h3>
                 <div style={{
@@ -1568,7 +1662,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal (含 Cheat Sheet 輸入欄位) */}
+      {/* 新增/編輯 Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
@@ -1661,7 +1755,6 @@ export default function App() {
                 <textarea rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}></textarea>
               </div>
 
-              {/* 🌟 快速規則 / 提示卡 Cheat Sheet 編輯輸入框 */}
               <div className="form-group">
                 <label>⚡ 快速規則 / 提示卡重點 (Cheat Sheet)</label>
                 <textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea>

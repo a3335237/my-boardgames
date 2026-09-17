@@ -328,30 +328,191 @@ main button.active,
   line-height: 1 !important;
   letter-spacing: 0 !important;
 }
-/* ===== 3D 桌遊外盒質感與懸浮開箱視差效果 ===== */
-.box-3d-card {
-  perspective: 1000px;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease !important;
+/* ===== 手機專屬排版修復 (Mobile First Polish) ===== */
+@media screen and (max-width: 768px) {
+  /* 1. 防止 iOS Safari 自動亂調整字體大小 */
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* 2. 主容器邊距自適應手機邊框 */
+  .app {
+    padding: 8px !important;
+  }
+
+  /* 3. 頂部 Header 改為好點擊的緊湊排版 */
+  .header {
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  .header-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .action-btn, .add-game-btn {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* 4. Hero 區塊改為上下堆疊，小工具在手機端撐滿寬度 */
+  .hero {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding: 14px 10px !important;
+  }
+
+  /* 5. 頂部 3 個統計篩選按鈕手機上橫向等寬平均分佈 */
+  .hero > div:first-child > div:first-of-type {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .hero button[type="button"] span {
+    font-size: 18px !important;
+  }
+
+  /* 6. 卡片網格：手機端維持精緻雙欄 */
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .game-card {
+    padding: 8px !important;
+  }
+
+  /* 7. 解決中英文標題折行破版：單行截斷加省略號 */
+  .game-info h3 {
+    font-size: 0.88rem !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-bottom: 2px !important;
+  }
+
+  .game-info .english {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* 8. 關鍵修復：卡片人數/最佳/時間改為多行微型標籤，不再水平擠爆 */
+  .game-details {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    font-size: 10.5px !important;
+    margin: 6px 0 !important;
+  }
+
+  .game-details span {
+    white-space: nowrap !important;
+  }
+
+  /* 9. 標籤列水平微滑動，不破壞卡片高度 */
+  .card-tags {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    gap: 4px !important;
+  }
+
+  .card-tags span {
+    font-size: 9.5px !important;
+    padding: 1px 4px !important;
+    white-space: nowrap !important;
+  }
+
+  /* 10. 彈窗最大高度限制，防止超出手機可視區域 */
+  .detail-modal-content, .modal-content {
+    width: 92vw !important;
+    max-height: 85vh !important;
+    padding: 1.2rem !important;
+  }
+}
+/* ===== 3D 實體卡牌立體翻牌效果 (Card Flip 3D Reveal) ===== */
+.card-flip-scene {
+  width: 220px;
+  height: 290px;
+  perspective: 1200px;
+  position: relative;
+}
+
+.card-flip-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
   transform-style: preserve-3d;
+  transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.box-3d-card:hover {
-  transform: translateY(-8px) rotateX(4deg) rotateY(-2deg) scale(1.02) !important;
-  box-shadow: 0 16px 32px rgba(79, 70, 229, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+.card-flip-inner.is-flipped {
+  transform: rotateY(180deg);
 }
 
-.box-cover-img {
-  transition: transform 0.3s ease;
-  box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+/* 卡片雙面共用屬性 */
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  box-sizing: border-box;
 }
 
-.box-3d-card:hover .box-cover-img {
-  transform: scale(1.04);
+/* 卡片背面（蓋牌狀態） */
+.card-face-back {
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%);
+  color: #fff;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
 }
 
-/* 計時器緊急脈衝紅光動畫 */
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.08); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+.card-back-pattern {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: pulse 1.5s infinite;
+}
+
+/* 卡片正面（開牌結果） */
+.card-face-front {
+  background: var(--bg-card, #ffffff);
+  color: inherit;
+  transform: rotateY(180deg);
+  border: 2px solid #6366F1;
+  box-shadow: 0 16px 36px rgba(99, 102, 241, 0.25);
+}
+
+/* 洗牌劇烈搖晃動畫 */
+.shuffle-shake {
+  animation: cardShuffle 0.15s infinite;
+}
+
+@keyframes cardShuffle {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-4px, -3px) rotate(-3deg); }
+  50% { transform: translate(4px, 2px) rotate(2deg); }
+  75% { transform: translate(-3px, 3px) rotate(-1deg); }
+  100% { transform: translate(2px, -2px) rotate(3deg); }
 }
