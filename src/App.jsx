@@ -84,7 +84,6 @@ export default function App() {
 
   const [widgetTab, setWidgetTab] = useState('starter')
 
-  // 本地持久化記錄玩家名單，不同裝置互不影響，重整不消失
   const [sharedPlayers, setSharedPlayers] = useState(() => {
     try {
       const saved = localStorage.getItem('bg_shared_players')
@@ -715,7 +714,6 @@ export default function App() {
         {/* 橫幅區域 */}
         <section className="hero">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', width: '100%' }}>
-            {/* 標題組合容器，修正手機換行 */}
             <div className="hero-title-group">
               <span className="eyebrow" style={{ color: '#64748B', fontWeight: 'bold' }}>MY BOARD GAME LIBRARY</span>
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
@@ -1571,7 +1569,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 <div>
                   <label>遊戲時間 (分鐘)</label>
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
@@ -1638,6 +1636,7 @@ export default function App() {
                 <textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea>
               </div>
 
+              {/* 🌟 完美相容原本的 isExpansion 欄位，無需修改資料庫 🌟 */}
               <div className="form-group">
                 <label>
                   <input 
