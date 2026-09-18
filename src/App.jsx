@@ -107,6 +107,34 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
+  // ❤️ 我的最愛狀態（專屬於這台裝置的 localStorage，絕不改動資料庫）
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bg_favorites')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
+    return []
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bg_favorites', JSON.stringify(favorites))
+    } catch (e) {}
+  }, [favorites])
+
+  function toggleFavorite(e, gameId) {
+    e.stopPropagation()
+    triggerHaptic('medium')
+    playSound('flip')
+    setFavorites(prev => {
+      if (prev.includes(gameId)) {
+        return prev.filter(id => id !== gameId)
+      } else {
+        return [...prev, gameId]
+      }
+    })
+  }
+
   const [randomGame, setRandomGame] = useState(null)
   const [isRevealed, setIsRevealed] = useState(false)
   const [isShuffling, setIsShuffling] = useState(false)
@@ -161,7 +189,6 @@ export default function App() {
     fetchGamesFromSupabase()
   }, [])
 
-  // 🌟 修復關鍵：只要資料庫有資料就完全以資料庫為主，不再自動拿程式碼去無腦補齊造成幽靈重複！
   async function fetchGamesFromSupabase() {
     setLoading(true)
     const { data, error } = await supabase
@@ -174,10 +201,8 @@ export default function App() {
       setGames(initialGames)
     } else if (data) {
       if (data.length === 0) {
-        // 資料庫是空的，才使用備用預設資料
         setGames(initialGames)
       } else {
-        // 資料庫有資料，100% 只用資料庫的資料！
         setGames(data)
       }
     }
@@ -374,7 +399,7 @@ export default function App() {
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
     if (pool.length === 0) {
-      alert('⚠️ 資料庫中尚無任何桌遊資料！')
+      alert('⚠️ 目前篩選條件下沒有桌遊可供挑選！')
       return
     }
 
@@ -397,6 +422,7 @@ export default function App() {
   const totalCount = games.length
   const expansionCount = useMemo(() => games.filter(g => checkIsExpansion(g)).length, [games])
   const mainCount = useMemo(() => games.filter(g => !checkIsExpansion(g)).length, [games])
+  const favoriteCount = useMemo(() => games.filter(g => favorites.includes(g.id)).length, [games, favorites])
 
   const categories = useMemo(() => {
     const baseCategories = ['派對', '陣營', '吹牛', '合作', '策略', '輕策略', '卡牌對戰', '家庭']
@@ -464,6 +490,8 @@ export default function App() {
         matchExpansion = !isExp
       } else if (expansionFilter === 'expansion') {
         matchExpansion = isExp
+      } else if (expansionFilter === 'favorite') {
+        matchExpansion = favorites.includes(game.id)
       }
 
       return matchSearch && matchCategory && matchPlayers && matchBestPlayers && matchTime && matchExpansion
@@ -478,7 +506,7 @@ export default function App() {
       if (sortBy === 'newest') return b.id - a.id
       return 0
     })
-  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter])
+  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
 
   function handleExportJSON() {
     const jsonString = JSON.stringify(games, null, 2)
@@ -815,6 +843,25 @@ export default function App() {
                   <div style={{ color: '#64748B', fontWeight: 'bold' }}>擴充包</div>
                   <div style={{ fontWeight: '800', color: '#D97706' }}>
                     {expansionCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  </div>
+                </div>
+              </button>
+
+              {/* ❤️ 我的最愛快速篩選按鈕 */}
+              <button
+                type="button"
+                onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'favorite' ? 'all' : 'favorite'); }}
+                className={`stat-filter-btn ${expansionFilter === 'favorite' ? 'active-favorite' : ''}`}
+                style={{
+                  borderColor: expansionFilter === 'favorite' ? '#EC4899' : 'transparent',
+                  background: expansionFilter === 'favorite' ? 'rgba(236, 72, 153, 0.12)' : 'var(--bg-card, #ffffff)'
+                }}
+              >
+                <span>❤️</span>
+                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
+                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>我的最愛</div>
+                  <div style={{ fontWeight: '800', color: '#EC4899' }}>
+                    {favoriteCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -1268,8 +1315,38 @@ export default function App() {
             {filteredGames.map((game) => {
               const isSeq = Array.isArray(game.tags) && game.tags.includes('續作')
               const isExp = checkIsExpansion(game)
+              const isFav = favorites.includes(game.id)
               return (
                 <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
+                  {/* ❤️ 愛心收藏按鈕 */}
+                  <button
+                    type="button"
+                    className="fav-btn"
+                    onClick={(e) => toggleFavorite(e, game.id)}
+                    title={isFav ? '從我的最愛移除' : '加入我的最愛'}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      left: '10px',
+                      zIndex: 8,
+                      background: 'rgba(255, 255, 255, 0.85)',
+                      backdropFilter: 'blur(4px)',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                      transition: 'transform 0.15s ease'
+                    }}
+                  >
+                    {isFav ? '❤️' : '🤍'}
+                  </button>
+
                   {isAdmin && (
                     <div className="card-actions">
                       <button type="button" className="edit-btn" onClick={(e) => handleOpenEditModal(e, game)}>✏️</button>
