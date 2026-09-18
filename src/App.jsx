@@ -89,6 +89,10 @@ const emptyForm = {
   parentId: ''
 }
 
+function checkIsExpansion(game) {
+  return game.isExpansion === true || game.isExpansion === 'true'
+}
+
 export default function App() {
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
@@ -157,6 +161,7 @@ export default function App() {
     fetchGamesFromSupabase()
   }, [])
 
+  // 🌟 修復關鍵：只要資料庫有資料就完全以資料庫為主，不再自動拿程式碼去無腦補齊造成幽靈重複！
   async function fetchGamesFromSupabase() {
     setLoading(true)
     const { data, error } = await supabase
@@ -169,19 +174,11 @@ export default function App() {
       setGames(initialGames)
     } else if (data) {
       if (data.length === 0) {
+        // 資料庫是空的，才使用備用預設資料
         setGames(initialGames)
       } else {
-        // 合併資料庫與內建清單，依照遊戲名稱去重，徹底防止重複出現
-        const combined = [...data]
-        const existingNames = new Set(data.map(g => (g.name || '').trim()))
-
-        initialGames.forEach(initGame => {
-          if (!existingNames.has(initGame.name.trim())) {
-            combined.push(initGame)
-            existingNames.add(initGame.name.trim())
-          }
-        })
-        setGames(combined)
+        // 資料庫有資料，100% 只用資料庫的資料！
+        setGames(data)
       }
     }
     setLoading(false)
@@ -398,8 +395,8 @@ export default function App() {
   }
 
   const totalCount = games.length
-  const mainCount = games.filter(g => !g.isExpansion).length
-  const expansionCount = games.filter(g => g.isExpansion).length
+  const expansionCount = useMemo(() => games.filter(g => checkIsExpansion(g)).length, [games])
+  const mainCount = useMemo(() => games.filter(g => !checkIsExpansion(g)).length, [games])
 
   const categories = useMemo(() => {
     const baseCategories = ['派對', '陣營', '吹牛', '合作', '策略', '輕策略', '卡牌對戰', '家庭']
@@ -461,11 +458,12 @@ export default function App() {
         matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
       }
 
+      const isExp = checkIsExpansion(game)
       let matchExpansion = true
       if (expansionFilter === 'main') {
-        matchExpansion = !game.isExpansion
+        matchExpansion = !isExp
       } else if (expansionFilter === 'expansion') {
-        matchExpansion = !!game.isExpansion
+        matchExpansion = isExp
       }
 
       return matchSearch && matchCategory && matchPlayers && matchBestPlayers && matchTime && matchExpansion
@@ -590,7 +588,8 @@ export default function App() {
     setEditingId(game.id)
     
     const isSeq = Array.isArray(game.tags) && game.tags.includes('續作')
-    const identity = isSeq ? 'sequel' : (game.isExpansion ? 'expansion' : 'main')
+    const isExp = checkIsExpansion(game)
+    const identity = isSeq ? 'sequel' : (isExp ? 'expansion' : 'main')
 
     setFormData({
       name: game.name || '',
@@ -1268,6 +1267,7 @@ export default function App() {
           <div className="game-grid">
             {filteredGames.map((game) => {
               const isSeq = Array.isArray(game.tags) && game.tags.includes('續作')
+              const isExp = checkIsExpansion(game)
               return (
                 <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
                   {isAdmin && (
@@ -1283,12 +1283,12 @@ export default function App() {
                     ) : (
                       <span className="cover-emoji">{game.emoji}</span>
                     )}
-                    {game.isExpansion && (
+                    {isExp && (
                       <span className="expansion-badge">
                         🧩 擴充
                       </span>
                     )}
-                    {isSeq && !game.isExpansion && (
+                    {isSeq && !isExp && (
                       <span className="expansion-badge" style={{ background: 'rgba(14, 165, 233, 0.95)' }}>
                         ✨ 續作
                       </span>
@@ -1515,7 +1515,7 @@ export default function App() {
                   <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 0).toFixed(2)} / 5.00</span>
                 </div>
 
-                {viewDetailGame.isExpansion && viewDetailGame.parentId && (
+                {checkIsExpansion(viewDetailGame) && viewDetailGame.parentId && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>
                       🧩 此為純擴充包，需搭配主遊戲遊玩
@@ -1541,7 +1541,7 @@ export default function App() {
                   </div>
                 )}
 
-                {(!viewDetailGame.isExpansion && Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.includes('續作')) && (
+                {(!checkIsExpansion(viewDetailGame) && Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.includes('續作')) && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(14, 165, 233, 0.08)', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#0369A1', fontWeight: 'bold' }}>
                       ✨ 此為獨立續作，可單獨遊玩，亦可與系列作混合連動！
@@ -1740,7 +1740,7 @@ export default function App() {
                 {formData.gameIdentity !== 'main' && (
                   <select value={formData.parentId || ''} onChange={(e) => setFormData({...formData, parentId: e.target.value})} style={{ marginTop: '8px' }}>
                     <option value="">-- 請選擇關聯的主遊戲 / 前作 --</option>
-                    {games.map(parent => (
+                    {games.filter(g => !checkIsExpansion(g)).map(parent => (
                       <option key={parent.id} value={parent.id}>{parent.name}</option>
                     ))}
                   </select>
