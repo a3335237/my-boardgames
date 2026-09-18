@@ -84,12 +84,26 @@ export default function App() {
 
   const [widgetTab, setWidgetTab] = useState('starter')
 
-  const [sharedPlayers, setSharedPlayers] = useState([
-    { id: 1, name: '玩家 1', score: 0 },
-    { id: 2, name: '玩家 2', score: 0 },
-    { id: 3, name: '玩家 3', score: 0 },
-    { id: 4, name: '玩家 4', score: 0 }
-  ])
+  // 本地持久化記錄玩家名單，不同裝置互不影響，重整不消失
+  const [sharedPlayers, setSharedPlayers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('bg_shared_players')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
+    return [
+      { id: 1, name: '玩家 1', score: 0 },
+      { id: 2, name: '玩家 2', score: 0 },
+      { id: 3, name: '玩家 3', score: 0 },
+      { id: 4, name: '玩家 4', score: 0 }
+    ]
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('bg_shared_players', JSON.stringify(sharedPlayers))
+    } catch (e) {}
+  }, [sharedPlayers])
+
   const [inputPlayerName, setInputPlayerName] = useState('')
 
   const [starterWinner, setStarterWinner] = useState(null)
@@ -698,26 +712,27 @@ export default function App() {
       </header>
 
       <main>
-        {/* 🌟 橫幅區域：鎖定 alignItems: 'flex-start'，左邊永遠不動 🌟 */}
-        <section className="hero" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', padding: '0 8px' }}>
-            <div>
-              <p className="eyebrow" style={{ margin: '0 0 6px 0' }}>MY BOARD GAME LIBRARY</p>
-              <h1 style={{ margin: 0, lineHeight: 1.25 }}>今天聚會，<br /><span style={{ color: '#4F46E5' }}>玩哪一款？</span></h1>
+        {/* 橫幅區域 */}
+        <section className="hero">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', width: '100%' }}>
+            {/* 標題組合容器，修正手機換行 */}
+            <div className="hero-title-group">
+              <span className="eyebrow" style={{ color: '#64748B', fontWeight: 'bold' }}>MY BOARD GAME LIBRARY</span>
+              <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             </div>
             
             {/* 統計篩選膠囊 */}
-            <div style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0' }}>
+            <div className="hero-filter-group" style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0' }}>
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
                 className={`stat-filter-btn ${expansionFilter === 'all' ? 'active-all' : ''}`}
               >
-                <span style={{ fontSize: '20px' }}>📦</span>
+                <span>📦</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>總收藏量</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#4F46E5' }}>
-                    {totalCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>總收藏量</div>
+                  <div style={{ fontWeight: '800', color: '#4F46E5' }}>
+                    {totalCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -727,11 +742,11 @@ export default function App() {
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}
                 className={`stat-filter-btn ${expansionFilter === 'main' ? 'active-main' : ''}`}
               >
-                <span style={{ fontSize: '20px' }}>🎮</span>
+                <span>🎮</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>主遊戲</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#10B981' }}>
-                    {mainCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>主遊戲</div>
+                  <div style={{ fontWeight: '800', color: '#10B981' }}>
+                    {mainCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -741,11 +756,11 @@ export default function App() {
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion'); }}
                 className={`stat-filter-btn ${expansionFilter === 'expansion' ? 'active-expansion' : ''}`}
               >
-                <span style={{ fontSize: '20px' }}>🧩</span>
+                <span>🧩</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 'bold' }}>擴充包</div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#D97706' }}>
-                    {expansionCount} <span style={{ fontSize: '11px', fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>擴充包</div>
+                  <div style={{ fontWeight: '800', color: '#D97706' }}>
+                    {expansionCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -1556,7 +1571,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                 <div>
                   <label>遊戲時間 (分鐘)</label>
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />

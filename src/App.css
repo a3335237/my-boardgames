@@ -88,7 +88,6 @@ body {
   align-items: center;
 }
 
-/* 頂部功能按鈕立體膠囊風 */
 .header-actions button,
 .add-game-btn,
 .action-btn {
@@ -125,7 +124,8 @@ body {
 /* ==================== Hero 橫幅區域 ==================== */
 .hero {
   display: grid;
-  align-items: flex-start !important; /* 永遠頂部對齊，解決右側切換時左邊跳動問題 */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: flex-start !important;
   gap: 2rem !important;
   background: var(--hero-bg);
   border: 1px solid var(--hero-border);
@@ -139,13 +139,13 @@ body {
   font-size: 2.3rem;
   margin: 0;
   line-height: 1.25;
+  white-space: nowrap;
 }
 
 .hero h1 span {
   color: #4f46e5;
 }
 
-/* 主行動按鈕：🎲 幫我選一款桌遊 */
 .random-button {
   display: inline-flex !important;
   align-items: center !important;
@@ -174,9 +174,8 @@ body {
   transform: translateY(0) scale(0.98) !important;
 }
 
-/* 右側五合一小工具卡片 */
 .starter-card {
-  min-height: 300px !important; /* 鎖定基礎高度，避免換頁時卡片劇烈縮放 */
+  min-height: 300px !important;
   box-sizing: border-box !important;
 }
 
@@ -185,7 +184,7 @@ body {
   background: #ffffff !important;
   color: #1e293b !important;
   border: 1.5px solid #e2e8f0 !important;
-  border-bottom: 4px solid #cbd5e1 !important; /* 未選中時是柔和底邊 */
+  border-bottom: 4px solid #cbd5e1 !important;
   border-radius: 14px !important;
   padding: 8px 16px !important;
   display: inline-flex !important;
@@ -199,7 +198,6 @@ body {
   transition: all 0.15s ease !important;
 }
 
-/* 1. 總收藏量選中（靛藍指示條） */
 .stat-filter-btn.active-all {
   border-color: #818cf8 !important;
   border-bottom: 4.5px solid #4f46e5 !important;
@@ -208,7 +206,6 @@ body {
   transform: translateY(1px) !important;
 }
 
-/* 2. 主遊戲選中（翡翠綠指示條） */
 .stat-filter-btn.active-main {
   border-color: #6ee7b7 !important;
   border-bottom: 4.5px solid #10b981 !important;
@@ -217,7 +214,6 @@ body {
   transform: translateY(1px) !important;
 }
 
-/* 3. 擴充包選中（琥珀橘指示條） */
 .stat-filter-btn.active-expansion {
   border-color: #fcd34d !important;
   border-bottom: 4.5px solid #f59e0b !important;
@@ -352,7 +348,6 @@ body {
   justify-content: center;
 }
 
-/* 封面容器與標籤定位 */
 .cover {
   height: 160px;
   background: var(--bg-main);
@@ -375,7 +370,6 @@ body {
   font-size: 3.5rem;
 }
 
-/* 右上角絕對定位擴充徽章（徹底解決切邊溢出） */
 .expansion-badge {
   position: absolute !important;
   top: 8px !important;
@@ -395,7 +389,6 @@ body {
   backdrop-filter: blur(4px) !important;
 }
 
-/* 左下角分類標籤 */
 .category-tag {
   position: absolute !important;
   bottom: 8px !important;
@@ -451,7 +444,7 @@ body {
 /* ==================== 3D 實體卡牌翻牌效果 ==================== */
 .card-flip-scene {
   width: 240px !important;
-  height: 340px !important; /* 加高空間，確保長方形桌遊盒完整顯示 */
+  height: 340px !important;
   perspective: 1200px;
   position: relative;
 }
@@ -632,7 +625,7 @@ body {
   margin: 0 auto 1.5rem auto !important;
 }
 
-/* ==================== 手機專屬排版優化 (RWD) ==================== */
+/* ==================== 手機專屬排版優化 (RWD 終極修復) ==================== */
 @media screen and (max-width: 768px) {
   html, body {
     -webkit-text-size-adjust: 100%;
@@ -663,13 +656,38 @@ body {
     font-size: 0.78rem !important;
   }
 
+  /* 手機 Hero 改為單欄置中，解決左右擠壓換行問題 */
   .hero {
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
+    gap: 16px !important;
     padding: 1.2rem 1rem !important;
   }
 
-  .hero > div:first-child > div:first-of-type {
+  /* 解決截圖中文字被切碎折行的關鍵修正 */
+  .hero-title-group {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 100% !important;
+  }
+
+  .hero .eyebrow {
+    font-size: 0.72rem !important;
+    letter-spacing: 1px !important;
+    margin-bottom: 4px !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .hero h1 {
+    font-size: 1.75rem !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+  }
+
+  /* 手機版三顆篩選膠囊按鈕排版 */
+  .hero-filter-group {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     gap: 6px !important;
@@ -677,8 +695,28 @@ body {
   }
 
   .stat-filter-btn {
-    padding: 6px 8px !important;
-    gap: 6px !important;
+    padding: 6px 4px !important;
+    gap: 4px !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-filter-btn span {
+    font-size: 16px !important;
+  }
+
+  .stat-filter-btn > div > div:first-child {
+    font-size: 9.5px !important;
+  }
+
+  .stat-filter-btn > div > div:last-child {
+    font-size: 13.5px !important;
+  }
+
+  .random-button {
+    width: 100% !important;
+    padding: 12px 20px !important;
+    font-size: 0.95rem !important;
   }
 
   .game-grid {
@@ -733,10 +771,6 @@ body {
     margin: 5px 0 !important;
   }
 
-  .game-details span {
-    white-space: nowrap !important;
-  }
-
   .card-tags {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -750,21 +784,12 @@ body {
     white-space: nowrap !important;
   }
 
-  /* 評分與燒腦度在手機雙欄直向排列 */
   .game-card .rating-complexity-row {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 2px !important;
     margin-top: 4px !important;
-  }
-
-  .game-card .rating-complexity-row .rating {
-    font-size: 0.85rem !important;
-  }
-
-  .game-card .rating-complexity-row .complexity-badge {
-    font-size: 10px !important;
   }
 
   .detail-modal-content,
