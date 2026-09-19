@@ -1,8 +1,15 @@
 {
-  "short_name": "我的桌遊",
-  "name": "我的桌遊收藏庫 BoardGame Collection",
-  "start_url": "/",
-  "background_color": "#111827",
-  "theme_color": "#4f46e5",
-  "display": "standalone"
+  "short_name": "桌遊收藏庫",
+  "name": "我的桌遊收藏庫 Board Game Library",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7fafc",
+  "theme_color": "#4f46e5"
 }
