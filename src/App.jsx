@@ -87,7 +87,6 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // 多重主題切換
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'default')
 
   useEffect(() => {
@@ -98,7 +97,6 @@ export default function App() {
     localStorage.setItem('app_theme', theme)
   }, [theme])
 
-  // 我的最愛
   const [favorites, setFavorites] = useState(() => {
     try {
       const saved = localStorage.getItem('bg_favorite_ids')
@@ -121,7 +119,6 @@ export default function App() {
     )
   }
 
-  // 牌套動態多組管理 (方案一)
   const [sleeveList, setSleeveList] = useState([{ size: '63.5x88 mm', count: '' }])
 
   function addSleeveRow() {
@@ -138,7 +135,6 @@ export default function App() {
     setSleeveList(next)
   }
 
-  // 聚會小工具狀態
   const [widgetTab, setWidgetTab] = useState('starter')
   const [sharedPlayers, setSharedPlayers] = useState(() => {
     try {
@@ -172,7 +168,6 @@ export default function App() {
   const [teamA, setTeamA] = useState([])
   const [teamB, setTeamB] = useState([])
 
-  // 彈窗
   const [randomGame, setRandomGame] = useState(null)
   const [isRevealed, setIsRevealed] = useState(false)
   const [isShuffling, setIsShuffling] = useState(false)
@@ -586,7 +581,6 @@ export default function App() {
 
     const parentGame = games.find(g => g.id === game.parentId)
 
-    // 動態拆解牌套
     if (game.sleeveSize) {
       const parsed = game.sleeveSize.split(',').map(s => {
         const item = s.trim()
@@ -631,7 +625,6 @@ export default function App() {
     triggerHaptic('medium')
     if (!formData.name.trim()) return alert('請填寫桌遊名稱！')
 
-    // 組裝多組牌套規格 (方案一)
     const formattedSleeve = sleeveList
       .filter(s => s.size && s.size !== '')
       .map(s => s.count ? `${s.size} (${s.count}張)` : s.size)
@@ -713,7 +706,6 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          {/* 主題切換 */}
           <select 
             className="theme-selector" 
             value={theme} 
@@ -777,7 +769,6 @@ export default function App() {
       </header>
 
       <main>
-        {/* 橫幅區域 */}
         <section className="hero" id="hero-sec">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', width: '100%' }}>
             <div className="hero-title-group">
@@ -785,7 +776,6 @@ export default function App() {
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             </div>
             
-            {/* 統計篩選膠囊 */}
             <div className="hero-filter-group" style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', margin: '4px 0' }}>
               <button
                 type="button"
@@ -854,7 +844,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* 右側小工具卡片 */}
           <div className="starter-card" style={{
             background: 'var(--bg-card)',
             borderRadius: '20px',
@@ -904,7 +893,6 @@ export default function App() {
               ))}
             </div>
 
-            {/* 1. 先攻 */}
             {widgetTab === 'starter' && (
               <>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', minHeight: '36px', marginBottom: '12px', alignItems: 'center' }}>
@@ -984,7 +972,6 @@ export default function App() {
               </>
             )}
 
-            {/* 2. 計分 */}
             {widgetTab === 'scoreboard' && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -1060,7 +1047,6 @@ export default function App() {
               </>
             )}
 
-            {/* 3. 倒數計時 */}
             {widgetTab === 'timer' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', marginBottom: '14px' }}>
@@ -1116,7 +1102,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 4. 骰子與硬幣 */}
             {widgetTab === 'dice' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
@@ -1161,7 +1146,6 @@ export default function App() {
               </div>
             )}
 
-            {/* 5. 分隊 */}
             {widgetTab === 'team' && (
               <div>
                 <button 
@@ -1205,7 +1189,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* 篩選面板 */}
         <section className="filter-panel" id="collection-sec">
           <div className="filter-row">
             <div className="search-box">
@@ -1284,14 +1267,12 @@ export default function App() {
           </div>
         </section>
 
-        {/* 收藏列表 */}
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => {
               const isFav = favorites.includes(game.id)
               return (
                 <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
-                  {/* 左上角愛心 */}
                   <button 
                     type="button" 
                     className="card-fav-btn" 
@@ -1308,7 +1289,6 @@ export default function App() {
                       <span className="cover-emoji">{game.emoji}</span>
                     )}
 
-                    {/* 右上角擴充/續作徽章 */}
                     <div className="badge-container">
                       {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
                       {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
@@ -1329,7 +1309,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* 微型膠囊圖標 (Pill Badges) */}
                     <div className="pill-badges-row">
                       <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
                       {game.bestPlayers && <span className="pill-badge best">👑 最佳{game.bestPlayers}人</span>}
@@ -1350,7 +1329,6 @@ export default function App() {
         </section>
       </main>
 
-      {/* 手機專屬底部導覽列 (Bottom Nav) */}
       <nav className="bottom-nav-bar">
         <button 
           type="button" 
@@ -1387,7 +1365,6 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 3D 抽卡立體翻面彈窗 */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
@@ -1486,11 +1463,32 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal */}
+      {/* 詳細資料 Modal (編輯與刪除按鈕已固定在右上角) */}
       {viewDetailGame && (
         <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
+
+            {isAdmin && (
+              <div className="detail-top-admin-bar">
+                <button 
+                  type="button" 
+                  className="detail-top-admin-btn"
+                  onClick={() => handleOpenEditModal(viewDetailGame)}
+                  style={{ background: 'var(--accent-blue)' }}
+                >
+                  ✏️ 編輯
+                </button>
+                <button 
+                  type="button" 
+                  className="detail-top-admin-btn"
+                  onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
+                  style={{ background: '#EF4444' }}
+                >
+                  🗑️ 刪除
+                </button>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <button
@@ -1565,7 +1563,6 @@ export default function App() {
                   <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 2.00).toFixed(2)} / 5.00</span>
                 </div>
 
-                {/* 牌套尺寸顯示 */}
                 {viewDetailGame.sleeveSize && (
                   <div style={{ margin: '8px 0 12px 0', padding: '8px 12px', background: 'var(--pill-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '0.9rem' }}>🃏</span>
@@ -1574,7 +1571,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 說明書 PDF 與教學影片 */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
                   {viewDetailGame.rulePdfUrl && (
                     <a href={viewDetailGame.rulePdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#0284c7', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
@@ -1582,13 +1578,12 @@ export default function App() {
                     </a>
                   )}
                   {viewDetailGame.videoUrl && (
-                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
                       🎬 觀看教學影片
                     </a>
                   )}
                 </div>
 
-                {/* 擴充包提示 */}
                 {viewDetailGame.isExpansion && viewDetailGame.parentId && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>
@@ -1615,7 +1610,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 獨立續作提示 */}
                 {viewDetailGame.isSequel && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(14, 165, 233, 0.08)', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#0369A1', fontWeight: 'bold' }}>
@@ -1678,25 +1672,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {isAdmin && (
-                  <div className="detail-admin-bar">
-                    <button 
-                      type="button" 
-                      onClick={() => handleOpenEditModal(viewDetailGame)}
-                      style={{ background: 'var(--accent-blue)', color: '#fff' }}
-                    >
-                      ✏️ 編輯桌遊
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
-                      style={{ background: '#EF4444', color: '#fff' }}
-                    >
-                      🗑️ 刪除桌遊
-                    </button>
-                  </div>
-                )}
               </>
             ) : (
               <div style={{ padding: '4px 0' }}>
@@ -1718,7 +1693,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal (工整滿版 + 動態牌套增刪 + 官方說明書連結) */}
+      {/* 新增/編輯 Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -1787,7 +1762,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 牌套多組動態管理 (方案一：選尺寸 + 張數，排版舒適滿版) */}
               <div className="sleeve-manager-box">
                 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>
                   🃏 牌套規格管理（棋寶常用尺寸 + 張數）：
@@ -1824,7 +1798,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* 說明書 PDF 網址 */}
               <div className="form-group">
                 <label>📄 官方規則說明書連結 (PDF 網址)</label>
                 <input 
@@ -1865,7 +1838,6 @@ export default function App() {
                 <textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea>
               </div>
 
-              {/* 遊戲本體類型下拉選單 + 打字搜尋前作 */}
               <div className="form-group" style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '10px' }}>
                 <label style={{ fontWeight: 'bold', marginBottom: '6px' }}>📦 遊戲本體類型：</label>
                 <select 

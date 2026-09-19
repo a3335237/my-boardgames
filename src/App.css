@@ -612,7 +612,7 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* ==================== 彈窗與表單樣式（完全修復滿版與舒適圓角） ==================== */
+/* ==================== 彈窗與表單樣式 ==================== */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -654,7 +654,6 @@ body {
   color: var(--text-main);
 }
 
-/* 核心修正：讓所有輸入框滿版、圓角舒適、內距漂亮（完全如原版） */
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -678,7 +677,7 @@ body {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
-/* 牌套多組動態表單樣式 (方案一) */
+/* 牌套多組動態管理 (方案一) */
 .sleeve-manager-box {
   background: rgba(0, 0, 0, 0.03);
   padding: 12px 14px;
@@ -783,15 +782,20 @@ body {
   cursor: pointer;
 }
 
+/* 詳情彈窗內部滾動與右上角管理列固定 */
 .detail-modal-content {
   background: var(--bg-card);
   padding: 2rem;
   border-radius: 24px;
   width: 90%;
   max-width: 600px;
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   position: relative;
   border: 1px solid var(--border-color);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box !important;
 }
 
 .close-detail-btn {
@@ -803,6 +807,33 @@ body {
   font-size: 1.5rem;
   color: var(--text-muted);
   cursor: pointer;
+  z-index: 15;
+}
+
+/* 右上角固定管理按鈕列 (解決不用捲動即可編輯/刪除) */
+.detail-top-admin-bar {
+  position: absolute;
+  top: 15px;
+  right: 65px;
+  display: flex;
+  gap: 8px;
+  z-index: 15;
+}
+
+.detail-top-admin-btn {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: transform 0.15s ease;
+}
+
+.detail-top-admin-btn:hover {
+  transform: scale(1.05);
 }
 
 .detail-english {
@@ -814,32 +845,11 @@ body {
 .modal-content img {
   width: auto !important;
   max-width: 100% !important;
-  max-height: 420px !important;
+  max-height: 360px !important;
   height: auto !important;
   object-fit: contain !important;
   display: block !important;
-  margin: 0 auto 1.5rem auto !important;
-}
-
-.detail-admin-bar {
-  margin-top: 20px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.detail-admin-bar button {
-  padding: 7px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  margin: 0 auto 1.2rem auto !important;
 }
 
 /* ==================== 手機底部導覽列 (Bottom Nav) ==================== */
@@ -882,7 +892,7 @@ body {
   color: var(--accent-blue);
 }
 
-/* ==================== 手機版排版優化 (RWD) ==================== */
+/* ==================== 手機版 RWD 優化 ==================== */
 @media screen and (max-width: 768px) {
   html, body {
     -webkit-text-size-adjust: 100%;
@@ -986,10 +996,26 @@ body {
     left: 6px !important;
   }
 
-  .detail-modal-content,
-  .modal-content {
-    width: 92vw !important;
+  .detail-modal-content {
+    width: 95vw !important;
     max-height: 85vh !important;
+    padding: 1.2rem !important;
+    overflow-y: auto !important;
+  }
+
+  .detail-top-admin-bar {
+    right: 50px !important;
+    top: 12px !important;
+  }
+
+  .detail-top-admin-btn {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .modal-content {
+    width: 95vw !important;
+    max-height: 88vh !important;
     padding: 1.2rem !important;
   }
 }
