@@ -782,7 +782,7 @@ body {
   cursor: pointer;
 }
 
-/* 詳情彈窗內部滾動與右上角管理列固定 */
+/* 詳情彈窗內部滾動優化 */
 .detail-modal-content {
   background: var(--bg-card);
   padding: 2rem;
@@ -810,8 +810,8 @@ body {
   z-index: 15;
 }
 
-/* 右上角固定管理按鈕列 (解決不用捲動即可編輯/刪除) */
-.detail-top-admin-bar {
+/* 電腦版專屬：右上角固定管理按鈕列 */
+.desktop-admin-bar {
   position: absolute;
   top: 15px;
   right: 65px;
@@ -820,7 +820,7 @@ body {
   z-index: 15;
 }
 
-.detail-top-admin-btn {
+.desktop-admin-btn {
   padding: 5px 12px;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -832,8 +832,33 @@ body {
   transition: transform 0.15s ease;
 }
 
-.detail-top-admin-btn:hover {
+.desktop-admin-btn:hover {
   transform: scale(1.05);
+}
+
+/* 手機版專屬：底部管理按鈕列 (預設隱藏) */
+.mobile-admin-bar {
+  display: none;
+  margin-top: 2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border-color);
+  gap: 12px;
+}
+
+.mobile-admin-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .detail-english {
@@ -905,6 +930,15 @@ body {
 
   .bottom-nav-bar {
     display: flex;
+  }
+
+  /* 切換為手機版按鈕機制 */
+  .desktop-admin-bar {
+    display: none !important;
+  }
+
+  .mobile-admin-bar {
+    display: flex !important;
   }
 
   .header {
@@ -1001,18 +1035,6 @@ body {
     max-height: 85vh !important;
     padding: 1.2rem !important;
     overflow-y: auto !important;
-  }
-
-  .detail-top-admin-bar {
-    position: absolute !important;
-    top: 55px !important;       /* 下移至分頁標籤下方，避免卡在上方 */
-    right: 15px !important;      /* 靠右對齊 */
-    gap: 6px !important;
-  }
-
-  .detail-top-admin-btn {
-    padding: 3px 8px !important;
-    font-size: 0.7rem !important;
   }
 
   .modal-content {

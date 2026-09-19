@@ -1463,17 +1463,18 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal (編輯與刪除按鈕已固定在右上角) */}
+      {/* 詳細資料 Modal (電腦版右上角固定，手機版底部滿版) */}
       {viewDetailGame && (
         <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
 
+            {/* 電腦版右上角按鈕 */}
             {isAdmin && (
-              <div className="detail-top-admin-bar">
+              <div className="desktop-admin-bar">
                 <button 
                   type="button" 
-                  className="detail-top-admin-btn"
+                  className="desktop-admin-btn"
                   onClick={() => handleOpenEditModal(viewDetailGame)}
                   style={{ background: 'var(--accent-blue)' }}
                 >
@@ -1481,7 +1482,7 @@ export default function App() {
                 </button>
                 <button 
                   type="button" 
-                  className="detail-top-admin-btn"
+                  className="desktop-admin-btn"
                   onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
                   style={{ background: '#EF4444' }}
                 >
@@ -1670,6 +1671,28 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* 手機版底部專屬按鈕 */}
+                {isAdmin && (
+                  <div className="mobile-admin-bar">
+                    <button 
+                      type="button" 
+                      className="mobile-admin-btn"
+                      onClick={() => handleOpenEditModal(viewDetailGame)}
+                      style={{ background: 'var(--accent-blue)' }}
+                    >
+                      ✏️ 編輯桌遊
+                    </button>
+                    <button 
+                      type="button" 
+                      className="mobile-admin-btn"
+                      onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
+                      style={{ background: '#EF4444' }}
+                    >
+                      🗑️ 刪除桌遊
+                    </button>
                   </div>
                 )}
               </>
