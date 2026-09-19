@@ -236,14 +236,6 @@ export default function App() {
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
         osc.start(now)
         osc.stop(now + 0.2)
-      } else if (type === 'flip') {
-        osc.type = 'sawtooth'
-        osc.frequency.setValueAtTime(450, now)
-        osc.frequency.exponentialRampToValueAtTime(180, now + 0.12)
-        gain.gain.setValueAtTime(0.12, now)
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
-        osc.start(now)
-        osc.stop(now + 0.12)
       } else if (type === 'victory') {
         osc.type = 'triangle'
         osc.frequency.setValueAtTime(523.25, now)
@@ -532,7 +524,6 @@ export default function App() {
     setIsRevealed(false)
     setIsShuffling(true)
     triggerHaptic('medium')
-    playSound('flip')
 
     const picked = pool[Math.floor(Math.random() * pool.length)]
     setRandomGame(picked)
@@ -542,7 +533,7 @@ export default function App() {
       setIsRevealed(true)
       playSound('victory')
       triggerHaptic('heavy')
-    }, 700)
+    }, 600)
   }
 
   function handleAdminToggle() {
@@ -1365,6 +1356,7 @@ export default function App() {
         </button>
       </nav>
 
+      {/* ✨ 放大外框與空間的盲盒開箱抽卡彈窗 */}
       {randomGame && (
         <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
           <div 
@@ -1372,10 +1364,9 @@ export default function App() {
             onClick={(e) => e.stopPropagation()} 
             style={{ 
               textAlign: 'center', 
-              maxWidth: '380px', 
-              padding: '1.8rem 1.4rem', 
-              borderRadius: '24px',
-              perspective: '1200px'
+              maxWidth: '460px', 
+              padding: '2rem 1.6rem', 
+              borderRadius: '28px'
             }}
           >
             <button className="close-detail-btn" onClick={() => setRandomGame(null)} disabled={isShuffling}>
@@ -1386,32 +1377,30 @@ export default function App() {
               {isShuffling ? '🎴 命運牌堆洗牌中...' : '✨ 命中注定就是它！'}
             </span>
 
-            <div className={`card-flip-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1.2rem auto' }}>
-              <div className={`card-flip-inner ${isRevealed ? 'is-flipped' : ''}`}>
-                <div className="card-face card-face-back">
-                  <div className="card-back-pattern">
-                    <span style={{ fontSize: '3rem' }}>🔮</span>
-                    <strong style={{ fontSize: '0.9rem', color: '#CBD5E1', letterSpacing: '2px' }}>DESTINY</strong>
-                  </div>
+            <div className={`card-reveal-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1.2rem auto' }}>
+              {isShuffling || !isRevealed ? (
+                <div className="card-mystery-back">
+                  <span>🔮</span>
+                  <strong style={{ fontSize: '0.95rem', color: '#CBD5E1', letterSpacing: '2px' }}>DESTINY</strong>
                 </div>
-
-                <div className="card-face card-face-front" style={{ padding: '12px 10px', height: '100%' }}>
-                  <div style={{ flex: 1, width: '100%', minHeight: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', overflow: 'hidden', marginBottom: '8px' }}>
+              ) : (
+                <div className="card-reveal-box">
+                  <div className="card-reveal-img-box">
                     {randomGame.imageUrl ? (
-                      <img src={randomGame.imageUrl} alt={randomGame.name} style={{ width: 'auto', height: 'auto', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+                      <img src={randomGame.imageUrl} alt={randomGame.name} />
                     ) : (
                       <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '1.2rem', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '1.3rem', margin: '6px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '0.82rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
                     <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1.2rem' }}>
@@ -1424,9 +1413,9 @@ export default function App() {
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 20px',
+                  padding: '10px 22px',
                   fontWeight: 'bold',
-                  fontSize: '0.88rem',
+                  fontSize: '0.9rem',
                   cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
                 }}
@@ -1449,9 +1438,9 @@ export default function App() {
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 20px',
+                  padding: '10px 22px',
                   fontWeight: 'bold',
-                  fontSize: '0.88rem',
+                  fontSize: '0.9rem',
                   cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                 }}
@@ -1463,13 +1452,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal (電腦版右上角固定，手機版底部滿版) */}
+      {/* 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
 
-            {/* 電腦版右上角按鈕 */}
             {isAdmin && (
               <div className="desktop-admin-bar">
                 <button 
@@ -1579,7 +1567,7 @@ export default function App() {
                     </a>
                   )}
                   {viewDetailGame.videoUrl && (
-                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
                       🎬 觀看教學影片
                     </a>
                   )}
@@ -1674,7 +1662,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 手機版底部專屬按鈕 */}
                 {isAdmin && (
                   <div className="mobile-admin-bar">
                     <button 
