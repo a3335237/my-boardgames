@@ -2,69 +2,53 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import './App.css'
 import { supabase } from './supabaseClients'
 
+// 棋寶常見牌套尺寸選項
+const CHESURE_SLEEVE_OPTIONS = [
+  '38x88 mm', '41x63 mm', '43x65 mm', '44x63 mm', '45x68 mm',
+  '50x75 mm', '54x80 mm', '54x86 mm', '56x87 mm', '57.5x89 mm',
+  '59x92 mm', '61x112 mm', '63.5x88 mm', '65x100 mm', '70x100 mm',
+  '70x110 mm', '70x120 mm', '75x105 mm', '75x110 mm', '80x120 mm',
+  '52x52 mm', '65x65 mm', '70x70 mm', '80x80 mm', '免用牌套'
+]
+
 const initialGames = [
-  { id: 1, name: '病毒在跳舞', englishName: 'Virus!', minPlayers: 2, maxPlayers: 6, bestPlayers: '3-4', time: 20, category: '卡牌對戰', rating: 6.60, complexity: 1.08, emoji: '🦠', imageUrl: '', tags: ['新手推薦', '互相傷害'], description: '搶先組合出四個健康器官！使用病毒感染對手，或用醫療卡拯救自己。', cheatSheet: '1. 每回合出1張牌或棄牌。\n2. 第一個組出4個健康器官的玩家獲勝！', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 2, name: '雙面間諜', englishName: 'Double Agent', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 20, category: '陣營', rating: 0, complexity: 0, emoji: '🕵️‍♂️', imageUrl: '', tags: ['心機', '身分猜測'], description: '在情報戰中隱藏身分，辨別誰是敵誰是友。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 3, name: '香蕉保衛戰', englishName: 'Banana Defense', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 15, category: '派對', rating: 0, complexity: 0, emoji: '🍌', imageUrl: '', tags: ['歡樂', '快節奏'], description: '守護你的香蕉！快速反應搶奪資源的熱鬧派對遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 4, name: '吸爆鬆餅', englishName: 'Pancake Stack', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 0, complexity: 0, emoji: '🥞', imageUrl: '', tags: ['反應搶答', '輕鬆搞笑'], description: '疊高鬆餅吸爆對手！節奏快速且充滿歡笑的輕度派對遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 5, name: '超級瑪利歐 生命之旅', englishName: 'The Game of Life: Super Mario', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '家庭', rating: 6.40, complexity: 1.25, emoji: '🍄', imageUrl: '', tags: ['經典IP', '家庭同樂'], description: '經典生命之旅融入瑪利歐世界，收集金幣與夥伴擊敗庫巴！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 6, name: '格格不入', englishName: 'Blokus', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '策略', rating: 6.90, complexity: 1.77, emoji: '🟩', imageUrl: '', tags: ['抽象棋類', '易學難精'], description: '經典的版塊放置遊戲，盡可能把自己的方塊全部拼上棋盤！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 7, name: '黑洞貓 (爆炸貓擴充)', englishName: 'Exploding Kittens: Streaking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '派對', rating: 7.20, complexity: 1.09, emoji: '🐱', imageUrl: '', tags: ['擴充', '更多玩法'], description: '爆炸貓擴充包，加入可以偷偷把爆炸貓握在手中的黑洞貓卡！', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 8, name: '墨敵賽', englishName: 'Modisai', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 20, category: '輕策略', rating: 0, complexity: 0, emoji: '🐙', imageUrl: '', tags: ['卡牌對決', '簡單易學'], description: '充滿戰略趣味的卡牌對決遊戲，運用墨水敵人打敗對手！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 9, name: '神吐槽', englishName: 'God Reaction', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-8', time: 25, category: '派對', rating: 0, complexity: 0, emoji: '🗣️', imageUrl: '', tags: ['吐槽搞笑', '文字遊戲'], description: '面對各種奇葩情境，給出最具創意與爆點的神吐槽！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 10, name: '拼布對決：臺灣意象', englishName: 'Patchwork: Taiwan Edition', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 30, category: '策略', rating: 7.60, complexity: 1.62, emoji: '🧵', imageUrl: '', tags: ['雙人必玩', '拼板幾何', '在地風情'], description: '經典雙人對決拼布遊戲，融入滿滿台灣特色地磚與風景圖案。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 11, name: '回憶三重奏', englishName: 'Trio', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '卡牌對戰', rating: 7.40, complexity: 1.09, emoji: '🎵', imageUrl: '', tags: ['記憶推理', '日系熱門', '快節奏'], description: '找出隱藏的三張同數字卡牌！結合記憶與刺探心理的極簡卡牌遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 12, name: '機密代號：裡應外合', englishName: 'Codenames: Duet', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 25, category: '合作', rating: 7.50, complexity: 1.34, emoji: '🕵️', imageUrl: '', tags: ['雙人首選', '默契考驗', '續作'], description: '雙人合作版的機密代號，透過一個詞彙給予提示，找出所有特務。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 13, name: 'BANG! 決鬥版', englishName: 'BANG! The Duel', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 30, category: '卡牌對戰', rating: 6.70, complexity: 1.95, emoji: '🤠', imageUrl: '', tags: ['雙人專屬', '牛仔決鬥', '續作'], description: '專為兩位玩家設計的西部槍戰決鬥！執法者對決不法之徒。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 14, name: '京都蝶影', englishName: 'Shadows in Kyoto', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 20, category: '輕策略', rating: 6.90, complexity: 1.74, emoji: '🦋', imageUrl: '', tags: ['雙人推理', '日式和風', '心理博弈'], description: '明治時代的京都暗影對決，密探互相刺探情報的雙人心理戰棋。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 15, name: '藝妓知道', englishName: "Geisha's Secret", minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 20, category: '輕策略', rating: 0, complexity: 0, emoji: '🪭', imageUrl: '', tags: ['雙人博弈', '花見小路系列', '續作'], description: '《花見小路》系列衍生作，運用有限手牌在藝妓爭奪中獲得優勢。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 16, name: '花見小路', englishName: 'Hanamikoji', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 20, category: '輕策略', rating: 7.50, complexity: 1.71, emoji: '🌸', imageUrl: '', tags: ['雙人神作', '四個行動', '精美和風'], description: '極具深度的雙人博弈經典，藉由巧妙的送牌與設局贏得藝妓芳心。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 17, name: '你是不是沒朋友', englishName: 'No Friends', minPlayers: 1, maxPlayers: 5, bestPlayers: '3-4', time: 25, category: '派對', rating: 0, complexity: 0, emoji: '😜', imageUrl: '', tags: ['自嘲搞笑', '單人可玩'], description: '適合邊聊天邊玩的邊緣人派對桌遊。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 18, name: '殘酷二選一', englishName: 'Pick Your Poison', minPlayers: 3, maxPlayers: 10, bestPlayers: '5-8', time: 30, category: '派對', rating: 6.10, complexity: 1.04, emoji: '⚖️', imageUrl: '', tags: ['地獄抉擇', '派對熱場'], description: '兩個荒謬無比的情境，你會選哪一個？考驗人性與友情的爆笑對話。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 19, name: '矮人礦坑：雙人決鬥版', englishName: 'Saboteur: The Duel', minPlayers: 1, maxPlayers: 2, bestPlayers: '2', time: 30, category: '輕策略', rating: 6.60, complexity: 1.62, emoji: '⛏️', imageUrl: '', tags: ['雙人專屬', '挖礦陷害', '續作'], description: '矮人礦坑雙人對決版，鋪路尋找金礦，同時破壞對手的工具！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 20, name: '炸彈競技場：口袋版', englishName: 'Bomb Arena', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '陣營', rating: 0, complexity: 0, emoji: '💣', imageUrl: '', tags: ['快節奏', '互相傷害'], description: '炸彈隨時爆發，利用手中的牌轉移炸彈或陷害對手。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 21, name: '駱駝大賽', englishName: 'Camel Up', minPlayers: 2, maxPlayers: 8, bestPlayers: '5-6', time: 30, category: '派對', rating: 7.50, complexity: 1.50, emoji: '🐪', imageUrl: '', tags: ['賽駱駝', '押注下注', '立體金字塔'], description: '瘋狂爆笑的駱駝賽跑！疊羅漢前進與倒退駱駝讓賽況充滿意外變數。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 22, name: '瘋狂地下城', englishName: 'Dungeon Mayhem: Monster Madness', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '卡牌對戰', rating: 7.40, complexity: 1.30, emoji: '👾', imageUrl: '', tags: ['怪物陣容', '支援6人', '續作'], description: '《地城無雙》大盒續作，扮演眼魔、奪心魔等經典 D&D 怪物互毆！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 23, name: '黃牌', englishName: 'Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🟨', imageUrl: '', tags: ['填空搞笑', '黃暴歡樂'], description: '填空題卡牌遊戲，用最無厘頭或地獄的答案獲得裁判青睞！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 24, name: '黃牌：梗圖擴充', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🖼️', imageUrl: '', tags: ['擴充', '梗圖迷因'], description: '將迷因圖卡融入黃牌題型，產出更爆笑的地獄哏組合。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 25, name: '瞎掰王', englishName: 'Fake That', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 0, complexity: 0, emoji: '🤥', imageUrl: '', tags: ['派對熱門', '一本正經胡說八道'], description: '只有一個人知道冷知識真相，其他人要發揮演技瞎掰搶答！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 26, name: '瞎掰王：看圖掰', englishName: 'Fake That Picture', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 0, complexity: 0, emoji: '🖼️', imageUrl: '', tags: ['續作', '看圖說故事', '胡說八道'], description: '看著怪異圖片發揮創意一本正經地胡說八道，騙過所有玩家！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 27, name: '搞怪運動會', englishName: 'Wacky Sports', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 0, complexity: 0, emoji: '🏅', imageUrl: '', tags: ['歡樂動作', '派對爆笑'], description: '各種搞怪刺激的運動會項目，考驗大家的反應與肢體協調！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 28, name: '璀璨寶石：漫威版', englishName: 'Splendor Marvel', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '策略', rating: 7.60, complexity: 1.93, emoji: '💎', imageUrl: '', tags: ['續作', '引擎建構', '漫威IP'], description: '招募超級英雄，收集無限寶石，搶先完成無限手套！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 29, name: '出包魔法師', englishName: 'Abraca...What?', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 25, category: '派對', rating: 6.90, complexity: 1.18, emoji: '🧙‍♂️', imageUrl: '', tags: ['看別人看不到自己', '魔法施法', '排骨積木'], description: '你看得到別人的咒語，卻看不到自己的！猜測手中石塊念出正確魔法。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 30, name: '心靈共感', englishName: 'Telepathy', minPlayers: 2, maxPlayers: 8, bestPlayers: '4-6', time: 20, category: '合作', rating: 0, complexity: 0, emoji: '🔮', imageUrl: '', tags: ['默契聯想', '同頻共振'], description: '考驗玩家心靈同頻率的默契文字聯想遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 31, name: '黃牌：擴充3 水星逆行', englishName: 'Yellow Card: Mercury Retrograde', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🪐', imageUrl: '', tags: ['擴充', '星座倒楣哏'], description: '黃牌第三彈擴充包，收錄滿滿水逆崩潰新字詞！', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 32, name: '黃牌：擴充SP 看見幸福', englishName: 'Yellow Card: SP See Happiness', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🌈', imageUrl: '', tags: ['擴充', '特別版'], description: '黃牌特別限定擴充包，反諷滿滿的幸福字詞卡。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 33, name: '黃牌：擴充2 石虎', englishName: 'Yellow Card: Leopard Cat', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🐆', imageUrl: '', tags: ['擴充', '台灣在地'], description: '黃牌第二彈擴充包，融入台灣特有種與時事哏。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 34, name: '黃牌：擴充1 過年', englishName: 'Yellow Card: Lunar New Year', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 0, complexity: 0, emoji: '🧧', imageUrl: '', tags: ['擴充', '過年必開'], description: '黃牌首波擴充，充滿親戚拷問與過年情境卡牌。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: null },
-  { id: 35, name: '拉密：大字版 XL', englishName: 'Rummikub Large Numbers XL', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 45, category: '策略', rating: 6.30, complexity: 1.77, emoji: '🔢', imageUrl: '', tags: ['以色列麻將', '數字重組', '經典神作'], description: '全球風行數字拼牌遊戲！將手中的數字牌依順子或同數組合率先出完。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 36, name: '試個好遊戲', englishName: "We Didn't Playtest This At All", minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 5.70, complexity: 1.05, emoji: '🃏', imageUrl: '', tags: ['超快節奏', '無厘頭勝負'], description: '幾秒鐘就能結束一局！規則隨時在變，抽到什麼牌就照著做。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 37, name: '還試好遊戲', englishName: "We Didn't Playtest This Either", minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 5.90, complexity: 1.06, emoji: '🎴', imageUrl: '', tags: ['續作', '無厘頭'], description: '《試個好遊戲》續作，更多荒繆搞笑的勝利條件與淘汰規則！可獨立開局。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: 36 },
-  { id: 38, name: '字字轉機', englishName: 'Anomia', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 25, category: '派對', rating: 7.00, complexity: 1.10, emoji: '🔤', imageUrl: '', tags: ['反應力', '聯想力'], description: '符號對對碰！當卡牌符號相同時，必須搶先喊出對方卡牌類別的單字！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 39, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 6.80, complexity: 1.06, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 40, name: '腦洞量表', englishName: 'Top Ten', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 7.40, complexity: 1.08, emoji: '💡', imageUrl: '', tags: ['合作默契', '熱鬧歡樂'], description: '隊長提出題目，每個人根據手中的數字表演對應程度，讓隊長排序！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 41, name: '腦洞量表：沒有下限', englishName: 'Top Ten Uncensored', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 7.40, complexity: 1.08, emoji: '🔞', imageUrl: '', tags: ['續作', '限制級搞笑', '默契評估'], description: '腦洞量表無下限版！根據題目表演 1 到 10 的程度，越浮誇越好！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: 40 },
-  { id: 42, name: '鴿爆了', englishName: 'Pigeon Explode', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 20, category: '派對', rating: 0, complexity: 0, emoji: '🕊️', imageUrl: '', tags: ['派對', '搞笑'], description: '充滿歡笑與意外的派對卡牌遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 43, name: '政變疑雲', englishName: 'Coup', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '吹牛', rating: 7.00, complexity: 1.41, emoji: '👑', imageUrl: '', tags: ['吹牛陣營', '快節奏'], description: '即使你沒有那個角色的能力，也可以假裝有！看誰能吹牛到最後。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 44, name: '爆炸貓', englishName: 'Exploding Kittens', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 6.10, complexity: 1.08, emoji: '💥', imageUrl: '', tags: ['心機抽牌', '新手推薦'], description: '像俄羅斯輪盤一樣的抽牌遊戲，抽到爆炸貓就淘汰！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 45, name: '驚爆倫敦', englishName: 'Time Bomb', minPlayers: 4, maxPlayers: 8, bestPlayers: '6-8', time: 20, category: '陣營', rating: 7.00, complexity: 1.25, emoji: '💣', imageUrl: '', tags: ['剪線炸彈', '陣營心機'], description: '福爾摩斯對決莫里亞蒂！剪對線解除炸彈，還是不小心引爆大樓？', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 46, name: '獵巫鎮', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 6.90, complexity: 1.69, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 47, name: 'Who 怕 Who', englishName: 'Who Pa Who', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '派對', rating: 0, complexity: 0, emoji: '👊', imageUrl: '', tags: ['互相傷害', '熱鬧歡樂'], description: '充滿挑釁與互踩樂趣的歡樂派對卡牌遊戲！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 48, name: 'BANG! 骰子版', englishName: 'BANG! The Dice Game', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-7', time: 15, category: '陣營', rating: 7.00, complexity: 1.28, emoji: '🎲', imageUrl: '', tags: ['續作', '快節奏骰子', '熱鬧陣營'], description: '骰子版本的經典西部 BANG！擲骰決定射擊、補血或引爆印地安人箭雨。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 49, name: 'BANG! 骰子版：老酒館擴充', englishName: 'BANG! The Dice Game: Old Saloon', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-7', time: 20, category: '陣營', rating: 7.60, complexity: 1.48, emoji: '🍺', imageUrl: '', tags: ['擴充', '模組配件'], description: 'BANG骰子版專屬擴充，加入幽靈角色、老酒館骰與新角色。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: 48 },
-  { id: 50, name: 'BANG! 骰子版：殭屍來襲擴充', englishName: 'BANG! The Dice Game: Undead or Alive', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-7', time: 20, category: '陣營', rating: 7.50, complexity: 1.47, emoji: '🧟', imageUrl: '', tags: ['擴充', '殭屍反撲'], description: '陣亡玩家化身殭屍重回戰場！為 BANG 骰子版帶來逆轉樂趣。', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: 48 },
-  { id: 51, name: '爆炸貓 桌遊版', englishName: 'Exploding Kittens: Party Pack', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 15, category: '派對', rating: 6.50, complexity: 1.07, emoji: '📦', imageUrl: '', tags: ['支援10人', '派對升級'], description: '爆炸貓派對盒裝版，支援多達 10 人同時開局遊玩。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 52, name: '三千世界鴉殺盡', englishName: 'Crow Killers', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '派對', rating: 0, complexity: 0, emoji: '🦅', imageUrl: '', tags: ['日系畫風', '心機'], description: '充滿日式風情的輕度心理戰遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 53, name: '犯人在跳舞', englishName: 'Criminal Dance', minPlayers: 3, maxPlayers: 8, bestPlayers: '6-8', time: 15, category: '陣營', rating: 6.70, complexity: 1.13, emoji: '🕺', imageUrl: '', tags: ['手牌交換', '新手必玩'], description: '犯人卡會在大家手中不斷轉移，偵探能否在遊戲結束前抓到犯人？', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 54, name: '多數派問非所答', englishName: 'Majority Cross Questions', minPlayers: 4, maxPlayers: 8, bestPlayers: '5-8', time: 20, category: '派對', rating: 0, complexity: 0, emoji: '❓', imageUrl: '', tags: ['無厘頭', '答非所問', '爆笑派對'], description: '不能回答正確答案！用最奇葩的反應混淆視聽的派對文字遊戲。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 55, name: '爆炸貓：炸毛版', englishName: 'Exploding Kittens: Barking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '派對', rating: 7.00, complexity: 1.12, emoji: '🐕', imageUrl: '', tags: ['擴充', '貓冠配件'], description: '爆炸貓第3彈擴充，內含實體貓咪皇冠與吠叫貓卡！', cheatSheet: '', videoUrl: '', isExpansion: true, parentId: 44 },
-  { id: 56, name: '炸彈 BOOM', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 0, complexity: 0, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 57, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 7.00, complexity: 1.25, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 58, name: '夜市人蔘', englishName: 'Night Market', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 30, category: '輕策略', rating: 6.80, complexity: 1.50, emoji: '🍢', imageUrl: '', tags: ['台灣在地', '美食擺攤'], description: '體驗台灣夜市擺攤樂趣！收集食材組合出美味的夜市小吃。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 59, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 7.50, complexity: 1.76, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', isExpansion: false, parentId: null },
-  { id: 60, name: '情書：六人版', englishName: 'Love Letter: Premium', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '輕策略', rating: 7.50, complexity: 1.41, emoji: '💌', imageUrl: '', tags: ['經典推理', '支援6人', '續作'], description: '情書高級擴展獨立版，支援高達6人，加入刺客、紅衣主教等全新角色。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 61, name: '情書：四人版', englishName: 'Love Letter', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '輕策略', rating: 7.20, complexity: 1.19, emoji: '✉️', imageUrl: '', tags: ['經典神作', '16張牌微桌遊'], description: '手牌只有一張！利用角色能力刺探並淘汰對手，將信送到公主手中。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null },
-  { id: 62, name: '情書：漫威版', englishName: 'Love Letter: Marvel Infinity Gauntlet', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '陣營', rating: 7.20, complexity: 1.34, emoji: '🥊', imageUrl: '', tags: ['續作', '一對多', '漫威對決'], description: '《情書》核心機制改版！一人扮演薩諾斯對決復仇者聯盟英雄隊伍。', cheatSheet: '', videoUrl: '', isExpansion: false, parentId: null }
+  { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (120張)' },
+  { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.10, complexity: 1.20, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm (120張)' },
+  { id: 3, name: '機密代號：裡應外合', englishName: 'Codenames: Duet', minPlayers: 2, maxPlayers: 2, bestPlayers: '2', time: 25, category: '合作', rating: 8.30, complexity: 2.00, emoji: '🕵️', imageUrl: '', tags: ['雙人首選', '聯想燒腦'], description: '雙人合作版的機密代號，透過一個詞彙給予提示，找出所有特務。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: null, sleeveSize: '45x68 mm (100張), 70x70 mm (15張)' },
+  { id: 4, name: '格格不入', englishName: 'Blokus', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '策略', rating: 7.80, complexity: 1.80, emoji: '🟩', imageUrl: '', tags: ['抽象棋類', '易學難精'], description: '經典的版塊放置遊戲，盡可能把自己的方塊全部拼上棋盤！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '免用牌套' },
+  { id: 5, name: '璀璨寶石：漫威版', englishName: 'Splendor Marvel', minPlayers: 2, maxPlayers: 4, bestPlayers: '3-4', time: 40, category: '策略', rating: 8.40, complexity: 2.20, emoji: '💎', imageUrl: '', tags: ['引擎建構', '漫威IP'], description: '招募超級英雄，收集無限寶石，搶先完成無限手套！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: null, sleeveSize: '63.5x88 mm (90張)' },
+  { id: 6, name: '炸彈競技場：口袋版', englishName: 'Bomb Arena', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '陣營', rating: 7.50, complexity: 1.30, emoji: '💣', imageUrl: '', tags: ['快節奏', '互相傷害'], description: '炸彈隨時爆發，利用手中的牌轉移炸彈或陷害對手。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm' },
+  { id: 7, name: '三千世界鴉殺盡', englishName: 'Crow Killers', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '派對', rating: 7.60, complexity: 1.50, emoji: '🦅', imageUrl: '', tags: ['日系畫風', '心機'], description: '充滿日式風情的輕度心理戰遊戲。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 8, name: '鴿爆了', englishName: 'Pigeon Explode', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 20, category: '派對', rating: 7.40, complexity: 1.00, emoji: '🕊️', imageUrl: '', tags: ['派對', '搞笑'], description: '充滿歡笑與意外的派對卡牌遊戲。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 9, name: '你是不是沒朋友', englishName: 'No Friends', minPlayers: 1, maxPlayers: 5, bestPlayers: '3-4', time: 25, category: '派對', rating: 7.30, complexity: 1.00, emoji: '😜', imageUrl: '', tags: ['自嘲搞笑', '單人可玩'], description: '適合邊聊天邊玩的邊緣人派對桌遊。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 10, name: '無限手套：情書', englishName: 'Infinity Gauntlet', minPlayers: 2, maxPlayers: 6, bestPlayers: '6', time: 15, category: '陣營', rating: 8.00, complexity: 1.50, emoji: '🥊', imageUrl: '', tags: ['1對多', '陣營對決'], description: '一名玩家扮演薩諾斯，其他人扮演復仇者聯盟進行對決！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: 17, sleeveSize: '63.5x88 mm (36張)' },
+  { id: 11, name: '爆炸貓桌遊版', englishName: 'Exploding Kittens', minPlayers: 2, maxPlayers: 5, bestPlayers: '4-5', time: 15, category: '派對', rating: 7.80, complexity: 1.10, emoji: '💥', imageUrl: '', tags: ['心機抽牌', '新手推薦'], description: '像俄羅斯輪盤一樣的抽牌遊戲，抽到爆炸貓就淘汰！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (56張)' },
+  { id: 12, name: '爆炸貓 + 黑洞貓擴充', englishName: 'Exploding Kittens: Streaking Kittens', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 8.00, complexity: 1.30, emoji: '🐱', imageUrl: '', tags: ['擴充版', '更多玩法'], description: '加入了黑洞貓與更多特殊功能卡，讓遊戲更混亂更有趣！', videoUrl: '', rulePdfUrl: '', isExpansion: true, isSequel: false, parentId: 11, sleeveSize: '63.5x88 mm (15張)' },
+  { id: 13, name: '德國蟑螂 皇家版', englishName: 'Cockroach Poker Royal', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-5', time: 20, category: '吹牛', rating: 7.90, complexity: 1.20, emoji: '🪲', imageUrl: '', tags: ['經典吹牛', '看穿心機'], description: '看著對方的眼睛吹牛，皇家版多了皇冠動物與特殊卡牌！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: null, sleeveSize: '57.5x89 mm (65張)' },
+  { id: 14, name: '字字轉機', englishName: 'Anomia', minPlayers: 3, maxPlayers: 6, bestPlayers: '4-6', time: 25, category: '派對', rating: 7.70, complexity: 1.10, emoji: '🔤', imageUrl: '', tags: ['反應力', '聯想力'], description: '符號對對碰！當卡牌符號相同時，必須搶先喊出對方卡牌類別的單字！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 15, name: '夜市人蔘', englishName: 'Night Market', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 30, category: '輕策略', rating: 7.80, complexity: 1.80, emoji: '🍢', imageUrl: '', tags: ['台灣在地', '美食擺攤'], description: '體驗台灣夜市擺攤樂趣！收集食材組合出美味的夜市小吃。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 16, name: '搞怪運動會', englishName: 'Wacky Sports', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 20, category: '派對', rating: 7.20, complexity: 1.00, emoji: '🏅', imageUrl: '', tags: ['歡樂動作', '派對爆笑'], description: '各種搞怪刺激的運動會項目，考驗大家的反應與肢體協調！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 17, name: '情書：六人版', englishName: 'Love Letter: Premium', minPlayers: 2, maxPlayers: 6, bestPlayers: '4', time: 20, category: '輕策略', rating: 8.00, complexity: 1.40, emoji: '💌', imageUrl: '', tags: ['經典推理', '支援6人'], description: '手牌只有一張！利用角色能力猜測他人手牌並將情書送到公主手中。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (27張)' },
+  { id: 18, name: '政變疑雲', englishName: 'Coup', minPlayers: 2, maxPlayers: 6, bestPlayers: '5-6', time: 15, category: '吹牛', rating: 8.10, complexity: 1.50, emoji: '👑', imageUrl: '', tags: ['吹牛陣營', '快節奏'], description: '即使你沒有那個角色的能力，也可以假裝有！看誰能吹牛到最後。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (15張)' },
+  { id: 19, name: '墨敵賽', englishName: 'Modisai', minPlayers: 2, maxPlayers: 5, bestPlayers: '3-4', time: 20, category: '輕策略', rating: 7.30, complexity: 1.60, emoji: '🐙', imageUrl: '', tags: ['卡牌對決', '簡單易學'], description: '充滿戰略趣味的卡牌對決遊戲，運用墨水敵人打敗對手！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm' },
+  { id: 20, name: '吸爆鬆餅', englishName: 'Pancake Stack', minPlayers: 2, maxPlayers: 5, time: 15, bestPlayers: '4-5', category: '派對', rating: 7.40, complexity: 1.10, emoji: '🥞', imageUrl: '', tags: ['反應搶答', '輕鬆搞笑'], description: '疊高鬆餅吸爆對手！節奏快速且充滿歡笑的輕度派對遊戲。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '70x70 mm' },
+  { id: 21, name: '犯人在跳舞', englishName: 'Criminal Dance', minPlayers: 3, maxPlayers: 8, bestPlayers: '6-8', time: 15, category: '陣營', rating: 8.00, complexity: 1.20, emoji: '🕺', imageUrl: '', tags: ['手牌交換', '新手必玩'], description: '犯人卡會在大家手中不斷轉移，偵探能否在遊戲結束前抓到犯人？', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (32張)' },
+  { id: 22, name: 'Who怕Who !?', englishName: 'Who Pa Who', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 20, category: '派對', rating: 7.30, complexity: 1.10, emoji: '👊', imageUrl: '', tags: ['互相傷害', '熱鬧歡樂'], description: '充滿挑釁與互踩樂趣的歡樂派對卡牌遊戲！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 23, name: '神吐槽', englishName: 'God Reaction', minPlayers: 3, maxPlayers: 8, bestPlayers: '5-8', time: 25, category: '派對', rating: 7.80, complexity: 1.20, emoji: '🗣️', imageUrl: '', tags: ['吐槽搞笑', '文字遊戲'], description: '面對各種奇葩情境，給出最具創意與爆點的神吐槽！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm' },
+  { id: 24, name: '驚爆倫敦', englishName: 'Time Bomb', minPlayers: 4, maxPlayers: 8, bestPlayers: '6-8', time: 20, category: '陣營', rating: 8.20, complexity: 1.60, emoji: '💣', imageUrl: '', tags: ['剪線炸彈', '陣營心機'], description: '福爾摩斯對決莫里亞蒂！剪對線解除炸彈，還是不小心引爆大樓？', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (48張)' },
+  { id: 25, name: '世界上有兩種人', englishName: 'Two Kinds of People', minPlayers: 2, maxPlayers: 8, bestPlayers: '5-8', time: 20, category: '派對', rating: 7.60, complexity: 1.00, emoji: '☯️', imageUrl: '', tags: ['價值觀對立', '聊天神開場'], description: '香菜吃不吃？折摺還是捲牙膏？迅速了解朋友隱藏性格的派對遊戲！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 26, name: '瞎掰王：看圖掰', englishName: 'Fake That Picture', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.10, complexity: 1.40, emoji: '🖼️', imageUrl: '', tags: ['看圖說故事', '胡說八道'], description: '看著怪異圖片發揮創意一本正經地胡說八道，騙過所有玩家！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: 28, sleeveSize: '63.5x88 mm' },
+  { id: 27, name: '腦洞量表：沒有下限', englishName: 'Top Ten Uncensored', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.30, complexity: 1.20, emoji: '🔞', imageUrl: '', tags: ['限制級搞笑', '默契評估'], description: '腦洞量表無下限版！根據題目表演 1 到 10 的程度，越浮誇越好！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: 29, sleeveSize: '63.5x88 mm' },
+  { id: 28, name: '瞎掰王', englishName: 'Fake That', minPlayers: 3, maxPlayers: 9, bestPlayers: '5-8', time: 30, category: '吹牛', rating: 8.40, complexity: 1.50, emoji: '🤥', imageUrl: '', tags: ['派對熱門', '一本正經胡說八道'], description: '只有一個人知道冷知識真相，其他人要發揮演技瞎掰搶答！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 29, name: '腦洞量表', englishName: 'Top Ten', minPlayers: 4, maxPlayers: 9, bestPlayers: '6-8', time: 30, category: '派對', rating: 8.20, complexity: 1.20, emoji: '💡', imageUrl: '', tags: ['合作默契', '熱鬧歡樂'], description: '隊長提出題目，每個人根據手中的數字表演對應程度，讓隊長排序！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 30, name: '阿瓦隆', englishName: 'Avalon', minPlayers: 5, maxPlayers: 10, bestPlayers: '8-10', time: 30, category: '陣營', rating: 8.60, complexity: 2.40, emoji: '🏰', imageUrl: '', tags: ['陣營必玩', '語言邏輯', '不淘汰'], description: '正義與邪惡陣營的經典對決，刺客與梅林的智力較量。', cheatSheet: '1. 任務組隊：依據玩家人數指派隊長出任務。\n2. 投票：所有人同時決定贊成或反對該任務組合。\n3. 任務執行：任務成員秘密投下成功或失敗。\n4. 刺殺梅林：壞人若失敗可試圖找出梅林逆轉勝！', videoUrl: 'https://www.youtube.com/results?search_query=阿瓦隆+教學', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (26張)' },
+  { id: 31, name: '黃牌', englishName: 'Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.00, complexity: 1.00, emoji: '🟨', imageUrl: '', tags: ['填空搞笑', '黃暴歡樂'], description: '填空題卡牌遊戲，用最無厘頭或地獄的答案獲得裁判青睞！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' },
+  { id: 32, name: '試個好遊戲', englishName: 'We Didn\'t Playtest This At All', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.50, complexity: 1.00, emoji: '🃏', imageUrl: '', tags: ['超快節奏', '無厘頭勝負'], description: '幾秒鐘就能結束一局！規則隨時在變，抽到什麼牌就照著做。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (72張)' },
+  { id: 33, name: '還試好遊戲', englishName: 'We Didn\'t Playtest This Either', minPlayers: 2, maxPlayers: 10, bestPlayers: '5-8', time: 5, category: '派對', rating: 7.50, complexity: 1.00, emoji: '🎴', imageUrl: '', tags: ['續作擴充', '無厘頭'], description: '《試個好遊戲》獨立續作，可單獨遊玩，亦可與前作混合！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: true, parentId: 32, sleeveSize: '63.5x88 mm (72張)' },
+  { id: 34, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 8.10, complexity: 1.40, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (14張)' },
+  { id: 35, name: '梗圖黃牌', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.10, complexity: 1.10, emoji: '🖼️', imageUrl: '', tags: ['梗圖搭配', '地獄迷因'], description: '將熱門迷因梗圖搭配超欠扁台詞，製作出最搞笑的梗圖組合！', videoUrl: '', rulePdfUrl: '', isExpansion: true, isSequel: false, parentId: 31, sleeveSize: '63.5x88 mm' },
+  { id: 36, name: '獵巫鎮 1692', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 8.40, complexity: 2.10, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (128張)' },
+  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.20, complexity: 1.00, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' }
 ]
 
 const ADMIN_PASSWORD = '1234'
@@ -77,27 +61,23 @@ const emptyForm = {
   bestPlayers: '4',
   time: 30,
   category: '派對',
-  rating: '0.00',
-  complexity: '0.00',
+  rating: '8.00',
+  complexity: '2.00',
   emoji: '🎲',
   imageUrl: '',
   tagsInput: '',
   description: '',
   cheatSheet: '',
   videoUrl: '',
-  gameIdentity: 'main',
+  rulePdfUrl: '',
+  gameType: 'main',
   parentId: ''
-}
-
-function checkIsExpansion(game) {
-  return game.isExpansion === true || game.isExpansion === 'true'
 }
 
 export default function App() {
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme_mode') === 'dark')
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('全部')
@@ -107,10 +87,21 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // ❤️ 我的最愛狀態（專屬於這台裝置的 localStorage，絕不改動資料庫）
+  // 多重主題切換
+  const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'default')
+
+  useEffect(() => {
+    document.body.className = ''
+    if (theme !== 'default') {
+      document.body.classList.add(`theme-${theme}`)
+    }
+    localStorage.setItem('app_theme', theme)
+  }, [theme])
+
+  // 我的最愛
   const [favorites, setFavorites] = useState(() => {
     try {
-      const saved = localStorage.getItem('bg_favorites')
+      const saved = localStorage.getItem('bg_favorite_ids')
       if (saved) return JSON.parse(saved)
     } catch (e) {}
     return []
@@ -118,29 +109,77 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('bg_favorites', JSON.stringify(favorites))
+      localStorage.setItem('bg_favorite_ids', JSON.stringify(favorites))
     } catch (e) {}
   }, [favorites])
 
   function toggleFavorite(e, gameId) {
     e.stopPropagation()
-    triggerHaptic('medium')
-    playSound('flip')
-    setFavorites(prev => {
-      if (prev.includes(gameId)) {
-        return prev.filter(id => id !== gameId)
-      } else {
-        return [...prev, gameId]
-      }
-    })
+    triggerHaptic('light')
+    setFavorites(prev => 
+      prev.includes(gameId) ? prev.filter(id => id !== gameId) : [...prev, gameId]
+    )
   }
 
-  const [randomGame, setRandomGame] = useState(null)
-  const [isRevealed, setIsRevealed] = useState(false)
-  const [isShuffling, setIsShuffling] = useState(false)
+  // 牌套動態多組管理 (方案一)
+  const [sleeveList, setSleeveList] = useState([{ size: '63.5x88 mm', count: '' }])
 
+  function addSleeveRow() {
+    setSleeveList([...sleeveList, { size: '63.5x88 mm', count: '' }])
+  }
+
+  function removeSleeveRow(idx) {
+    setSleeveList(sleeveList.filter((_, i) => i !== idx))
+  }
+
+  function updateSleeveRow(idx, field, value) {
+    const next = [...sleeveList]
+    next[idx][field] = value
+    setSleeveList(next)
+  }
+
+  // BGG 自動抓取輔助狀態
+  const [bggInput, setBggInput] = useState('')
+  const [isFetchingBgg, setIsFetchingBgg] = useState(false)
+
+ export default async function handler(req, res) {
+  // 設定允許跨域與回應格式
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
+  const { id } = req.query
+  if (!id) {
+    return res.status(400).json({ error: 'Missing id parameter' })
+  }
+
+  try {
+    const bggUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${id}&stats=1`
+    
+    // 由伺服器端代為發出請求，加上合法的 User-Agent 避免被阻擋
+    const response = await fetch(bggUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    })
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'BGG API response error' })
+    }
+
+    const xmlData = await response.text()
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8')
+    return res.status(200).send(xmlData)
+  } catch (error) {
+    return res.status(500).json({ error: error.message })
+  }
+}
+
+  // 小工具狀態
   const [widgetTab, setWidgetTab] = useState('starter')
-
   const [sharedPlayers, setSharedPlayers] = useState(() => {
     try {
       const saved = localStorage.getItem('bg_shared_players')
@@ -161,25 +200,26 @@ export default function App() {
   }, [sharedPlayers])
 
   const [inputPlayerName, setInputPlayerName] = useState('')
-
   const [starterWinner, setStarterWinner] = useState(null)
   const [isPickingStarter, setIsPickingStarter] = useState(false)
-
   const [timeLeft, setTimeLeft] = useState(60)
   const [timerRunning, setTimerRunning] = useState(false)
-
   const [diceResult, setDiceResult] = useState('🎲 點擊擲骰')
   const [coinResult, setCoinResult] = useState('🪙 點擊翻面')
   const [isRollingDice, setIsRollingDice] = useState(false)
   const [isFlippingCoin, setIsFlippingCoin] = useState(false)
   const [coinDegree, setCoinDegree] = useState(0)
-
   const [teamA, setTeamA] = useState([])
   const [teamB, setTeamB] = useState([])
 
+  // 彈窗
+  const [randomGame, setRandomGame] = useState(null)
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [isShuffling, setIsShuffling] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(emptyForm)
+  const [parentSearchInput, setParentSearchInput] = useState('')
   const [viewDetailGame, setViewDetailGame] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
 
@@ -200,11 +240,7 @@ export default function App() {
       console.error('抓取資料失敗:', error.message)
       setGames(initialGames)
     } else if (data) {
-      if (data.length === 0) {
-        setGames(initialGames)
-      } else {
-        setGames(data)
-      }
+      setGames(data.length > 0 ? data : initialGames)
     }
     setLoading(false)
   }
@@ -289,20 +325,159 @@ export default function App() {
     return () => clearInterval(interval)
   }, [timerRunning, timeLeft])
 
-  function handleAdminToggle() {
-    triggerHaptic('light')
-    if (isAdmin) {
-      setIsAdmin(false)
-      alert('🔒 已退出管理模式！')
-      return
+  const totalCount = games.length
+  const mainCount = games.filter(g => !g.isExpansion).length
+  const expansionCount = games.filter(g => g.isExpansion).length
+  const favoriteCount = games.filter(g => favorites.includes(g.id)).length
+
+  const categories = useMemo(() => {
+    const base = ['派對', '陣營', '吹牛', '合作', '策略', '輕策略', '卡牌對戰']
+    const catSet = new Set(base)
+    games.forEach(g => { if (g.category) catSet.add(g.category.trim()) })
+    return ['全部', ...Array.from(catSet)]
+  }, [games])
+
+  function isBestPlayerMatch(bestStr, targetNum) {
+    if (!bestStr) return false
+    const cleanStr = String(bestStr).replace(/人/g, '').trim()
+    if (cleanStr.includes('-')) {
+      const [minStr, maxStr] = cleanStr.split('-')
+      const min = parseInt(minStr, 10)
+      const max = parseInt(maxStr, 10)
+      return targetNum >= min && targetNum <= max
     }
-    const inputPass = prompt('🔑 請輸入管理者密碼：')
-    if (inputPass === ADMIN_PASSWORD) {
-      setIsAdmin(true)
-      alert('🔓 驗證成功！已進入管理編輯模式。')
-    } else if (inputPass !== null) {
-      alert('❌ 密碼錯誤！')
+    return parseInt(cleanStr, 10) === targetNum
+  }
+
+  const filteredGames = useMemo(() => {
+    const keyword = search.trim().toLowerCase()
+    return games.filter((game) => {
+      const matchSearch = keyword === '' || 
+        (game.name && game.name.toLowerCase().includes(keyword)) ||
+        (game.englishName && game.englishName.toLowerCase().includes(keyword))
+      
+      const matchCat = category === '全部' || game.category === category
+      
+      let matchP = true
+      if (playerFilter !== 'all') {
+        const p = parseInt(playerFilter, 10)
+        matchP = p >= (game.minPlayers || 1) && p <= (game.maxPlayers || 99)
+      }
+
+      let matchBest = true
+      if (bestPlayerFilter !== 'all') {
+        const b = parseInt(bestPlayerFilter, 10)
+        matchBest = isBestPlayerMatch(game.bestPlayers, b)
+      }
+
+      let matchTime = true
+      if (maxTimeFilter !== 'all') {
+        matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
+      }
+
+      let matchExp = true
+      if (expansionFilter === 'main') matchExp = !game.isExpansion
+      else if (expansionFilter === 'expansion') matchExp = !!game.isExpansion
+      else if (expansionFilter === 'favorite') matchExp = favorites.includes(game.id)
+
+      return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp
+    }).sort((a, b) => {
+      if (sortBy === 'rating-desc') return (b.rating || 0) - (a.rating || 0)
+      if (sortBy === 'time-asc') return (a.time || 0) - (b.time || 0)
+      if (sortBy === 'complexity-asc') return (a.complexity || 1) - (b.complexity || 1)
+      return 0
+    })
+  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
+
+  // JSON 備份
+  function handleExportJSON() {
+    const jsonString = JSON.stringify(games, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const downloadAnchor = document.createElement('a')
+    downloadAnchor.href = url
+    downloadAnchor.download = `boardgames_backup_${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(downloadAnchor)
+    downloadAnchor.click()
+    document.body.removeChild(downloadAnchor)
+    URL.revokeObjectURL(url)
+  }
+
+  function handleImportJSON(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result)
+        if (!Array.isArray(importedData)) return alert('❌ 檔案格式不正確！')
+        if (!window.confirm(`確定要匯入 ${importedData.length} 款桌遊到雲端資料庫嗎？`)) return
+
+        const cleanPayload = importedData.map(({ id, created_at, ...rest }) => ({
+          ...rest,
+          minPlayers: parseInt(rest.minPlayers, 10) || 1,
+          maxPlayers: parseInt(rest.maxPlayers, 10) || 4,
+          time: parseInt(rest.time, 10) || 30,
+          rating: parseFloat(rest.rating) || 8.00,
+          complexity: parseFloat(rest.complexity) || 2.00,
+          isExpansion: !!rest.isExpansion,
+          isSequel: !!rest.isSequel,
+          parentId: rest.parentId ? parseInt(rest.parentId, 10) : null,
+          sleeveSize: rest.sleeveSize || '',
+          rulePdfUrl: rest.rulePdfUrl || ''
+        }))
+
+        const { error } = await supabase.from('boardgames').insert(cleanPayload)
+        if (error) {
+          alert('❌ 匯入 Supabase 失敗：' + error.message)
+        } else {
+          alert(`✅ 成功匯入 ${cleanPayload.length} 款桌遊！`)
+          fetchGamesFromSupabase()
+        }
+      } catch (err) {
+        alert('❌ 解析 JSON 失敗！')
+      }
     }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  function handleCroppedImageUpload(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target.result
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const maxSize = 600
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round((height * maxSize) / width)
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round((width * maxSize) / height)
+            height = maxSize
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        ctx.drawImage(img, 0, 0, width, height)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85)
+        setFormData(prev => ({ ...prev, imageUrl: compressedBase64 }))
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   function handleAddSharedPlayer(e) {
@@ -310,7 +485,7 @@ export default function App() {
     triggerHaptic('light')
     const name = inputPlayerName.trim()
     if (!name) return
-    if (sharedPlayers.some(p => p.name === name)) return alert('玩家名稱已存在！')
+    if (sharedPlayers.some(p => p.name === name)) return alert('玩家已存在！')
     const newId = sharedPlayers.length > 0 ? Math.max(...sharedPlayers.map(p => p.id)) + 1 : 1
     setSharedPlayers([...sharedPlayers, { id: newId, name, score: 0 }])
     setInputPlayerName('')
@@ -398,10 +573,7 @@ export default function App() {
 
   function chooseRandomWithAnimation() {
     const pool = filteredGames.length > 0 ? filteredGames : games
-    if (pool.length === 0) {
-      alert('⚠️ 目前篩選條件下沒有桌遊可供挑選！')
-      return
-    }
+    if (pool.length === 0) return alert('⚠️ 目前篩選條件下沒有桌遊可抽取！')
 
     setIsRevealed(false)
     setIsShuffling(true)
@@ -419,186 +591,20 @@ export default function App() {
     }, 700)
   }
 
-  const totalCount = games.length
-  const expansionCount = useMemo(() => games.filter(g => checkIsExpansion(g)).length, [games])
-  const mainCount = useMemo(() => games.filter(g => !checkIsExpansion(g)).length, [games])
-  const favoriteCount = useMemo(() => games.filter(g => favorites.includes(g.id)).length, [games, favorites])
-
-  const categories = useMemo(() => {
-    const baseCategories = ['派對', '陣營', '吹牛', '合作', '策略', '輕策略', '卡牌對戰', '家庭']
-    const catSet = new Set(baseCategories)
-    games.forEach(g => {
-      if (g.category && g.category.trim() !== '') {
-        catSet.add(g.category.trim())
-      }
-    })
-    return ['全部', ...Array.from(catSet)]
-  }, [games])
-
-  useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-theme')
-      localStorage.setItem('theme_mode', 'dark')
-    } else {
-      document.body.classList.remove('dark-theme')
-      localStorage.setItem('theme_mode', 'light')
+  function handleAdminToggle() {
+    triggerHaptic('light')
+    if (isAdmin) {
+      setIsAdmin(false)
+      alert('🔒 已退出管理模式！')
+      return
     }
-  }, [darkMode])
-
-  function isBestPlayerMatch(bestStr, targetNum) {
-    if (!bestStr) return false
-    const cleanStr = String(bestStr).replace(/人/g, '').trim()
-    if (cleanStr.includes('-')) {
-      const [minStr, maxStr] = cleanStr.split('-')
-      const min = parseInt(minStr, 10)
-      const max = parseInt(maxStr, 10)
-      return targetNum >= min && targetNum <= max
+    const inputPass = prompt('🔑 請輸入管理者密碼：')
+    if (inputPass === ADMIN_PASSWORD) {
+      setIsAdmin(true)
+      alert('🔓 驗證成功！已進入管理編輯模式。')
+    } else if (inputPass !== null) {
+      alert('❌ 密碼錯誤！')
     }
-    return parseInt(cleanStr, 10) === targetNum
-  }
-
-  const filteredGames = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
-    let result = games.filter((game) => {
-      const matchSearch =
-        keyword === '' ||
-        (game.name && game.name.toLowerCase().includes(keyword)) ||
-        (game.englishName && game.englishName.toLowerCase().includes(keyword))
-
-      const matchCategory = category === '全部' || game.category === category
-
-      let matchPlayers = true
-      if (playerFilter !== 'all') {
-        const pCount = parseInt(playerFilter, 10)
-        matchPlayers = pCount >= (game.minPlayers || 1) && pCount <= (game.maxPlayers || 99)
-      }
-
-      let matchBestPlayers = true
-      if (bestPlayerFilter !== 'all') {
-        const bCount = parseInt(bestPlayerFilter, 10)
-        matchBestPlayers = isBestPlayerMatch(game.bestPlayers, bCount)
-      }
-
-      let matchTime = true
-      if (maxTimeFilter !== 'all') {
-        matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
-      }
-
-      const isExp = checkIsExpansion(game)
-      let matchExpansion = true
-      if (expansionFilter === 'main') {
-        matchExpansion = !isExp
-      } else if (expansionFilter === 'expansion') {
-        matchExpansion = isExp
-      } else if (expansionFilter === 'favorite') {
-        matchExpansion = favorites.includes(game.id)
-      }
-
-      return matchSearch && matchCategory && matchPlayers && matchBestPlayers && matchTime && matchExpansion
-    })
-
-    return result.sort((a, b) => {
-      if (sortBy === 'rating-desc') return (b.rating || 0) - (a.rating || 0)
-      if (sortBy === 'time-asc') return (a.time || 0) - (b.time || 0)
-      if (sortBy === 'players-desc') return (b.maxPlayers || 0) - (a.maxPlayers || 0)
-      if (sortBy === 'complexity-asc') return (a.complexity || 0) - (b.complexity || 0)
-      if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '', 'zh-Hant')
-      if (sortBy === 'newest') return b.id - a.id
-      return 0
-    })
-  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
-
-  function handleExportJSON() {
-    const jsonString = JSON.stringify(games, null, 2)
-    const blob = new Blob([jsonString], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const downloadAnchor = document.createElement('a')
-    downloadAnchor.href = url
-    downloadAnchor.download = `boardgames_backup_${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(downloadAnchor)
-    downloadAnchor.click()
-    document.body.removeChild(downloadAnchor)
-    URL.revokeObjectURL(url)
-  }
-
-  function handleImportJSON(e) {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      try {
-        const importedData = JSON.parse(event.target.result)
-        if (!Array.isArray(importedData)) {
-          return alert('❌ 檔案格式不正確，必須是 JSON 陣列資料！')
-        }
-
-        if (!window.confirm(`確定要匯入 ${importedData.length} 款桌遊到雲端資料庫嗎？`)) {
-          return
-        }
-
-        const cleanPayload = importedData.map(({ id, created_at, ...rest }) => ({
-          ...rest,
-          minPlayers: parseInt(rest.minPlayers, 10) || 1,
-          maxPlayers: parseInt(rest.maxPlayers, 10) || 4,
-          time: parseInt(rest.time, 10) || 30,
-          rating: parseFloat(rest.rating) || 0,
-          complexity: parseFloat(rest.complexity) || 0,
-          isExpansion: !!rest.isExpansion,
-          parentId: rest.parentId ? parseInt(rest.parentId, 10) : null
-        }))
-
-        const { error } = await supabase.from('boardgames').insert(cleanPayload)
-
-        if (error) {
-          alert('❌ 匯入 Supabase 失敗：' + error.message)
-        } else {
-          alert(`✅ 成功將 ${cleanPayload.length} 款桌遊寫入雲端資料庫！`)
-          fetchGamesFromSupabase()
-        }
-      } catch (err) {
-        alert('❌ 解析 JSON 檔案失敗，請確認檔案內容！')
-      }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
-  }
-
-  function handleCroppedImageUpload(e) {
-    const file = e.target.files && e.target.files[0]
-    if (!file) return
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const img = new Image()
-      img.src = event.target.result
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        const maxSize = 600
-        let width = img.width
-        let height = img.height
-
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width)
-            width = maxSize
-          }
-        } else {
-          if (height > maxSize) {
-            width = Math.round((width * maxSize) / height)
-            height = maxSize
-          }
-        }
-
-        canvas.width = width
-        canvas.height = height
-        ctx.drawImage(img, 0, 0, width, height)
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85)
-        setFormData(prev => ({ ...prev, imageUrl: compressedBase64 }))
-      }
-    }
-    reader.readAsDataURL(file)
   }
 
   function handleOpenAddModal() {
@@ -606,18 +612,37 @@ export default function App() {
     triggerHaptic('light')
     setEditingId(null)
     setFormData(emptyForm)
+    setSleeveList([{ size: '63.5x88 mm', count: '' }])
+    setBggInput('')
+    setParentSearchInput('')
     setShowModal(true)
   }
 
-  function handleOpenEditModal(e, game) {
-    e.stopPropagation()
+  function handleOpenEditModal(game) {
     if (!isAdmin) return
     triggerHaptic('light')
     setEditingId(game.id)
-    
-    const isSeq = Array.isArray(game.tags) && game.tags.includes('續作')
-    const isExp = checkIsExpansion(game)
-    const identity = isSeq ? 'sequel' : (isExp ? 'expansion' : 'main')
+    let gType = 'main'
+    if (game.isExpansion) gType = 'expansion'
+    else if (game.isSequel) gType = 'sequel'
+
+    const parentGame = games.find(g => g.id === game.parentId)
+
+    // 動態拆解牌套
+    if (game.sleeveSize) {
+      const parsed = game.sleeveSize.split(',').map(s => {
+        const item = s.trim()
+        const countMatch = item.match(/\((\d+)張\)/)
+        const sizeOnly = item.replace(/\s*\(\d+張\)/, '').trim()
+        return {
+          size: sizeOnly || '63.5x88 mm',
+          count: countMatch ? countMatch[1] : ''
+        }
+      })
+      setSleeveList(parsed.length > 0 ? parsed : [{ size: '63.5x88 mm', count: '' }])
+    } else {
+      setSleeveList([{ size: '63.5x88 mm', count: '' }])
+    }
 
     setFormData({
       name: game.name || '',
@@ -627,17 +652,20 @@ export default function App() {
       bestPlayers: game.bestPlayers || '',
       time: game.time || 30,
       category: game.category || '派對',
-      rating: game.rating ? Number(game.rating).toFixed(2) : '0.00',
-      complexity: game.complexity ? Number(game.complexity).toFixed(2) : '0.00',
+      rating: game.rating ? Number(game.rating).toFixed(2) : '8.00',
+      complexity: game.complexity ? Number(game.complexity).toFixed(2) : '2.00',
       emoji: game.emoji || '🎲',
       imageUrl: game.imageUrl || '',
-      tagsInput: Array.isArray(game.tags) ? game.tags.filter(t => t !== '續作').join(', ') : '',
+      tagsInput: Array.isArray(game.tags) ? game.tags.join(', ') : '',
       description: game.description || '',
       cheatSheet: game.cheatSheet || '',
       videoUrl: game.videoUrl || '',
-      gameIdentity: identity,
+      rulePdfUrl: game.rulePdfUrl || '',
+      gameType: gType,
       parentId: game.parentId || ''
     })
+    setBggInput('')
+    setParentSearchInput(parentGame ? parentGame.name : '')
     setShowModal(true)
   }
 
@@ -646,19 +674,15 @@ export default function App() {
     triggerHaptic('medium')
     if (!formData.name.trim()) return alert('請填寫桌遊名稱！')
 
-    let tagsArray = formData.tagsInput.split(',').map(t => t.trim()).filter(t => t !== '')
+    // 方案一：動態組裝牌套規格
+    const formattedSleeve = sleeveList
+      .filter(s => s.size && s.size !== '')
+      .map(s => s.count ? `${s.size} (${s.count}張)` : s.size)
+      .join(', ')
 
-    let isExpVal = false
-    if (formData.gameIdentity === 'expansion') {
-      isExpVal = true
-    } else if (formData.gameIdentity === 'sequel') {
-      isExpVal = false
-      if (!tagsArray.includes('續作')) {
-        tagsArray.push('續作')
-      }
-    } else {
-      tagsArray = tagsArray.filter(t => t !== '續作')
-    }
+    const tagsArray = formData.tagsInput.split(',').map(t => t.trim()).filter(t => t !== '')
+    const isExpansion = formData.gameType === 'expansion'
+    const isSequel = formData.gameType === 'sequel'
 
     const gamePayload = {
       name: formData.name,
@@ -668,62 +692,54 @@ export default function App() {
       bestPlayers: formData.bestPlayers.trim() || `${formData.minPlayers}-${formData.maxPlayers}`,
       time: parseInt(formData.time, 10) || 30,
       category: formData.category.trim() || '未分類',
-      rating: parseFloat(Number(formData.rating).toFixed(2)) || 0,
-      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 0,
+      rating: parseFloat(Number(formData.rating).toFixed(2)) || 8.00,
+      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 2.00,
       emoji: formData.emoji,
       imageUrl: formData.imageUrl,
       tags: tagsArray,
       description: formData.description,
       cheatSheet: formData.cheatSheet,
       videoUrl: formData.videoUrl,
-      isExpansion: isExpVal,
-      parentId: formData.gameIdentity !== 'main' ? (parseInt(formData.parentId, 10) || null) : null
+      rulePdfUrl: formData.rulePdfUrl,
+      isExpansion,
+      isSequel,
+      parentId: (isExpansion || isSequel) ? (parseInt(formData.parentId, 10) || null) : null,
+      sleeveSize: formattedSleeve
     }
 
     if (editingId) {
-      const { error } = await supabase
-        .from('boardgames')
-        .update(gamePayload)
-        .eq('id', editingId)
-
+      const { error } = await supabase.from('boardgames').update(gamePayload).eq('id', editingId)
       if (error) {
         alert('更新失敗：' + error.message)
       } else {
         setGames(games.map(g => g.id === editingId ? { ...g, ...gamePayload } : g))
+        if (viewDetailGame && viewDetailGame.id === editingId) {
+          setViewDetailGame({ ...viewDetailGame, ...gamePayload })
+        }
         setShowModal(false)
-        setFormData(emptyForm)
       }
     } else {
-      const { data, error } = await supabase
-        .from('boardgames')
-        .insert([gamePayload])
-        .select()
-
+      const { data, error } = await supabase.from('boardgames').insert([gamePayload]).select()
       if (error) {
         alert('新增失敗：' + error.message)
       } else if (data) {
         setGames([data[0], ...games])
         setShowModal(false)
-        setFormData(emptyForm)
       }
     }
   }
 
-  async function handleDeleteGame(e, id, name) {
-    e.stopPropagation()
+  async function handleDeleteGame(id, name) {
     if (!isAdmin) return
     triggerHaptic('medium')
 
     if (window.confirm(`確定要刪除「${name}」嗎？`)) {
-      const { error } = await supabase
-        .from('boardgames')
-        .delete()
-        .eq('id', id)
-
+      const { error } = await supabase.from('boardgames').delete().eq('id', id)
       if (error) {
         alert('刪除失敗：' + error.message)
       } else {
         setGames(games.filter(g => g.id !== id))
+        if (viewDetailGame && viewDetailGame.id === id) setViewDetailGame(null)
       }
     }
   }
@@ -740,11 +756,24 @@ export default function App() {
         </div>
 
         <div className="header-actions">
+          {/* 主題選擇器 */}
+          <select 
+            className="theme-selector" 
+            value={theme} 
+            onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}
+          >
+            <option value="default">☀️ 淺色簡約</option>
+            <option value="dark">🌙 柔和暗黑</option>
+            <option value="forest">🌲 森之木質</option>
+            <option value="medieval">🏰 中古世紀</option>
+            <option value="cyberpunk">🌌 賽博龐克</option>
+          </select>
+
           <button 
             type="button" 
             className="action-btn" 
             onClick={() => { triggerHaptic('light'); setSoundEnabled(!soundEnabled); }}
-            title="聚會音效開關"
+            title="聚會音效"
           >
             {soundEnabled ? '🔊 聲音開' : '🔇 靜音'}
           </button>
@@ -767,17 +796,13 @@ export default function App() {
           <button type="button" className="action-btn" onClick={handleExportJSON}>
             📤 匯出 JSON
           </button>
-          
-          <button type="button" className="action-btn" onClick={() => { triggerHaptic('light'); setDarkMode(!darkMode); }}>
-            {darkMode ? '☀️ 淺色' : '🌙 暗黑'}
-          </button>
 
           <button 
             type="button" 
             className="action-btn" 
             onClick={handleAdminToggle}
             style={{ 
-              backgroundColor: isAdmin ? '#EF4444' : '#4F46E5', 
+              backgroundColor: isAdmin ? '#EF4444' : 'var(--accent-blue)', 
               color: '#fff',
               border: 'none',
               fontWeight: 'bold'
@@ -796,15 +821,15 @@ export default function App() {
 
       <main>
         {/* 橫幅區域 */}
-        <section className="hero">
+        <section className="hero" id="hero-sec">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', width: '100%' }}>
             <div className="hero-title-group">
-              <span className="eyebrow" style={{ color: '#64748B', fontWeight: 'bold' }}>MY BOARD GAME LIBRARY</span>
+              <span className="eyebrow" style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>MY BOARD GAME LIBRARY</span>
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             </div>
             
             {/* 統計篩選膠囊 */}
-            <div className="hero-filter-group" style={{ display: 'inline-flex', gap: '10px', flexWrap: 'wrap', margin: '4px 0' }}>
+            <div className="hero-filter-group" style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', margin: '4px 0' }}>
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
@@ -812,9 +837,9 @@ export default function App() {
               >
                 <span>📦</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>總收藏量</div>
-                  <div style={{ fontWeight: '800', color: '#4F46E5' }}>
-                    {totalCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>總收藏量</div>
+                  <div style={{ fontWeight: '800', color: 'var(--accent-blue)' }}>
+                    {totalCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -826,9 +851,9 @@ export default function App() {
               >
                 <span>🎮</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>主遊戲</div>
+                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>主遊戲</div>
                   <div style={{ fontWeight: '800', color: '#10B981' }}>
-                    {mainCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
+                    {mainCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -840,28 +865,23 @@ export default function App() {
               >
                 <span>🧩</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>擴充包</div>
+                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>擴充包</div>
                   <div style={{ fontWeight: '800', color: '#D97706' }}>
-                    {expansionCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
+                    {expansionCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
                   </div>
                 </div>
               </button>
 
-              {/* ❤️ 我的最愛快速篩選按鈕 */}
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'favorite' ? 'all' : 'favorite'); }}
                 className={`stat-filter-btn ${expansionFilter === 'favorite' ? 'active-favorite' : ''}`}
-                style={{
-                  borderColor: expansionFilter === 'favorite' ? '#EC4899' : 'transparent',
-                  background: expansionFilter === 'favorite' ? 'rgba(236, 72, 153, 0.12)' : 'var(--bg-card, #ffffff)'
-                }}
               >
                 <span>❤️</span>
                 <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: '#64748B', fontWeight: 'bold' }}>我的最愛</div>
-                  <div style={{ fontWeight: '800', color: '#EC4899' }}>
-                    {favoriteCount} <span style={{ fontWeight: 'normal', color: '#64748B' }}>款</span>
+                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>我的最愛</div>
+                  <div style={{ fontWeight: '800', color: '#E11D48' }}>
+                    {favoriteCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
                   </div>
                 </div>
               </button>
@@ -877,13 +897,13 @@ export default function App() {
             </button>
           </div>
 
-          {/* 右側多功能小工具卡片 */}
+          {/* 右側小工具卡片 */}
           <div className="starter-card" style={{
-            background: 'var(--bg-card, #ffffff)',
+            background: 'var(--bg-card)',
             borderRadius: '20px',
             padding: '1.4rem',
-            border: '1px solid var(--border-color, rgba(0,0,0,0.08))',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.05)',
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--card-shadow)',
             position: 'relative',
             overflowX: 'hidden'
           }}>
@@ -916,7 +936,7 @@ export default function App() {
                     fontSize: '0.82rem',
                     fontWeight: 'bold',
                     cursor: 'pointer',
-                    background: widgetTab === tab.key ? '#4F46E5' : 'transparent',
+                    background: widgetTab === tab.key ? 'var(--accent-blue)' : 'transparent',
                     color: widgetTab === tab.key ? '#fff' : 'inherit',
                     transition: 'all 0.2s',
                     textAlign: 'center'
@@ -940,15 +960,15 @@ export default function App() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        background: starterWinner === p.name ? '#4F46E5' : 'rgba(79, 70, 229, 0.08)',
-                        color: starterWinner === p.name ? '#ffffff' : '#4F46E5',
+                        background: starterWinner === p.name ? 'var(--accent-blue)' : 'var(--pill-bg)',
+                        color: starterWinner === p.name ? '#ffffff' : 'inherit',
                         padding: '4px 10px',
                         borderRadius: '20px',
                         fontSize: '0.82rem',
                         fontWeight: starterWinner === p.name ? '700' : '500',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        border: starterWinner === p.name ? '1px solid #4F46E5' : '1px solid transparent'
+                        border: starterWinner === p.name ? '1px solid var(--accent-blue)' : '1px solid transparent'
                       }}
                     >
                       {p.name} ✕
@@ -962,11 +982,11 @@ export default function App() {
                     placeholder="輸入玩家名字..." 
                     value={inputPlayerName} 
                     onChange={(e) => setInputPlayerName(e.target.value)}
-                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none' }}
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid var(--input-border)', background: 'var(--bg-main)', color: 'inherit', fontSize: '0.85rem', outline: 'none' }}
                   />
                   <button 
                     type="submit" 
-                    style={{ background: '#6366F1', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
+                    style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
                   >
                     + 加入
                   </button>
@@ -974,15 +994,15 @@ export default function App() {
 
                 <div style={{
                   background: isPickingStarter ? 'rgba(79, 70, 229, 0.05)' : (starterWinner ? 'rgba(16, 185, 129, 0.08)' : 'rgba(0,0,0,0.02)'),
-                  border: starterWinner && !isPickingStarter ? '1px dashed #10B981' : '1px dashed #CBD5E1',
+                  border: starterWinner && !isPickingStarter ? '1px dashed #10B981' : '1px dashed var(--input-border)',
                   borderRadius: '12px',
                   padding: '10px',
                   textAlign: 'center',
                   marginBottom: '12px'
                 }}>
-                  {isPickingStarter && <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#4F46E5' }}>🎲 輪動中... {starterWinner}</div>}
+                  {isPickingStarter && <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>🎲 輪動中... {starterWinner}</div>}
                   {!isPickingStarter && starterWinner && <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>🎉 先攻由 <u>{starterWinner}</u> 開始！</div>}
-                  {!isPickingStarter && !starterWinner && <div style={{ fontSize: '0.82rem', color: '#888' }}>點擊下方按鈕選出首位玩家！</div>}
+                  {!isPickingStarter && !starterWinner && <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>點擊下方按鈕選出首位玩家！</div>}
                 </div>
 
                 <button 
@@ -993,7 +1013,7 @@ export default function App() {
                     width: '100%',
                     padding: '9px',
                     borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)',
+                    background: 'linear-gradient(135deg, var(--accent-blue) 0%, #3B82F6 100%)',
                     color: '#fff',
                     border: 'none',
                     fontWeight: 'bold',
@@ -1011,11 +1031,11 @@ export default function App() {
             {widgetTab === 'scoreboard' && (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#666' }}>快速重設：</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>快速重設：</span>
                   <div style={{ display: 'flex', gap: '4px' }}>
-                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>歸零</button>
-                    <button type="button" onClick={() => resetAllScores(10)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>10血</button>
-                    <button type="button" onClick={() => resetAllScores(20)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: 'transparent', fontSize: '0.75rem', cursor: 'pointer' }}>20血</button>
+                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>歸零</button>
+                    <button type="button" onClick={() => resetAllScores(10)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>10血</button>
+                    <button type="button" onClick={() => resetAllScores(20)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>20血</button>
                   </div>
                 </div>
 
@@ -1030,13 +1050,13 @@ export default function App() {
                         background: 'rgba(0,0,0,0.03)',
                         borderRadius: '10px',
                         padding: '6px 10px',
-                        border: '1px solid rgba(0,0,0,0.04)'
+                        border: '1px solid var(--border-color)'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span 
                           onClick={() => handleRemoveSharedPlayer(p.id)} 
-                          style={{ cursor: 'pointer', color: '#94A3B8', fontSize: '0.75rem' }} 
+                          style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem' }} 
                           title="刪除玩家"
                         >
                           ✕
@@ -1071,7 +1091,7 @@ export default function App() {
                     placeholder="新增玩家 (兩邊同步)..." 
                     value={inputPlayerName} 
                     onChange={(e) => setInputPlayerName(e.target.value)}
-                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none' }}
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid var(--input-border)', background: 'var(--bg-main)', color: 'inherit', fontSize: '0.85rem', outline: 'none' }}
                   />
                   <button 
                     type="submit" 
@@ -1087,11 +1107,11 @@ export default function App() {
             {widgetTab === 'timer' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', marginBottom: '14px' }}>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(30); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>30秒</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(60); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>60秒</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(120); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>2分鐘</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(300); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>5分鐘</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(600); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid #CBD5E1', background: 'transparent', cursor: 'pointer', fontSize: '0.75rem' }}>10分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(30); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>30秒</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(60); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>60秒</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(120); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>2分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(300); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>5分鐘</button>
+                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(600); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>10分鐘</button>
                 </div>
 
                 <div style={{
@@ -1099,8 +1119,7 @@ export default function App() {
                   fontWeight: '900',
                   margin: '10px 0',
                   fontFamily: 'monospace',
-                  color: timeLeft <= 10 ? '#EF4444' : '#4F46E5',
-                  animation: timeLeft <= 5 && timerRunning ? 'pulse 0.5s infinite' : 'none'
+                  color: timeLeft <= 10 ? '#EF4444' : 'var(--accent-blue)'
                 }}>
                   {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                 </div>
@@ -1127,8 +1146,9 @@ export default function App() {
                     style={{
                       padding: '8px 14px',
                       borderRadius: '10px',
-                      border: '1px solid #CBD5E1',
+                      border: '1px solid var(--border-color)',
                       background: 'transparent',
+                      color: 'inherit',
                       cursor: 'pointer',
                       fontWeight: '600'
                     }}
@@ -1143,9 +1163,9 @@ export default function App() {
             {widgetTab === 'dice' && (
               <div style={{ textAlign: 'center' }}>
                 <div style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#4F46E5', minHeight: '30px' }}>{diceResult}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-blue)', minHeight: '30px' }}>{diceResult}</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginTop: '10px' }}>
-                    <button type="button" onClick={() => rollDice(6)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#4F46E5', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 6面骰</button>
+                    <button type="button" onClick={() => rollDice(6)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'var(--accent-blue)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 6面骰</button>
                     <button type="button" onClick={() => rollDice(8)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#6366F1', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 8面骰</button>
                     <button type="button" onClick={() => rollDice(10)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#3B82F6', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 10面骰</button>
                     <button type="button" onClick={() => rollDice(20)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#0EA5E9', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 20面骰</button>
@@ -1175,8 +1195,7 @@ export default function App() {
                       color: '#fff',
                       fontWeight: 'bold',
                       cursor: isFlippingCoin ? 'not-allowed' : 'pointer',
-                      fontSize: '0.88rem',
-                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+                      fontSize: '0.88rem'
                     }}
                   >
                     {isFlippingCoin ? '💫 翻轉中...' : '🪙 投擲硬幣'}
@@ -1196,7 +1215,7 @@ export default function App() {
                     padding: '9px',
                     borderRadius: '10px',
                     border: 'none',
-                    background: 'linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%)',
+                    background: 'linear-gradient(135deg, var(--accent-blue) 0%, #3B82F6 100%)',
                     color: '#fff',
                     fontWeight: 'bold',
                     fontSize: '0.9rem',
@@ -1220,7 +1239,7 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.82rem', color: '#888', textAlign: 'center', padding: '10px 0' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
                     將使用目前已輸入的 {sharedPlayers.length} 位玩家進行自動分隊！
                   </div>
                 )}
@@ -1230,7 +1249,7 @@ export default function App() {
         </section>
 
         {/* 篩選面板 */}
-        <section className="filter-panel">
+        <section className="filter-panel" id="collection-sec">
           <div className="filter-row">
             <div className="search-box">
               <span>🔍</span>
@@ -1278,7 +1297,6 @@ export default function App() {
                 <option value="rating-desc">⭐ 評分最高</option>
                 <option value="time-asc">⏱️ 時間最短</option>
                 <option value="complexity-asc">🧠 最易學入門</option>
-                <option value="name-asc">🔤 名稱順序</option>
               </select>
             </div>
           </div>
@@ -1295,8 +1313,8 @@ export default function App() {
                   padding: '7px 16px',
                   fontSize: '0.92rem',
                   fontWeight: '600',
-                  border: category === cat ? '1px solid #4F46E5' : '1px solid #E2E8F0',
-                  backgroundColor: category === cat ? '#4F46E5' : 'var(--bg-card, #ffffff)',
+                  border: category === cat ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
+                  backgroundColor: category === cat ? 'var(--accent-blue)' : 'var(--bg-card)',
                   color: category === cat ? '#ffffff' : 'inherit',
                   cursor: 'pointer',
                   boxShadow: category === cat ? '0 4px 12px rgba(79, 70, 229, 0.3)' : '0 2px 4px rgba(0,0,0,0.03)',
@@ -1309,50 +1327,22 @@ export default function App() {
           </div>
         </section>
 
-        {/* 收藏列表 */}
+        {/* 收藏列表 (卡片微擬真 + 膠囊標籤) */}
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => {
-              const isSeq = Array.isArray(game.tags) && game.tags.includes('續作')
-              const isExp = checkIsExpansion(game)
               const isFav = favorites.includes(game.id)
               return (
                 <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
-                  {/* ❤️ 愛心收藏按鈕 */}
-                  <button
-                    type="button"
-                    className="fav-btn"
+                  {/* 左上角愛心 */}
+                  <button 
+                    type="button" 
+                    className="card-fav-btn" 
                     onClick={(e) => toggleFavorite(e, game.id)}
-                    title={isFav ? '從我的最愛移除' : '加入我的最愛'}
-                    style={{
-                      position: 'absolute',
-                      top: '10px',
-                      left: '10px',
-                      zIndex: 8,
-                      background: 'rgba(255, 255, 255, 0.85)',
-                      backdropFilter: 'blur(4px)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                      transition: 'transform 0.15s ease'
-                    }}
+                    title={isFav ? "取消收藏" : "加入我的最愛"}
                   >
                     {isFav ? '❤️' : '🤍'}
                   </button>
-
-                  {isAdmin && (
-                    <div className="card-actions">
-                      <button type="button" className="edit-btn" onClick={(e) => handleOpenEditModal(e, game)}>✏️</button>
-                      <button type="button" className="delete-btn" onClick={(e) => handleDeleteGame(e, game.id, game.name)}>✕</button>
-                    </div>
-                  )}
 
                   <div className="cover">
                     {game.imageUrl ? (
@@ -1360,16 +1350,13 @@ export default function App() {
                     ) : (
                       <span className="cover-emoji">{game.emoji}</span>
                     )}
-                    {isExp && (
-                      <span className="expansion-badge">
-                        🧩 擴充
-                      </span>
-                    )}
-                    {isSeq && !isExp && (
-                      <span className="expansion-badge" style={{ background: 'rgba(14, 165, 233, 0.95)' }}>
-                        ✨ 續作
-                      </span>
-                    )}
+
+                    {/* 右上角擴充/續作徽章 */}
+                    <div className="badge-container">
+                      {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
+                      {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
+                    </div>
+
                     <span className="category-tag">{game.category}</span>
                   </div>
 
@@ -1377,39 +1364,25 @@ export default function App() {
                     <h3>{game.name}</h3>
                     <p className="english">{game.englishName}</p>
                     
-                    {Array.isArray(game.tags) && game.tags.filter(t => t !== '續作').length > 0 && (
+                    {Array.isArray(game.tags) && game.tags.length > 0 && (
                       <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
-                        {game.tags.filter(t => t !== '續作').map(t => (
-                          <span key={t} style={{ fontSize: '11px', background: 'rgba(0,0,0,0.05)', padding: '2px 6px', borderRadius: '4px' }}>#{t}</span>
+                        {game.tags.map(t => (
+                          <span key={t} style={{ fontSize: '11px', background: 'var(--pill-bg)', padding: '2px 6px', borderRadius: '4px' }}>#{t}</span>
                         ))}
                       </div>
                     )}
 
-                    <div 
-                      className="game-details" 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between', 
-                        gap: '4px', 
-                        whiteSpace: 'nowrap', 
-                        fontSize: '11.5px', 
-                        margin: '6px 0' 
-                      }}
-                    >
-                      <span>👥 {game.minPlayers}–{game.maxPlayers}人</span>
-                      {game.bestPlayers && (
-                        <span style={{ color: '#D97706', fontWeight: 'bold' }}>
-                          👑 最佳{game.bestPlayers}人
-                        </span>
-                      )}
-                      <span>⏱️ {game.time}分</span>
+                    {/* 微型膠囊圖標 (Pill Badges) */}
+                    <div className="pill-badges-row">
+                      <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
+                      {game.bestPlayers && <span className="pill-badge best">👑 最佳{game.bestPlayers}人</span>}
+                      <span className="pill-badge">⏱️ {game.time}分</span>
                     </div>
 
                     <div className="rating-complexity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
                       <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
-                      <div className="complexity-badge" style={{ fontSize: '11px', color: '#6366F1', fontWeight: 'bold' }}>
-                        🧠 燒腦: {Number(game.complexity || 0).toFixed(2)}
+                      <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>
+                        🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -1419,6 +1392,43 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* 手機專屬底部導覽列 (Bottom Nav) */}
+      <nav className="bottom-nav-bar">
+        <button 
+          type="button" 
+          className="bottom-nav-item active" 
+          onClick={() => { triggerHaptic('light'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        >
+          <span>📦</span>
+          收藏庫
+        </button>
+        <button 
+          type="button" 
+          className="bottom-nav-item" 
+          onClick={() => {
+            triggerHaptic('light')
+            const heroSec = document.getElementById('hero-sec')
+            if (heroSec) heroSec.scrollIntoView({ behavior: 'smooth' })
+          }}
+        >
+          <span>🎲</span>
+          隨機選
+        </button>
+        <button 
+          type="button" 
+          className="bottom-nav-item" 
+          onClick={() => {
+            triggerHaptic('light')
+            const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']
+            const nextIdx = (themes.indexOf(theme) + 1) % themes.length
+            setTheme(themes[nextIdx])
+          }}
+        >
+          <span>🎨</span>
+          換主題
+        </button>
+      </nav>
 
       {/* 3D 抽卡立體翻面彈窗 */}
       {randomGame && (
@@ -1434,15 +1444,11 @@ export default function App() {
               perspective: '1200px'
             }}
           >
-            <button 
-              className="close-detail-btn" 
-              onClick={() => setRandomGame(null)}
-              disabled={isShuffling}
-            >
+            <button className="close-detail-btn" onClick={() => setRandomGame(null)} disabled={isShuffling}>
               ✕
             </button>
 
-            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#4F46E5', letterSpacing: '1px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--accent-blue)', letterSpacing: '1px' }}>
               {isShuffling ? '🎴 命運牌堆洗牌中...' : '✨ 命中注定就是它！'}
             </span>
 
@@ -1464,11 +1470,11 @@ export default function App() {
                     )}
                   </div>
                   <h3 style={{ fontSize: '1.2rem', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
-                  <p style={{ color: '#888', fontSize: '0.8rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: '#555', flexWrap: 'wrap', width: '100%', marginBottom: '4px' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%', marginBottom: '4px' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
-                    <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 0).toFixed(2)}</span>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -1480,7 +1486,7 @@ export default function App() {
                 onClick={chooseRandomWithAnimation} 
                 disabled={isShuffling}
                 style={{
-                  background: '#4F46E5',
+                  background: 'var(--accent-blue)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
@@ -1529,7 +1535,7 @@ export default function App() {
           <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
 
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', borderBottom: '1px solid #E2E8F0', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <button
                 type="button"
                 onClick={() => { triggerHaptic('light'); setDetailTab('info'); }}
@@ -1539,7 +1545,7 @@ export default function App() {
                   border: 'none',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  background: detailTab === 'info' ? '#4F46E5' : 'rgba(0,0,0,0.05)',
+                  background: detailTab === 'info' ? 'var(--accent-blue)' : 'var(--pill-bg)',
                   color: detailTab === 'info' ? '#fff' : 'inherit',
                   fontSize: '0.9rem'
                 }}
@@ -1555,7 +1561,7 @@ export default function App() {
                   border: 'none',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  background: detailTab === 'cheatSheet' ? '#10B981' : 'rgba(0,0,0,0.05)',
+                  background: detailTab === 'cheatSheet' ? '#10B981' : 'var(--pill-bg)',
                   color: detailTab === 'cheatSheet' ? '#fff' : 'inherit',
                   fontSize: '0.9rem'
                 }}
@@ -1581,21 +1587,55 @@ export default function App() {
                   />
                 )}
 
-                <h2>{viewDetailGame.emoji} {viewDetailGame.name}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <h2>{viewDetailGame.emoji} {viewDetailGame.name}</h2>
+                  <button
+                    type="button"
+                    onClick={(e) => toggleFavorite(e, viewDetailGame.id)}
+                    style={{ background: 'none', border: 'none', fontSize: '1.6rem', cursor: 'pointer' }}
+                    title={favorites.includes(viewDetailGame.id) ? "取消最愛" : "加入最愛"}
+                  >
+                    {favorites.includes(viewDetailGame.id) ? '❤️' : '🤍'}
+                  </button>
+                </div>
                 <p className="detail-english">{viewDetailGame.englishName}</p>
                 
-                <div style={{ display: 'flex', gap: '12px', margin: '12px 0', fontSize: '14px', color: '#666', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '12px', margin: '12px 0', fontSize: '14px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                   <span>👥 可玩人數：{viewDetailGame.minPlayers}–{viewDetailGame.maxPlayers} 人</span>
                   <span style={{ color: '#D97706', fontWeight: 'bold' }}>👑 最佳人數：{viewDetailGame.bestPlayers || '未設定'} 人</span>
                   <span>⏱️ 時間：{viewDetailGame.time} 分鐘</span>
                   <span>⭐ 評分：{Number(viewDetailGame.rating || 0).toFixed(2)} 分</span>
-                  <span style={{ color: '#6366F1', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 0).toFixed(2)} / 5.00</span>
+                  <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 燒腦指數：{Number(viewDetailGame.complexity || 2.00).toFixed(2)} / 5.00</span>
                 </div>
 
-                {checkIsExpansion(viewDetailGame) && viewDetailGame.parentId && (
+                {/* 牌套尺寸顯示 */}
+                {viewDetailGame.sleeveSize && (
+                  <div style={{ margin: '8px 0 12px 0', padding: '8px 12px', background: 'var(--pill-bg)', borderRadius: '10px', border: '1px solid var(--border-color)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.9rem' }}>🃏</span>
+                    <strong style={{ fontSize: '0.85rem', color: 'var(--accent-blue)' }}>牌套規格：</strong>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{viewDetailGame.sleeveSize}</span>
+                  </div>
+                )}
+
+                {/* 說明書 PDF 與教學影片 */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
+                  {viewDetailGame.rulePdfUrl && (
+                    <a href={viewDetailGame.rulePdfUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#0284c7', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                      📄 官方說明書 (PDF)
+                    </a>
+                  )}
+                  {viewDetailGame.videoUrl && (
+                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                      🎬 觀看教學影片
+                    </a>
+                  )}
+                </div>
+
+                {/* 擴充包提示 */}
+                {viewDetailGame.isExpansion && viewDetailGame.parentId && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '10px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>
-                      🧩 此為純擴充包，需搭配主遊戲遊玩
+                      🧩 此為擴充包，需搭配主遊戲遊玩
                     </span>
                     {games.find(g => g.id === viewDetailGame.parentId) && (
                       <button
@@ -1618,10 +1658,11 @@ export default function App() {
                   </div>
                 )}
 
-                {(!checkIsExpansion(viewDetailGame) && Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.includes('續作')) && (
+                {/* 獨立續作提示 */}
+                {viewDetailGame.isSequel && (
                   <div style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(14, 165, 233, 0.08)', borderRadius: '10px', border: '1px solid rgba(14, 165, 233, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontSize: '0.88rem', color: '#0369A1', fontWeight: 'bold' }}>
-                      ✨ 此為獨立續作，可單獨遊玩，亦可與系列作混合連動！
+                      ✨ 獨立續作：可單獨遊玩，亦可與前作混合！
                     </span>
                     {viewDetailGame.parentId && games.find(g => g.id === viewDetailGame.parentId) && (
                       <button
@@ -1638,31 +1679,25 @@ export default function App() {
                           fontWeight: 'bold'
                         }}
                       >
-                        🔗 查看前作：{games.find(g => g.id === viewDetailGame.parentId).name} →
+                        📦 查看關聯前作：{games.find(g => g.id === viewDetailGame.parentId).name} →
                       </button>
                     )}
                   </div>
                 )}
 
-                {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.filter(t => t !== '續作').length > 0 && (
+                {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.length > 0 && (
                   <div style={{ margin: '8px 0', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {viewDetailGame.tags.filter(t => t !== '續作').map(t => (
-                      <span key={t} style={{ background: '#4F46E5', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>#{t}</span>
+                    {viewDetailGame.tags.map(t => (
+                      <span key={t} style={{ background: 'var(--accent-blue)', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '12px' }}>#{t}</span>
                     ))}
                   </div>
                 )}
 
                 <p style={{ lineHeight: '1.6', margin: '12px 0' }}>{viewDetailGame.description || '暫無詳細描述。'}</p>
 
-                {viewDetailGame.videoUrl && (
-                  <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '8px 16px', background: '#FF0000', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', marginBottom: '12px' }}>
-                    🎬 觀看教學影片
-                  </a>
-                )}
-
                 {games.filter(g => g.parentId === viewDetailGame.id).length > 0 && (
-                  <div className="expansion-list" style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
-                    <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem' }}>🧩 附屬擴充包或續作（點擊查看詳情）：</h4>
+                  <div className="expansion-list" style={{ marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '0.95rem' }}>🧩 關聯作品 / 擴充包（點擊查看詳情）：</h4>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {games.filter(g => g.parentId === viewDetailGame.id).map(exp => (
                         <button
@@ -1670,8 +1705,8 @@ export default function App() {
                           type="button"
                           onClick={() => { triggerHaptic('light'); setViewDetailGame(exp); }}
                           style={{
-                            border: '1px solid #CBD5E1',
-                            background: 'var(--bg-card, #fff)',
+                            border: '1px solid var(--border-color)',
+                            background: 'var(--bg-card)',
                             color: 'inherit',
                             padding: '6px 12px',
                             borderRadius: '8px',
@@ -1680,10 +1715,29 @@ export default function App() {
                             fontWeight: '500'
                           }}
                         >
-                          ✨ {exp.name} →
+                          {exp.isSequel ? '✨' : '🧩'} {exp.name} →
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {isAdmin && (
+                  <div className="detail-admin-bar">
+                    <button 
+                      type="button" 
+                      onClick={() => handleOpenEditModal(viewDetailGame)}
+                      style={{ background: 'var(--accent-blue)', color: '#fff' }}
+                    >
+                      ✏️ 編輯桌遊
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
+                      style={{ background: '#EF4444', color: '#fff' }}
+                    >
+                      🗑️ 刪除桌遊
+                    </button>
                   </div>
                 )}
               </>
@@ -1707,11 +1761,36 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal */}
+      {/* 新增/編輯 Modal (全寬工整排版 + 動態牌套 + BGG抓取 + 說明書連結) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingId ? '✏️ 編輯桌遊' : '➕ 新增桌遊'}</h2>
+            
+            {/* BGG 智慧資料抓取輔助列 */}
+            <div style={{ background: 'var(--pill-bg)', padding: '12px', borderRadius: '12px', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
+                🚀 BGG 智慧辨識自動帶入（貼上 BGG 連結或 ID）：
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  type="text" 
+                  placeholder="例如: 174430 或 https://boardgamegeek.com/boardgame/174430/..."
+                  value={bggInput}
+                  onChange={(e) => setBggInput(e.target.value)}
+                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--input-border)', background: 'var(--bg-card)', color: 'inherit' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleFetchBGG}
+                  disabled={isFetchingBgg}
+                  style={{ background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontWeight: 'bold', cursor: isFetchingBgg ? 'not-allowed' : 'pointer' }}
+                >
+                  {isFetchingBgg ? '抓取中...' : '⚡ 一鍵帶入'}
+                </button>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmitForm}>
               <div className="form-group">
                 <label>中文名稱 *</label>
@@ -1738,7 +1817,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                 <div>
                   <label>遊戲時間 (分鐘)</label>
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
@@ -1748,8 +1827,8 @@ export default function App() {
                   <input type="number" step="0.01" min="0.00" max="10.00" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
                 </div>
                 <div>
-                  <label>🧠 燒腦度 (0.00~5.00)</label>
-                  <input type="number" step="0.01" min="0.00" max="5.00" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
+                  <label>🧠 燒腦度 (1.00~5.00)</label>
+                  <input type="number" step="0.01" min="1.00" max="5.00" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
                 </div>
               </div>
 
@@ -1775,6 +1854,54 @@ export default function App() {
                 </div>
               </div>
 
+              {/* 牌套多組動態管理 (方案一：選尺寸 + 張數，排版舒適滿版) */}
+              <div className="sleeve-manager-box">
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>
+                  🃏 牌套規格管理（棋寶常用尺寸 + 張數）：
+                </label>
+
+                {sleeveList.map((item, idx) => (
+                  <div key={idx} className="sleeve-row-item">
+                    <select 
+                      value={item.size} 
+                      onChange={(e) => updateSleeveRow(idx, 'size', e.target.value)}
+                    >
+                      {CHESURE_SLEEVE_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+
+                    <input 
+                      type="number" 
+                      placeholder="張數 (例: 110)" 
+                      value={item.count} 
+                      onChange={(e) => updateSleeveRow(idx, 'count', e.target.value)}
+                    />
+
+                    {sleeveList.length > 1 && (
+                      <button type="button" className="sleeve-remove-btn" onClick={() => removeSleeveRow(idx)}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                <button type="button" className="sleeve-add-btn" onClick={addSleeveRow}>
+                  + 新增另一種牌套尺寸
+                </button>
+              </div>
+
+              {/* 說明書 PDF 網址 */}
+              <div className="form-group">
+                <label>📄 官方規則說明書連結 (PDF 網址)</label>
+                <input 
+                  type="url" 
+                  placeholder="https://example.com/rules.pdf" 
+                  value={formData.rulePdfUrl} 
+                  onChange={(e) => setFormData({...formData, rulePdfUrl: e.target.value})} 
+                />
+              </div>
+
               <div className="form-group">
                 <label>📷 封面圖片網址 (Image URL)</label>
                 <input type="url" placeholder="https://example.com/image.jpg" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} />
@@ -1797,36 +1924,68 @@ export default function App() {
 
               <div className="form-group">
                 <label>📝 遊戲介紹 / 玩法簡介</label>
-                <textarea rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }}></textarea>
+                <textarea rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
               </div>
 
               <div className="form-group">
                 <label>⚡ 快速規則 / 提示卡重點 (Cheat Sheet)</label>
-                <textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea>
+                <textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea>
               </div>
 
-              {/* 遊戲身分屬性：標準主遊戲、獨立續作、純擴充包 */}
-              <div className="form-group">
-                <label>遊戲身分屬性：</label>
-                <select value={formData.gameIdentity} onChange={(e) => setFormData({...formData, gameIdentity: e.target.value})}>
-                  <option value="main">🎮 標準主遊戲</option>
-                  <option value="sequel">✨ 獨立續作 / 衍生作（可單獨遊玩）</option>
-                  <option value="expansion">🧩 純擴充包（需搭配主遊戲）</option>
+              {/* 遊戲本體類型下拉選單 + 打字搜尋前作 */}
+              <div className="form-group" style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '10px' }}>
+                <label style={{ fontWeight: 'bold', marginBottom: '6px' }}>📦 遊戲本體類型：</label>
+                <select 
+                  value={formData.gameType} 
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setFormData(prev => ({
+                      ...prev,
+                      gameType: val,
+                      parentId: val === 'main' ? '' : prev.parentId
+                    }))
+                    if (val === 'main') setParentSearchInput('')
+                  }}
+                  style={{ marginBottom: '8px' }}
+                >
+                  <option value="main">🎮 獨立主遊戲</option>
+                  <option value="sequel">✨ 獨立續作 / 衍生作（可單獨玩）</option>
+                  <option value="expansion">🧩 純擴充包（需搭配前作）</option>
                 </select>
-                
-                {formData.gameIdentity !== 'main' && (
-                  <select value={formData.parentId || ''} onChange={(e) => setFormData({...formData, parentId: e.target.value})} style={{ marginTop: '8px' }}>
-                    <option value="">-- 請選擇關聯的主遊戲 / 前作 --</option>
-                    {games.filter(g => !checkIsExpansion(g)).map(parent => (
-                      <option key={parent.id} value={parent.id}>{parent.name}</option>
-                    ))}
-                  </select>
+
+                {(formData.gameType === 'expansion' || formData.gameType === 'sequel') && (
+                  <div>
+                    <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                      {formData.gameType === 'expansion' ? '🔍 搜尋並選擇所屬主遊戲 *：' : '🔍 搜尋並選擇關聯前作（可選）：'}
+                    </label>
+                    <input 
+                      type="text" 
+                      list="parent-games-list" 
+                      placeholder="輸入遊戲名稱關鍵字..."
+                      value={parentSearchInput}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setParentSearchInput(val)
+                        const matched = games.find(g => g.name === val)
+                        if (matched) {
+                          setFormData(prev => ({ ...prev, parentId: matched.id }))
+                        } else if (!val) {
+                          setFormData(prev => ({ ...prev, parentId: '' }))
+                        }
+                      }}
+                    />
+                    <datalist id="parent-games-list">
+                      {games.filter(g => !g.isExpansion && g.id !== editingId).map(g => (
+                        <option key={g.id} value={g.name} />
+                      ))}
+                    </datalist>
+                  </div>
                 )}
               </div>
 
-              <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>取消</button>
-                <button type="submit" className="submit-btn" style={{ background: '#4F46E5', color: '#fff', padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>儲存</button>
+                <button type="submit" className="submit-btn">儲存</button>
               </div>
             </form>
           </div>
