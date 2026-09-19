@@ -138,47 +138,7 @@ export default function App() {
     setSleeveList(next)
   }
 
-  // BGG 自動抓取輔助狀態
-  const [bggInput, setBggInput] = useState('')
-  const [isFetchingBgg, setIsFetchingBgg] = useState(false)
-
- export default async function handler(req, res) {
-  // 設定允許跨域與回應格式
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end()
-  }
-
-  const { id } = req.query
-  if (!id) {
-    return res.status(400).json({ error: 'Missing id parameter' })
-  }
-
-  try {
-    const bggUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${id}&stats=1`
-    
-    // 由伺服器端代為發出請求，加上合法的 User-Agent 避免被阻擋
-    const response = await fetch(bggUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    })
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'BGG API response error' })
-    }
-
-    const xmlData = await response.text()
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8')
-    return res.status(200).send(xmlData)
-  } catch (error) {
-    return res.status(500).json({ error: error.message })
-  }
-}
-
-  // 小工具狀態
+  // 聚會小工具狀態
   const [widgetTab, setWidgetTab] = useState('starter')
   const [sharedPlayers, setSharedPlayers] = useState(() => {
     try {
@@ -389,7 +349,6 @@ export default function App() {
     })
   }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
 
-  // JSON 備份
   function handleExportJSON() {
     const jsonString = JSON.stringify(games, null, 2)
     const blob = new Blob([jsonString], { type: 'application/json' })
@@ -613,7 +572,6 @@ export default function App() {
     setEditingId(null)
     setFormData(emptyForm)
     setSleeveList([{ size: '63.5x88 mm', count: '' }])
-    setBggInput('')
     setParentSearchInput('')
     setShowModal(true)
   }
@@ -664,7 +622,6 @@ export default function App() {
       gameType: gType,
       parentId: game.parentId || ''
     })
-    setBggInput('')
     setParentSearchInput(parentGame ? parentGame.name : '')
     setShowModal(true)
   }
@@ -674,7 +631,7 @@ export default function App() {
     triggerHaptic('medium')
     if (!formData.name.trim()) return alert('請填寫桌遊名稱！')
 
-    // 方案一：動態組裝牌套規格
+    // 組裝多組牌套規格 (方案一)
     const formattedSleeve = sleeveList
       .filter(s => s.size && s.size !== '')
       .map(s => s.count ? `${s.size} (${s.count}張)` : s.size)
@@ -756,7 +713,7 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          {/* 主題選擇器 */}
+          {/* 主題切換 */}
           <select 
             className="theme-selector" 
             value={theme} 
@@ -1327,7 +1284,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* 收藏列表 (卡片微擬真 + 膠囊標籤) */}
+        {/* 收藏列表 */}
         <section className="collection">
           <div className="game-grid">
             {filteredGames.map((game) => {
@@ -1625,7 +1582,7 @@ export default function App() {
                     </a>
                   )}
                   {viewDetailGame.videoUrl && (
-                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                    <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', padding: '6px 14px', background: '#FF0000', color: '#fff', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.85rem' }}>
                       🎬 觀看教學影片
                     </a>
                   )}
@@ -1761,36 +1718,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal (全寬工整排版 + 動態牌套 + BGG抓取 + 說明書連結) */}
+      {/* 新增/編輯 Modal (工整滿版 + 動態牌套增刪 + 官方說明書連結) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingId ? '✏️ 編輯桌遊' : '➕ 新增桌遊'}</h2>
             
-            {/* BGG 智慧資料抓取輔助列 */}
-            <div style={{ background: 'var(--pill-bg)', padding: '12px', borderRadius: '12px', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                🚀 BGG 智慧辨識自動帶入（貼上 BGG 連結或 ID）：
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="例如: 174430 或 https://boardgamegeek.com/boardgame/174430/..."
-                  value={bggInput}
-                  onChange={(e) => setBggInput(e.target.value)}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--input-border)', background: 'var(--bg-card)', color: 'inherit' }}
-                />
-                <button
-                  type="button"
-                  onClick={handleFetchBGG}
-                  disabled={isFetchingBgg}
-                  style={{ background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontWeight: 'bold', cursor: isFetchingBgg ? 'not-allowed' : 'pointer' }}
-                >
-                  {isFetchingBgg ? '抓取中...' : '⚡ 一鍵帶入'}
-                </button>
-              </div>
-            </div>
-
             <form onSubmit={handleSubmitForm}>
               <div className="form-group">
                 <label>中文名稱 *</label>
