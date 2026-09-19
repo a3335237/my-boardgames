@@ -535,7 +535,7 @@ body {
   background: rgba(245, 158, 11, 0.12);
 }
 
-/* ==================== 抽卡開箱動畫樣式（已放大外框與空間） ==================== */
+/* ==================== 抽卡開箱動畫樣式 ==================== */
 .card-reveal-scene {
   width: 100% !important;
   max-width: 420px !important;
@@ -573,7 +573,6 @@ body {
   animation: zoomInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* 放大圖片容器與尺寸：支援高達 320px 高度，絕不裁切任何大型桌遊封面 */
 .card-reveal-img-box {
   width: 100% !important;
   max-height: 320px !important;
@@ -582,6 +581,9 @@ body {
   justify-content: center !important;
   overflow: visible !important;
   margin-bottom: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
   flex-shrink: 0;
 }
 
@@ -592,6 +594,7 @@ body {
   height: auto !important;
   object-fit: contain !important;
   display: block !important;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.25)) !important;
 }
 
 @keyframes zoomInBounce {
@@ -795,53 +798,145 @@ body {
   cursor: pointer;
 }
 
-/* 詳情彈窗內部滾動優化 */
+/* ==================== 升級版：精緻化詳細資訊 Modal ==================== */
 .detail-modal-content {
   background: var(--bg-card);
-  padding: 2rem;
-  border-radius: 24px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 85vh !important;
+  padding: 2.2rem 2rem;
+  border-radius: 28px;
+  width: 92%;
+  max-width: 620px;
+  max-height: 88vh !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   position: relative;
   border: 1px solid var(--border-color);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   box-sizing: border-box !important;
 }
 
 .close-detail-btn {
   position: absolute;
-  top: 15px;
+  top: 18px;
   right: 20px;
-  background: transparent;
+  background: var(--pill-bg);
   border: none;
-  font-size: 1.5rem;
-  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  color: var(--text-main);
   cursor: pointer;
   z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-detail-btn:hover {
+  background: var(--border-color);
+  transform: scale(1.08);
+}
+
+/* 圖片容器 */
+.detail-img-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.03) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border: 1px solid rgba(79, 70, 229, 0.1);
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
+/* 💡 完美修復：去背圖片主體立體陰影 (drop-shadow 完美貼合去背邊緣) */
+.detail-modal-content img {
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: 270px !important;
+  height: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.28)) !important;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.detail-modal-content img:hover {
+  transform: translateY(-4px) scale(1.02);
+  filter: drop-shadow(0 18px 28px rgba(79, 70, 229, 0.35)) !important;
+}
+
+/* 💡 完美修復：恢復雙欄平衡網格排版，右側整齊不空洞 */
+.detail-info-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  font-size: 0.92rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+@media screen and (max-width: 480px) {
+  .detail-info-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 標籤改為微膠囊造型 (Pill Tags) */
+.detail-tags-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.detail-tag-pill {
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  transition: transform 0.15s ease;
+}
+
+.detail-tag-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
 }
 
 /* 電腦版專屬：右上角固定管理按鈕列 */
 .desktop-admin-bar {
   position: absolute;
-  top: 15px;
-  right: 65px;
+  top: 18px;
+  right: 68px;
   display: flex;
   gap: 8px;
   z-index: 15;
 }
 
 .desktop-admin-btn {
-  padding: 5px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 0.82rem;
   font-weight: bold;
   cursor: pointer;
   border: none;
   color: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
   transition: transform 0.15s ease;
 }
 
@@ -876,18 +971,9 @@ body {
 
 .detail-english {
   color: var(--text-muted);
-  margin-top: 0.2rem;
-}
-
-.detail-modal-content img,
-.modal-content img {
-  width: auto !important;
-  max-width: 100% !important;
-  max-height: 360px !important;
-  height: auto !important;
-  object-fit: contain !important;
-  display: block !important;
-  margin: 0 auto 1.2rem auto !important;
+  font-size: 0.9rem;
+  margin-top: 0.1rem;
+  margin-bottom: 0.8rem;
 }
 
 /* ==================== 手機底部導覽列 (Bottom Nav) ==================== */
@@ -1050,8 +1136,8 @@ body {
 
   .detail-modal-content {
     width: 95vw !important;
-    max-height: 85vh !important;
-    padding: 1.2rem !important;
+    max-height: 88vh !important;
+    padding: 1.4rem !important;
     overflow-y: auto !important;
   }
 
