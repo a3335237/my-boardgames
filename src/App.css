@@ -941,6 +941,13 @@ body {
     display: flex !important;
   }
 
+  /* 手機版強制所有表單網格改為單欄直排，解決欄位擠壓問題 */
+  .modal-content form .form-group[style*="grid"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+  }
+
   .header {
     flex-direction: column !important;
     gap: 10px !important;
