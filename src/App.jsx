@@ -138,77 +138,6 @@ export default function App() {
     setSleeveList(next)
   }
 
-  // BGG 自動抓取輔助狀態
-  const [bggInput, setBggInput] = useState('')
-  const [isFetchingBgg, setIsFetchingBgg] = useState(false)
-
-  async function handleFetchBGG() {
-    const input = bggInput.trim()
-    if (!input) return alert('請輸入 BGG 網址或桌遊 ID！')
-
-    let bggId = input
-    const match = input.match(/boardgame\/(\d+)/)
-    if (match) bggId = match[1]
-
-    if (!/^\d+$/.test(bggId)) {
-      return alert('無法識別 BGG ID，請輸入純數字 ID 或完整 BGG 網址！')
-    }
-
-    setIsFetchingBgg(true)
-    triggerHaptic('light')
-
-    try {
-      const res = await fetch(`/api/bgg?id=${bggId}`)
-      if (!res.ok) throw new Error('伺服器回應錯誤')
-
-      const xmlText = await res.text()
-      const parser = new DOMParser()
-      const xmlDoc = parser.parseFromString(xmlText, 'text/xml')
-
-      const itemNode = xmlDoc.querySelector('item')
-      if (!itemNode) throw new Error('找不到該桌遊資料')
-
-      const primaryName = xmlDoc.querySelector('name[type="primary"]')?.getAttribute('value') || ''
-      const minp = xmlDoc.querySelector('minplayers')?.getAttribute('value') || '2'
-      const maxp = xmlDoc.querySelector('maxplayers')?.getAttribute('value') || '4'
-      const playTime = xmlDoc.querySelector('playingtime')?.getAttribute('value') || '30'
-      const image = xmlDoc.querySelector('image')?.textContent || xmlDoc.querySelector('thumbnail')?.textContent || ''
-      
-      const ratingNode = xmlDoc.querySelector('statistics ratings average')
-      const ratingVal = ratingNode ? parseFloat(ratingNode.getAttribute('value') || '8.00').toFixed(2) : '8.00'
-      
-      const weightNode = xmlDoc.querySelector('statistics ratings averageweight')
-      const weightVal = weightNode ? parseFloat(weightNode.getAttribute('value') || '2.00').toFixed(2) : '2.00'
-
-      const descRaw = xmlDoc.querySelector('description')?.textContent || ''
-      const decodedDesc = descRaw
-        .replace(/&#10;/g, '\n')
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-
-      setFormData(prev => ({
-        ...prev,
-        englishName: primaryName || prev.englishName,
-        name: prev.name || primaryName,
-        minPlayers: parseInt(minp, 10) || prev.minPlayers,
-        maxPlayers: parseInt(maxp, 10) || prev.maxPlayers,
-        time: parseInt(playTime, 10) || prev.time,
-        rating: ratingVal,
-        complexity: weightVal,
-        imageUrl: image || prev.imageUrl,
-        description: decodedDesc.slice(0, 300) || prev.description
-      }))
-
-      alert(`✅ 成功抓取 BGG 資料：${primaryName}！`)
-    } catch (err) {
-      alert(`❌ 抓取失敗：${err.message} (請確認是否已部署至 Vercel 線上環境測試)`)
-    } finally {
-      setIsFetchingBgg(false)
-    }
-  }
-
   // 聚會小工具狀態
   const [widgetTab, setWidgetTab] = useState('starter')
   const [sharedPlayers, setSharedPlayers] = useState(() => {
@@ -643,7 +572,6 @@ export default function App() {
     setEditingId(null)
     setFormData(emptyForm)
     setSleeveList([{ size: '63.5x88 mm', count: '' }])
-    setBggInput('')
     setParentSearchInput('')
     setShowModal(true)
   }
@@ -694,7 +622,6 @@ export default function App() {
       gameType: gType,
       parentId: game.parentId || ''
     })
-    setBggInput('')
     setParentSearchInput(parentGame ? parentGame.name : '')
     setShowModal(true)
   }
@@ -1791,36 +1718,12 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增/編輯 Modal (包含 BGG 自動一鍵帶入列) */}
+      {/* 新增/編輯 Modal (工整滿版 + 動態牌套增刪 + 官方說明書連結) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>{editingId ? '✏️ 編輯桌遊' : '➕ 新增桌遊'}</h2>
             
-            {/* BGG 智慧資料抓取輔助列 */}
-            <div style={{ background: 'var(--pill-bg)', padding: '12px', borderRadius: '12px', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>
-                🚀 BGG 智慧辨識自動帶入（線上版 Vercel 支援）：
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input 
-                  type="text" 
-                  placeholder="例如: 174430 或 https://boardgamegeek.com/boardgame/174430/..."
-                  value={bggInput}
-                  onChange={(e) => setBggInput(e.target.value)}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid var(--input-border)', background: 'var(--bg-card)', color: 'inherit' }}
-                />
-                <button
-                  type="button"
-                  onClick={handleFetchBGG}
-                  disabled={isFetchingBgg}
-                  style={{ background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 14px', fontWeight: 'bold', cursor: isFetchingBgg ? 'not-allowed' : 'pointer' }}
-                >
-                  {isFetchingBgg ? '抓取中...' : '⚡ 一鍵帶入'}
-                </button>
-              </div>
-            </div>
-
             <form onSubmit={handleSubmitForm}>
               <div className="form-group">
                 <label>中文名稱 *</label>
@@ -1884,7 +1787,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* 牌套多組動態管理 (方案一) */}
+              {/* 牌套多組動態管理 (方案一：選尺寸 + 張數，排版舒適滿版) */}
               <div className="sleeve-manager-box">
                 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>
                   🃏 牌套規格管理（棋寶常用尺寸 + 張數）：

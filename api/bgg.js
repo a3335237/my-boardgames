@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // 設定允許跨域與回應格式
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
 
@@ -14,8 +13,6 @@ export default async function handler(req, res) {
 
   try {
     const bggUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${id}&stats=1`
-    
-    // 由伺服器端代為發出請求，加上合法的 User-Agent 避免被阻擋
     const response = await fetch(bggUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
