@@ -1,7 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import './App.css'
 import { supabase } from './supabaseClients'
-import { removeBackground } from '@imgly/background-removal'
 
 // 棋寶常見牌套尺寸選項
 const CHESURE_SLEEVE_OPTIONS = [
@@ -166,7 +165,7 @@ export default function App() {
     } catch (e) {}
   }, [sharedPlayers])
 
-  // 回合數與手動輸入狀態
+  // 回合數與分數編輯
   const [roundCount, setRoundCount] = useState(1)
   const [editingScoreId, setEditingScoreId] = useState(null)
   const [tempScoreVal, setTempScoreVal] = useState('')
@@ -203,9 +202,6 @@ export default function App() {
   const [parentSearchInput, setParentSearchInput] = useState('')
   const [viewDetailGame, setViewDetailGame] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
-
-  // 🪄 AI 免費去背狀態
-  const [isRemovingBg, setIsRemovingBg] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -455,51 +451,6 @@ export default function App() {
     }
     reader.readAsDataURL(file)
   }
-// 🪄 完全免費、無限次前端 AI 去背（修復 Failed to fetch）
-  async function handleAutoRemoveBackground() {
-    const sourceImage = formData.imageUrl
-    if (!sourceImage) {
-      return alert('請先填入圖片網址，或先上傳一張圖片！')
-    }
-
-    setIsRemovingBg(true)
-    triggerHaptic('medium')
-
-    try {
-      let imageToProcess = sourceImage
-
-      // 若是外部網址，透過 CORS 代理繞過外站防盜連限制
-      if (!sourceImage.startsWith('data:') && !sourceImage.startsWith('blob:')) {
-        // 使用多重備用代理，避免被目標網站擋下
-        imageToProcess = `https://corsproxy.io/?${encodeURIComponent(sourceImage)}`
-      }
-
-      // 執行前端本機去背
-      const blob = await removeBackground(imageToProcess, {
-        progress: (key, current, total) => {
-          // 進度監聽
-        }
-      })
-
-      // 將回傳的去背圖片轉成 Base64
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imageUrl: reader.result }))
-        setIsRemovingBg(false)
-        triggerHaptic('heavy')
-        alert('🎉 去背完成！記得滑到最下方點擊「儲存」喔！')
-      }
-      reader.readAsDataURL(blob)
-    } catch (err) {
-      console.error('去背錯誤:', err)
-      setIsRemovingBg(false)
-      alert(
-        '去背失敗：該圖片網址設定了極嚴格的防盜連。\n\n' +
-        '💡 解決方式（超簡單）：\n' +
-        '請在圖片上按右鍵「複製圖片」或「另存圖片」，然後用下方的「上傳圖片」選取它，再點一鍵去背，保證 100% 成功！'
-      )
-    }
-  }
 
   function handleAddSharedPlayer(e) {
     if (e) e.preventDefault()
@@ -633,7 +584,7 @@ export default function App() {
     }, 650)
   }
 
-  // ⚔️ 智慧多隊伍分隊邏輯（支援 2 / 3 / 4 隊）
+  // ⚔️ 智慧分隊邏輯
   function handleSplitTeams(numTeams = targetTeamCount) {
     triggerHaptic('medium')
     if (sharedPlayers.length < numTeams) {
@@ -903,7 +854,7 @@ export default function App() {
       </header>
 
       <main>
-        {/* 現代 App 儀表板風格 Hero 橫幅 */}
+        {/* Hero 儀表板 */}
         <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
             <div>
@@ -911,7 +862,7 @@ export default function App() {
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             </div>
 
-            {/* 4 欄 App 儀表板微卡片 */}
+            {/* 4 欄 App 儀表板卡片 */}
             <div className="hero-stats-grid">
               <div 
                 className={`hero-stat-card ${expansionFilter === 'all' ? 'active-all' : ''}`}
@@ -977,7 +928,7 @@ export default function App() {
             position: 'relative',
             overflowX: 'hidden'
           }}>
-            {/* 頂部 Segmented Control 滑塊軌道 */}
+            {/* 頂部 Segmented Control */}
             <div className="tool-tab-track">
               {[
                 { key: 'starter', label: '👑 先攻' },
@@ -1189,7 +1140,7 @@ export default function App() {
               </>
             )}
 
-            {/* ⏱️ 現代 App 環形倒數計時器 */}
+            {/* ⏱️ 環形倒數計時器 */}
             {widgetTab === 'timer' && (
               <div className="timer-container">
                 <div className="timer-preset-bar">
@@ -1253,7 +1204,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 🎲 現代 App 質感骰子與 3D 翻轉金幣 */}
+            {/* 🎲 骰子與 3D 拋硬幣 */}
             {widgetTab === 'dice' && (
               <div>
                 <div className="dice-sub-tabs">
@@ -1331,7 +1282,7 @@ export default function App() {
               </div>
             )}
 
-            {/* ⚔️ 現代 App 簡約整合分隊工具 */}
+            {/* ⚔️ 智慧分隊工具 */}
             {widgetTab === 'team' && (
               <div className="team-tool-container">
                 <div className="team-unified-header">
@@ -2054,57 +2005,38 @@ export default function App() {
                 </button>
               </div>
 
-              {/* 📷 封面圖片管理（含 AI 去背按鈕） */}
+              {/* 📷 封面圖片管理 */}
               <div className="form-group">
                 <label>📷 封面圖片網址 (Image URL)</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input 
-                    type="url" 
-                    placeholder="https://example.com/image.jpg" 
-                    value={formData.imageUrl} 
-                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={handleAutoRemoveBackground}
-                    disabled={isRemovingBg || !formData.imageUrl}
-                    className="action-btn"
-                    style={{ 
-                      whiteSpace: 'nowrap', 
-                      background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', 
-                      color: '#fff',
-                      border: 'none',
-                      opacity: isRemovingBg ? 0.7 : 1,
-                      cursor: isRemovingBg ? 'wait' : 'pointer'
-                    }}
-                  >
-                    {isRemovingBg ? '⏳ AI去背中...' : '🪄 一鍵去背'}
-                  </button>
-                </div>
+                <input 
+                  type="url" 
+                  placeholder="https://example.com/image.jpg" 
+                  value={formData.imageUrl} 
+                  onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
+                />
               </div>
 
               <div className="form-group">
-                <label>或 上傳圖片 (自動縮放不裁切)</label>
+                <label>或 上傳本機圖片 (自動壓縮不裁切)</label>
                 <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
               </div>
 
-              {/* 預覽即時去背成果（經典透明底棋盤格） */}
               {formData.imageUrl && (
                 <div style={{
                   padding: '10px',
-                  background: 'repeating-conic-gradient(#cbd5e1 0% 25%, #ffffff 0% 50%) 50% / 16px 16px',
+                  background: 'var(--bg-card)',
                   borderRadius: '12px',
                   textAlign: 'center',
                   margin: '8px 0',
                   border: '1px solid var(--border-color)'
                 }}>
-                  <span style={{ fontSize: '11px', color: '#475569', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
-                    圖片預覽（棋盤格代表透明去背效果）
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    封面預覽
                   </span>
                   <img 
                     src={formData.imageUrl} 
                     alt="預覽" 
-                    style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain' }} 
+                    style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} 
                   />
                 </div>
               )}
