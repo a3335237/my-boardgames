@@ -11,6 +11,17 @@ const CHESURE_SLEEVE_OPTIONS = [
   '52x52 mm', '65x65 mm', '70x70 mm', '80x80 mm', '免用牌套'
 ]
 
+// 專屬玩家圓點色環
+const PLAYER_PALETTE = ['#6366f1', '#059669', '#d97706', '#db2777', '#2563eb', '#7c3aed', '#0d9488', '#ea580c']
+
+// 隊伍色彩配置
+const TEAM_CONFIG = [
+  { name: '藍隊', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(37, 99, 235, 0.25)' },
+  { name: '琥珀隊', color: '#d97706', bg: 'rgba(217, 119, 6, 0.08)', border: 'rgba(217, 119, 6, 0.25)' },
+  { name: '綠隊', color: '#059669', bg: 'rgba(5, 150, 105, 0.08)', border: 'rgba(5, 150, 105, 0.25)' },
+  { name: '紫隊', color: '#7c3aed', bg: 'rgba(124, 58, 237, 0.08)', border: 'rgba(124, 58, 237, 0.25)' }
+]
+
 const initialGames = [
   { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (120張)' },
   { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.10, complexity: 1.20, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm (120張)' },
@@ -48,7 +59,7 @@ const initialGames = [
   { id: 34, name: '狼人真言', englishName: 'Werewords', minPlayers: 4, maxPlayers: 10, bestPlayers: '6-8', time: 10, category: '陣營', rating: 8.10, complexity: 1.40, emoji: '🐺', imageUrl: '', tags: ['問答陣營', '快節奏推理'], description: '透過「是/否」問答猜出祕密詞彙，同時找出潛伏在人群中的狼人！', videoUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (14張)' },
   { id: 35, name: '梗圖黃牌', englishName: 'Meme Yellow Card', minPlayers: 3, maxPlayers: 10, bestPlayers: '6-10', time: 30, category: '派對', rating: 8.10, complexity: 1.10, emoji: '🖼️', imageUrl: '', tags: ['梗圖搭配', '地獄迷因'], description: '將熱門迷因梗圖搭配超欠扁台詞，製作出最搞笑的梗圖組合！', videoUrl: '', isExpansion: true, isSequel: false, parentId: 31, sleeveSize: '63.5x88 mm' },
   { id: 36, name: '獵巫鎮 1692', englishName: 'Salem 1692', minPlayers: 4, maxPlayers: 12, bestPlayers: '7-10', time: 30, category: '陣營', rating: 8.40, complexity: 2.10, emoji: '🧹', imageUrl: '', tags: ['精美書本盒', '女巫審判'], description: '精美的暗黑歷史陣營遊戲，指控他人是女巫，在審判中存活下來！', videoUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '57.5x89 mm (128張)' },
-  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.20, complexity: 1.00, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', rulePdfUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' }
+  { id: 37, name: '炸彈 boom', englishName: 'Boom Boom', minPlayers: 2, maxPlayers: 6, bestPlayers: '4-6', time: 15, category: '派對', rating: 7.20, complexity: 1.00, emoji: '💥', imageUrl: '', tags: ['緊張刺激', '反應力'], description: '傳遞炸彈！在時間倒數結束前快速完成任務並把炸彈傳給下一個人。', videoUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm' }
 ]
 
 const ADMIN_PASSWORD = '1234'
@@ -154,18 +165,33 @@ export default function App() {
     } catch (e) {}
   }, [sharedPlayers])
 
+  // 回合數與手動輸入狀態
+  const [roundCount, setRoundCount] = useState(1)
+  const [editingScoreId, setEditingScoreId] = useState(null)
+  const [tempScoreVal, setTempScoreVal] = useState('')
+
+  // ⏱️ 計時器狀態
+  const [initialTimerDuration, setInitialTimerDuration] = useState(60)
+  const [timeLeft, setTimeLeft] = useState(60)
+  const [timerRunning, setTimerRunning] = useState(false)
+
+  // 🎲 骰子 / 🪙 硬幣狀態
+  const [diceToolTab, setDiceToolTab] = useState('dice')
+  const [diceSides, setDiceSides] = useState(6)
+  const [diceNumber, setDiceNumber] = useState(6)
+  const [isRollingDice, setIsRollingDice] = useState(false)
+  const [coinSide, setCoinSide] = useState('👑 正面')
+  const [isFlippingCoin, setIsFlippingCoin] = useState(false)
+  const [coinDegree, setCoinDegree] = useState(0)
+
+  // ⚔️ 多隊伍分隊狀態
+  const [targetTeamCount, setTargetTeamCount] = useState(2)
+  const [assignedTeams, setAssignedTeams] = useState([])
+  const [isShufflingTeams, setIsShufflingTeams] = useState(false)
+
   const [inputPlayerName, setInputPlayerName] = useState('')
   const [starterWinner, setStarterWinner] = useState(null)
   const [isPickingStarter, setIsPickingStarter] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(60)
-  const [timerRunning, setTimerRunning] = useState(false)
-  const [diceResult, setDiceResult] = useState('🎲 點擊擲骰')
-  const [coinResult, setCoinResult] = useState('🪙 點擊翻面')
-  const [isRollingDice, setIsRollingDice] = useState(false)
-  const [isFlippingCoin, setIsFlippingCoin] = useState(false)
-  const [coinDegree, setCoinDegree] = useState(0)
-  const [teamA, setTeamA] = useState([])
-  const [teamB, setTeamB] = useState([])
 
   const [randomGame, setRandomGame] = useState(null)
   const [isRevealed, setIsRevealed] = useState(false)
@@ -257,6 +283,7 @@ export default function App() {
     } catch (e) {}
   }
 
+  // ⏱️ 計時器邏輯
   useEffect(() => {
     let interval = null
     if (timerRunning && timeLeft > 0) {
@@ -436,6 +463,13 @@ export default function App() {
     setInputPlayerName('')
   }
 
+  function handleQuickAddPlayer() {
+    triggerHaptic('light')
+    const newId = sharedPlayers.length > 0 ? Math.max(...sharedPlayers.map(p => p.id)) + 1 : 1
+    const nextName = `玩家 ${newId}`
+    setSharedPlayers([...sharedPlayers, { id: newId, name: nextName, score: 0 }])
+  }
+
   function handleRemoveSharedPlayer(idToRemove) {
     triggerHaptic('light')
     if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！')
@@ -454,13 +488,13 @@ export default function App() {
       setStarterWinner(sharedPlayers[tempIdx].name)
       playSound('flip')
       count++
-      if (count >= 16) {
+      if (count >= 18) {
         clearInterval(interval)
         setIsPickingStarter(false)
         playSound('victory')
         triggerHaptic('heavy')
       }
-    }, 80)
+    }, 75)
   }
 
   function changeScore(id, delta) {
@@ -468,21 +502,64 @@ export default function App() {
     setSharedPlayers(sharedPlayers.map(p => p.id === id ? { ...p, score: p.score + delta } : p))
   }
 
+  function handleSortPlayersByScore() {
+    triggerHaptic('medium')
+    const sorted = [...sharedPlayers].sort((a, b) => b.score - a.score)
+    setSharedPlayers(sorted)
+  }
+
+  function handleSaveDirectScore(id) {
+    const val = parseInt(tempScoreVal, 10)
+    if (!isNaN(val)) {
+      setSharedPlayers(sharedPlayers.map(p => p.id === id ? { ...p, score: val } : p))
+    }
+    setEditingScoreId(null)
+  }
+
   function resetAllScores(val = 0) {
     triggerHaptic('medium')
     setSharedPlayers(sharedPlayers.map(p => ({ ...p, score: val })))
   }
 
-  function rollDice(sides = 6) {
+  const maxScore = useMemo(() => {
+    if (sharedPlayers.length === 0) return 0
+    return Math.max(...sharedPlayers.map(p => p.score))
+  }, [sharedPlayers])
+
+  // ⏱️ 計時器方法
+  function setTimerPreset(seconds) {
+    triggerHaptic('light')
+    setTimerRunning(false)
+    setInitialTimerDuration(seconds)
+    setTimeLeft(seconds)
+  }
+
+  function toggleTimer() {
+    triggerHaptic('medium')
+    if (timeLeft === 0) {
+      setTimeLeft(initialTimerDuration)
+    }
+    setTimerRunning(!timerRunning)
+  }
+
+  function resetTimer() {
+    triggerHaptic('light')
+    setTimerRunning(false)
+    setTimeLeft(initialTimerDuration)
+  }
+
+  // 🎲 骰子方法
+  function rollDice(sides) {
+    setDiceSides(sides)
     setIsRollingDice(true)
     playSound('dice')
     triggerHaptic('medium')
     let count = 0
     const interval = setInterval(() => {
       const temp = Math.floor(Math.random() * sides) + 1
-      setDiceResult(`🎲 ${sides}面骰：${temp}`)
+      setDiceNumber(temp)
       count++
-      if (count >= 10) {
+      if (count >= 12) {
         clearInterval(interval)
         setIsRollingDice(false)
         triggerHaptic('light')
@@ -490,30 +567,44 @@ export default function App() {
     }, 60)
   }
 
+  // 🪙 硬幣方法
   function flipCoin() {
     if (isFlippingCoin) return
     setIsFlippingCoin(true)
     playSound('coin')
     triggerHaptic('medium')
-    setCoinResult('🪙 翻轉中...')
     const nextDegree = coinDegree + 720 + (Math.random() < 0.5 ? 0 : 180)
     setCoinDegree(nextDegree)
 
     setTimeout(() => {
-      const outcome = (nextDegree % 360 === 0) ? '🪙 正面（人頭）' : '🪙 反面（字）'
-      setCoinResult(outcome)
+      const isHead = nextDegree % 360 === 0
+      setCoinSide(isHead ? '👑 正面（人頭）' : '🪙 反面（字）')
       setIsFlippingCoin(false)
       triggerHaptic('light')
-    }, 600)
+    }, 650)
   }
 
-  function handleSplitTeams() {
+  // ⚔️ 智慧多隊伍分隊邏輯（支援 2 / 3 / 4 隊）
+  function handleSplitTeams(numTeams = targetTeamCount) {
     triggerHaptic('medium')
-    if (sharedPlayers.length < 2) return alert('至少需要 2 位玩家才能分隊！')
+    if (sharedPlayers.length < numTeams) {
+      return alert(`至少需要 ${numTeams} 位玩家才能分成 ${numTeams} 隊！`)
+    }
+
+    setIsShufflingTeams(true)
     const shuffled = [...sharedPlayers].sort(() => Math.random() - 0.5)
-    const mid = Math.ceil(shuffled.length / 2)
-    setTeamA(shuffled.slice(0, mid))
-    setTeamB(shuffled.slice(mid))
+    
+    const buckets = Array.from({ length: numTeams }, () => [])
+    shuffled.forEach((player, idx) => {
+      buckets[idx % numTeams].push(player)
+    })
+
+    setTimeout(() => {
+      setAssignedTeams(buckets)
+      setIsShufflingTeams(false)
+      playSound('victory')
+      triggerHaptic('heavy')
+    }, 280)
   }
 
   function chooseRandomWithAnimation() {
@@ -682,6 +773,12 @@ export default function App() {
     }
   }
 
+  // 環形計時器半徑與周長
+  const timerRadius = 78
+  const timerCircumference = 2 * Math.PI * timerRadius
+  const timerProgress = initialTimerDuration > 0 ? (timeLeft / initialTimerDuration) : 0
+  const timerDashoffset = timerCircumference - (timerProgress * timerCircumference)
+
   return (
     <div className="app">
       <header className="header">
@@ -757,69 +854,59 @@ export default function App() {
       </header>
 
       <main>
+        {/* 💡 現代 App 儀表板風格 Hero 橫幅 */}
         <section className="hero" id="hero-sec">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start', width: '100%' }}>
-            <div className="hero-title-group">
-              <span className="eyebrow" style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>MY BOARD GAME LIBRARY</span>
+          <div className="hero-dashboard-left">
+            <div>
+              <span className="hero-tagline">✨ 聚會推薦助手</span>
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
             </div>
-            
-            <div className="hero-filter-group" style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', margin: '4px 0' }}>
-              <button
-                type="button"
+
+            {/* 4 欄 App 儀表板微卡片 */}
+            <div className="hero-stats-grid">
+              <div 
+                className={`hero-stat-card ${expansionFilter === 'all' ? 'active-all' : ''}`}
                 onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}
-                className={`stat-filter-btn ${expansionFilter === 'all' ? 'active-all' : ''}`}
               >
-                <span>📦</span>
-                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>總收藏量</div>
-                  <div style={{ fontWeight: '800', color: 'var(--accent-blue)' }}>
-                    {totalCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
-                  </div>
-                </div>
-              </button>
+                <span className="stat-icon">📦</span>
+                <span className="stat-title">總收藏</span>
+                <span className="stat-num" style={{ color: 'var(--accent-blue)' }}>
+                  {totalCount}<span className="stat-unit">款</span>
+                </span>
+              </div>
 
-              <button
-                type="button"
+              <div 
+                className={`hero-stat-card ${expansionFilter === 'main' ? 'active-main' : ''}`}
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}
-                className={`stat-filter-btn ${expansionFilter === 'main' ? 'active-main' : ''}`}
               >
-                <span>🎮</span>
-                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>主遊戲</div>
-                  <div style={{ fontWeight: '800', color: '#10B981' }}>
-                    {mainCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
-                  </div>
-                </div>
-              </button>
+                <span className="stat-icon">🎮</span>
+                <span className="stat-title">主遊戲</span>
+                <span className="stat-num" style={{ color: '#10b981' }}>
+                  {mainCount}<span className="stat-unit">款</span>
+                </span>
+              </div>
 
-              <button
-                type="button"
+              <div 
+                className={`hero-stat-card ${expansionFilter === 'expansion' ? 'active-expansion' : ''}`}
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'expansion' ? 'all' : 'expansion'); }}
-                className={`stat-filter-btn ${expansionFilter === 'expansion' ? 'active-expansion' : ''}`}
               >
-                <span>🧩</span>
-                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>擴充包</div>
-                  <div style={{ fontWeight: '800', color: '#D97706' }}>
-                    {expansionCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
-                  </div>
-                </div>
-              </button>
+                <span className="stat-icon">🧩</span>
+                <span className="stat-title">擴充包</span>
+                <span className="stat-num" style={{ color: '#d97706' }}>
+                  {expansionCount}<span className="stat-unit">款</span>
+                </span>
+              </div>
 
-              <button
-                type="button"
+              <div 
+                className={`hero-stat-card ${expansionFilter === 'favorite' ? 'active-favorite' : ''}`}
                 onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'favorite' ? 'all' : 'favorite'); }}
-                className={`stat-filter-btn ${expansionFilter === 'favorite' ? 'active-favorite' : ''}`}
               >
-                <span>❤️</span>
-                <div style={{ textAlign: 'left', pointerEvents: 'none' }}>
-                  <div style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>我的最愛</div>
-                  <div style={{ fontWeight: '800', color: '#E11D48' }}>
-                    {favoriteCount} <span style={{ fontWeight: 'normal', color: 'var(--text-muted)' }}>款</span>
-                  </div>
-                </div>
-              </button>
+                <span className="stat-icon">❤️</span>
+                <span className="stat-title">最愛</span>
+                <span className="stat-num" style={{ color: '#e11d48' }}>
+                  {favoriteCount}<span className="stat-unit">款</span>
+                </span>
+              </div>
             </div>
 
             <button 
@@ -834,22 +921,15 @@ export default function App() {
 
           <div className="starter-card" style={{
             background: 'var(--bg-card)',
-            borderRadius: '20px',
+            borderRadius: '24px',
             padding: '1.4rem',
             border: '1px solid var(--border-color)',
             boxShadow: 'var(--card-shadow)',
             position: 'relative',
             overflowX: 'hidden'
           }}>
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '6px',
-              background: 'rgba(0,0,0,0.05)',
-              padding: '6px',
-              borderRadius: '14px',
-              marginBottom: '14px'
-            }}>
+            {/* 頂部 Segmented Control 滑塊軌道 */}
+            <div className="tool-tab-track">
               {[
                 { key: 'starter', label: '👑 先攻' },
                 { key: 'scoreboard', label: '📝 計分' },
@@ -861,20 +941,7 @@ export default function App() {
                   key={tab.key}
                   type="button"
                   onClick={() => { triggerHaptic('light'); setWidgetTab(tab.key); }}
-                  style={{
-                    flex: '1 1 calc(20% - 6px)',
-                    minWidth: '54px',
-                    padding: '6px 4px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    fontSize: '0.82rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                    background: widgetTab === tab.key ? 'var(--accent-blue)' : 'transparent',
-                    color: widgetTab === tab.key ? '#fff' : 'inherit',
-                    transition: 'all 0.2s',
-                    textAlign: 'center'
-                  }}
+                  className={`tool-tab-btn ${widgetTab === tab.key ? 'active' : ''}`}
                 >
                   {tab.label}
                 </button>
@@ -883,293 +950,409 @@ export default function App() {
 
             {widgetTab === 'starter' && (
               <>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', minHeight: '36px', marginBottom: '12px', alignItems: 'center' }}>
-                  {sharedPlayers.map((p) => (
-                    <span 
-                      key={p.id}
-                      onClick={() => handleRemoveSharedPlayer(p.id)}
-                      title="點擊刪除此玩家"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        background: starterWinner === p.name ? 'var(--accent-blue)' : 'var(--pill-bg)',
-                        color: starterWinner === p.name ? '#ffffff' : 'inherit',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        fontSize: '0.82rem',
-                        fontWeight: starterWinner === p.name ? '700' : '500',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        border: starterWinner === p.name ? '1px solid var(--accent-blue)' : '1px solid transparent'
-                      }}
-                    >
-                      {p.name} ✕
-                    </span>
-                  ))}
+                <div className="player-chips-container">
+                  {sharedPlayers.map((p, idx) => {
+                    const isWon = starterWinner === p.name && !isPickingStarter
+                    const dotColor = PLAYER_PALETTE[idx % PLAYER_PALETTE.length]
+                    return (
+                      <span 
+                        key={p.id}
+                        className={`player-chip ${isWon ? 'winner-chip' : ''}`}
+                        title={isWon ? "🏆 起始先攻玩家！" : p.name}
+                      >
+                        <span className="player-chip-dot" style={{ backgroundColor: isWon ? '#f59e0b' : dotColor }}></span>
+                        <span>{p.name}</span>
+                        <span 
+                          className="player-chip-del" 
+                          onClick={() => handleRemoveSharedPlayer(p.id)}
+                          title="移除玩家"
+                        >
+                          ✕
+                        </span>
+                      </span>
+                    )
+                  })}
+                  <button 
+                    type="button" 
+                    onClick={handleQuickAddPlayer}
+                    style={{
+                      border: '1.5px dashed var(--border-color)',
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      borderRadius: '50px',
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    title="快速新增一位玩家"
+                  >
+                    + 快速加人
+                  </button>
                 </div>
 
-                <form onSubmit={handleAddSharedPlayer} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <form onSubmit={handleAddSharedPlayer} className="integrated-input-group">
                   <input 
                     type="text" 
-                    placeholder="輸入玩家名字..." 
+                    placeholder="自訂玩家暱稱..." 
                     value={inputPlayerName} 
                     onChange={(e) => setInputPlayerName(e.target.value)}
-                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid var(--input-border)', background: 'var(--bg-main)', color: 'inherit', fontSize: '0.85rem', outline: 'none' }}
                   />
-                  <button 
-                    type="submit" 
-                    style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
-                  >
+                  <button type="submit" className="integrated-input-btn">
                     + 加入
                   </button>
                 </form>
 
-                <div style={{
-                  background: isPickingStarter ? 'rgba(79, 70, 229, 0.05)' : (starterWinner ? 'rgba(16, 185, 129, 0.08)' : 'rgba(0,0,0,0.02)'),
-                  border: starterWinner && !isPickingStarter ? '1px dashed #10B981' : '1px dashed var(--input-border)',
-                  borderRadius: '12px',
-                  padding: '10px',
-                  textAlign: 'center',
-                  marginBottom: '12px'
-                }}>
-                  {isPickingStarter && <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>🎲 輪動中... {starterWinner}</div>}
-                  {!isPickingStarter && starterWinner && <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#059669' }}>🎉 先攻由 <u>{starterWinner}</u> 開始！</div>}
-                  {!isPickingStarter && !starterWinner && <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>點擊下方按鈕選出首位玩家！</div>}
+                <div className={`starter-stage-card ${isPickingStarter ? 'rolling' : ''} ${starterWinner && !isPickingStarter ? 'won' : ''}`}>
+                  {isPickingStarter && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🎰 命運輪盤極速旋轉中...</span>
+                      <span className="slot-machine-text">🎯 {starterWinner}</span>
+                    </div>
+                  )}
+                  {!isPickingStarter && starterWinner && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '1.8rem' }}>🎉</span>
+                      <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#059669' }}>
+                        先攻由 <u>{starterWinner}</u> 拔得頭籌！
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>請做好準備，順時針開始你的第一回合！</span>
+                    </div>
+                  )}
+                  {!isPickingStarter && !starterWinner && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      <span>👑</span>
+                      <span>點擊下方按鈕，交由命運選出首位開局玩家！</span>
+                    </div>
+                  )}
                 </div>
 
                 <button 
                   type="button" 
                   onClick={pickStarterPlayer} 
                   disabled={isPickingStarter}
-                  style={{
-                    width: '100%',
-                    padding: '9px',
-                    borderRadius: '12px',
-                    background: 'linear-gradient(135deg, var(--accent-blue) 0%, #3B82F6 100%)',
-                    color: '#fff',
-                    border: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    cursor: isPickingStarter ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
-                  }}
+                  className="starter-action-btn"
                 >
-                  {isPickingStarter ? '⚡ 決定中...' : '🎯 抽出起始玩家'}
+                  {isPickingStarter ? '⚡ 命運抉擇中...' : '🎯 抽出起始玩家'}
                 </button>
               </>
             )}
 
             {widgetTab === 'scoreboard' && (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>快速重設：</span>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <button type="button" onClick={() => resetAllScores(0)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>歸零</button>
-                    <button type="button" onClick={() => resetAllScores(10)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>10血</button>
-                    <button type="button" onClick={() => resetAllScores(20)} style={{ padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', fontSize: '0.75rem', cursor: 'pointer' }}>20血</button>
+                <div className="scoreboard-top-bar">
+                  <div className="round-pill-control">
+                    <span>🚩 第 {roundCount} 輪</span>
+                    <button 
+                      type="button" 
+                      className="round-step-btn"
+                      onClick={() => { triggerHaptic('light'); setRoundCount(Math.max(1, roundCount - 1)); }}
+                    >
+                      -
+                    </button>
+                    <button 
+                      type="button" 
+                      className="round-step-btn"
+                      onClick={() => { triggerHaptic('light'); setRoundCount(roundCount + 1); }}
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="scoreboard-quick-actions">
+                    <button 
+                      type="button" 
+                      className="scoreboard-action-tag highlight"
+                      onClick={handleSortPlayersByScore} 
+                      title="依分數從高到低重新排列"
+                    >
+                      🏆 排序
+                    </button>
+                    <button type="button" className="scoreboard-action-tag" onClick={() => resetAllScores(0)}>歸零</button>
+                    <button type="button" className="scoreboard-action-tag" onClick={() => resetAllScores(10)}>10分</button>
+                    <button type="button" className="scoreboard-action-tag" onClick={() => resetAllScores(20)}>20分</button>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
-                  {sharedPlayers.map(p => (
-                    <div 
-                      key={p.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: 'rgba(0,0,0,0.03)',
-                        borderRadius: '10px',
-                        padding: '6px 10px',
-                        border: '1px solid var(--border-color)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span 
-                          onClick={() => handleRemoveSharedPlayer(p.id)} 
-                          style={{ cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.75rem' }} 
-                          title="刪除玩家"
-                        >
-                          ✕
-                        </span>
-                        <strong style={{ fontSize: '0.88rem' }}>{p.name}</strong>
-                      </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+                  {sharedPlayers.map((p, idx) => {
+                    const dotColor = PLAYER_PALETTE[idx % PLAYER_PALETTE.length]
+                    const isLeader = maxScore > 0 && p.score === maxScore
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button type="button" onClick={() => changeScore(p.id, -5)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>-5</button>
-                        <button type="button" onClick={() => changeScore(p.id, -1)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#FEE2E2', color: '#DC2626', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>-1</button>
-                        
-                        <span style={{ 
-                          minWidth: '36px', 
-                          textAlign: 'center', 
-                          fontWeight: '800', 
-                          fontSize: '1rem',
-                          color: p.score < 0 ? '#EF4444' : (p.score > 0 ? '#10B981' : 'inherit')
-                        }}>
-                          {p.score}
-                        </span>
+                    return (
+                      <div 
+                        key={p.id}
+                        className={`score-card-row ${isLeader ? 'leader-active' : ''}`}
+                      >
+                        <div className="score-player-meta">
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: dotColor }}></span>
+                          <span className="score-player-name">{p.name}</span>
+                          {isLeader && <span className="leader-badge-pill">👑 領先</span>}
+                        </div>
 
-                        <button type="button" onClick={() => changeScore(p.id, 1)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#D1FAE5', color: '#059669', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>+1</button>
-                        <button type="button" onClick={() => changeScore(p.id, 5)} style={{ width: '24px', height: '24px', borderRadius: '6px', border: 'none', background: '#D1FAE5', color: '#059669', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.75rem' }}>+5</button>
+                        <div className="score-stepper-group">
+                          <button type="button" className="step-btn-app" onClick={() => changeScore(p.id, -5)}>-5</button>
+                          <button type="button" className="step-btn-app" onClick={() => changeScore(p.id, -1)}>-1</button>
+                          
+                          {editingScoreId === p.id ? (
+                            <input 
+                              type="number"
+                              className="score-input-direct-app"
+                              autoFocus
+                              value={tempScoreVal}
+                              onChange={(e) => setTempScoreVal(e.target.value)}
+                              onBlur={() => handleSaveDirectScore(p.id)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveDirectScore(p.id) }}
+                            />
+                          ) : (
+                            <span 
+                              className="score-display-number"
+                              onClick={() => {
+                                setEditingScoreId(p.id)
+                                setTempScoreVal(String(p.score))
+                              }}
+                              title="點擊直接修改分數"
+                            >
+                              {p.score}
+                            </span>
+                          )}
+
+                          <button type="button" className="step-btn-app" onClick={() => changeScore(p.id, 1)}>+1</button>
+                          <button type="button" className="step-btn-app" onClick={() => changeScore(p.id, 5)}>+5</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
-                <form onSubmit={handleAddSharedPlayer} style={{ display: 'flex', gap: '8px' }}>
+                <form onSubmit={handleAddSharedPlayer} className="integrated-input-group">
                   <input 
                     type="text" 
                     placeholder="新增玩家 (兩邊同步)..." 
                     value={inputPlayerName} 
                     onChange={(e) => setInputPlayerName(e.target.value)}
-                    style={{ flex: 1, padding: '7px 10px', borderRadius: '10px', border: '1px solid var(--input-border)', background: 'var(--bg-main)', color: 'inherit', fontSize: '0.85rem', outline: 'none' }}
                   />
-                  <button 
-                    type="submit" 
-                    style={{ background: '#10B981', color: '#fff', border: 'none', borderRadius: '10px', padding: '7px 12px', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer' }}
-                  >
+                  <button type="submit" className="integrated-input-btn">
                     + 新增
                   </button>
                 </form>
               </>
             )}
 
+            {/* ⏱️ 現代 App 環形倒數計時器 */}
             {widgetTab === 'timer' && (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px', marginBottom: '14px' }}>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(30); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>30秒</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(60); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>60秒</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(120); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>2分鐘</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(300); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>5分鐘</button>
-                  <button type="button" onClick={() => { triggerHaptic('light'); setTimeLeft(600); setTimerRunning(false); }} style={{ padding: '4px 8px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'inherit', cursor: 'pointer', fontSize: '0.75rem' }}>10分鐘</button>
+              <div className="timer-container">
+                <div className="timer-preset-bar">
+                  {[
+                    { label: '30秒', val: 30 },
+                    { label: '60秒', val: 60 },
+                    { label: '2分鐘', val: 120 },
+                    { label: '5分鐘', val: 300 },
+                    { label: '10分鐘', val: 600 }
+                  ].map(preset => (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => setTimerPreset(preset.val)}
+                      className={`timer-preset-chip ${initialTimerDuration === preset.val ? 'active' : ''}`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
                 </div>
 
-                <div style={{
-                  fontSize: '3rem',
-                  fontWeight: '900',
-                  margin: '10px 0',
-                  fontFamily: 'monospace',
-                  color: timeLeft <= 10 ? '#EF4444' : 'var(--accent-blue)'
-                }}>
-                  {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                <div className="timer-ring-wrapper">
+                  <svg className="timer-svg" viewBox="0 0 190 190">
+                    <circle className="timer-circle-bg" cx="95" cy="95" r={timerRadius} />
+                    <circle
+                      className={`timer-circle-progress ${timeLeft <= 10 && timeLeft > 0 ? 'danger' : ''}`}
+                      cx="95"
+                      cy="95"
+                      r={timerRadius}
+                      strokeDasharray={timerCircumference}
+                      strokeDashoffset={timerDashoffset}
+                    />
+                  </svg>
+
+                  <div className="timer-center-text">
+                    <span className={`timer-digits ${timeLeft <= 10 ? 'danger' : ''}`}>
+                      {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </span>
+                    <span className="timer-sublabel">
+                      {timerRunning ? 'COUNTING' : (timeLeft === 0 ? 'TIME OVER' : 'READY')}
+                    </span>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '14px' }}>
+                <div className="timer-controls-row">
                   <button
                     type="button"
-                    onClick={() => { triggerHaptic('medium'); setTimerRunning(!timerRunning); }}
-                    style={{
-                      padding: '8px 20px',
-                      borderRadius: '10px',
-                      border: 'none',
-                      background: timerRunning ? '#F59E0B' : '#10B981',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}
+                    onClick={toggleTimer}
+                    className={`timer-btn-primary ${timerRunning ? 'running' : ''}`}
                   >
-                    {timerRunning ? '⏸️ 暫停' : '▶️ 開始倒數'}
+                    {timerRunning ? '⏸️ 暫停' : (timeLeft === 0 ? '🔄 重新開始' : '▶️ 開始倒數')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => { triggerHaptic('light'); setTimerRunning(false); setTimeLeft(60); }}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: '10px',
-                      border: '1px solid var(--border-color)',
-                      background: 'transparent',
-                      color: 'inherit',
-                      cursor: 'pointer',
-                      fontWeight: '600'
-                    }}
+                    onClick={resetTimer}
+                    className="timer-btn-secondary"
                   >
-                    🔄 重設
+                    重設
                   </button>
                 </div>
               </div>
             )}
 
+            {/* 🎲 現代 App 質感骰子與 3D 翻轉金幣 */}
             {widgetTab === 'dice' && (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-blue)', minHeight: '30px' }}>{diceResult}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginTop: '10px' }}>
-                    <button type="button" onClick={() => rollDice(6)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: 'var(--accent-blue)', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 6面骰</button>
-                    <button type="button" onClick={() => rollDice(8)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#6366F1', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 8面骰</button>
-                    <button type="button" onClick={() => rollDice(10)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#3B82F6', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 10面骰</button>
-                    <button type="button" onClick={() => rollDice(20)} disabled={isRollingDice} style={{ padding: '6px', borderRadius: '8px', border: 'none', background: '#0EA5E9', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>🎲 20面骰</button>
-                  </div>
+              <div>
+                <div className="dice-sub-tabs">
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setDiceToolTab('dice'); }}
+                    className={`dice-sub-tab-btn ${diceToolTab === 'dice' ? 'active' : ''}`}
+                  >
+                    🎲 隨機骰子
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { triggerHaptic('light'); setDiceToolTab('coin'); }}
+                    className={`dice-sub-tab-btn ${diceToolTab === 'coin' ? 'active' : ''}`}
+                  >
+                    🪙 3D 拋硬幣
+                  </button>
                 </div>
 
-                <div style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{
-                    display: 'inline-block',
-                    fontSize: '2.5rem',
-                    transition: 'transform 0.6s cubic-bezier(0.4, 2, 0.3, 1)',
-                    transform: `rotateY(${coinDegree}deg)`
-                  }}>
-                    🪙
+                {diceToolTab === 'dice' ? (
+                  <>
+                    <div className="dice-stage-box">
+                      <div className={`dice-hero-icon ${isRollingDice ? 'rolling' : ''}`}>
+                        🎲
+                      </div>
+                      <div className="dice-result-value">
+                        {isRollingDice ? '投擲中...' : `${diceSides} 面骰點數：${diceNumber}`}
+                      </div>
+                    </div>
+
+                    <div className="dice-buttons-grid">
+                      {[
+                        { sides: 6, label: 'D6' },
+                        { sides: 8, label: 'D8' },
+                        { sides: 10, label: 'D10' },
+                        { sides: 20, label: 'D20' }
+                      ].map(d => (
+                        <button
+                          key={d.sides}
+                          type="button"
+                          onClick={() => rollDice(d.sides)}
+                          disabled={isRollingDice}
+                          className="dice-select-btn"
+                        >
+                          <strong>{d.label}</strong>
+                          <span>{d.sides}面</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="coin-stage-box" onClick={flipCoin} title="點擊硬幣直接翻轉">
+                      <div 
+                        className="coin-disc"
+                        style={{ transform: `rotateY(${coinDegree}deg)` }}
+                      >
+                        {coinDegree % 360 === 0 ? '👑' : '1'}
+                      </div>
+                      <div className="coin-result-text">
+                        {isFlippingCoin ? '空中旋轉中...' : coinSide}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={flipCoin}
+                      disabled={isFlippingCoin}
+                      className="coin-flip-action-btn"
+                    >
+                      {isFlippingCoin ? '💫 翻轉中...' : '🪙 投擲硬幣'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ⚔️ 現代 App 簡約整合分隊工具 */}
+            {widgetTab === 'team' && (
+              <div className="team-tool-container">
+                <div className="team-unified-header">
+                  <div className="team-segmented-control">
+                    {[2, 3, 4].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          triggerHaptic('light')
+                          setTargetTeamCount(num)
+                          handleSplitTeams(num)
+                        }}
+                        className={`team-seg-btn ${targetTeamCount === num ? 'active' : ''}`}
+                      >
+                        {num} 隊
+                      </button>
+                    ))}
                   </div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 'bold', color: '#D97706', marginTop: '4px' }}>{coinResult}</div>
+
                   <button 
                     type="button" 
-                    onClick={flipCoin} 
-                    disabled={isFlippingCoin}
-                    style={{
-                      marginTop: '8px',
-                      padding: '7px 20px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: '#F59E0B',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      cursor: isFlippingCoin ? 'not-allowed' : 'pointer',
-                      fontSize: '0.88rem'
-                    }}
+                    onClick={() => handleSplitTeams(targetTeamCount)}
+                    disabled={isShufflingTeams}
+                    className="team-roll-btn"
                   >
-                    {isFlippingCoin ? '💫 翻轉中...' : '🪙 投擲硬幣'}
+                    {isShufflingTeams ? '🎴 洗牌中...' : '🎲 重新分組'}
                   </button>
                 </div>
-              </div>
-            )}
 
-            {widgetTab === 'team' && (
-              <div>
-                <button 
-                  type="button" 
-                  onClick={handleSplitTeams} 
-                  style={{
-                    width: '100%',
-                    padding: '9px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: 'linear-gradient(135deg, var(--accent-blue) 0%, #3B82F6 100%)',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)',
-                    marginBottom: '12px'
-                  }}
-                >
-                  ⚖️ 將玩家隨機均分兩隊
-                </button>
+                {assignedTeams.length > 0 ? (
+                  <div className={`team-results-grid cols-${assignedTeams.length}`}>
+                    {assignedTeams.map((team, idx) => {
+                      const cfg = TEAM_CONFIG[idx % TEAM_CONFIG.length]
+                      return (
+                        <div 
+                          key={idx} 
+                          className="team-box-card"
+                          style={{ borderColor: cfg.border }}
+                        >
+                          <div className="team-card-header">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: cfg.color }}></span>
+                              <strong style={{ color: cfg.color, fontSize: '0.9rem' }}>
+                                {cfg.name}
+                              </strong>
+                            </div>
+                            <span 
+                              className="team-badge-pill" 
+                              style={{ background: cfg.bg, color: cfg.color }}
+                            >
+                              {team.length} 人
+                            </span>
+                          </div>
 
-                {teamA.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
-                    <div style={{ background: 'rgba(59, 130, 246, 0.08)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.25)' }}>
-                      <strong style={{ color: '#2563EB', display: 'block', marginBottom: '4px' }}>🔵 藍隊 ({teamA.length}人)：</strong>
-                      <div style={{ lineHeight: '1.4' }}>{teamA.map(p => p.name).join('、')}</div>
-                    </div>
-                    <div style={{ background: 'rgba(239, 68, 68, 0.08)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-                      <strong style={{ color: '#DC2626', display: 'block', marginBottom: '4px' }}>🔴 紅隊 ({teamB.length}人)：</strong>
-                      <div style={{ lineHeight: '1.4' }}>{teamB.map(p => p.name).join('、')}</div>
-                    </div>
+                          <div className="team-members-chips">
+                            {team.map(player => (
+                              <span key={player.id} className="team-member-pill">
+                                {player.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>
-                    將使用目前已輸入的 {sharedPlayers.length} 位玩家進行自動分隊！
+                  <div className="team-empty-state">
+                    <span>⚔️</span>
+                    <p>點擊上方切換隊伍數或按「重新分組」開始！</p>
                   </div>
                 )}
               </div>
@@ -1550,7 +1733,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 💡 現代 App 風格的質感滿版教學影片按鈕 */}
                 {viewDetailGame.videoUrl && (
                   <div style={{ margin: '14px 0' }}>
                     <a 
