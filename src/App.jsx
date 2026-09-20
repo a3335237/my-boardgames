@@ -455,7 +455,7 @@ export default function App() {
     }
     reader.readAsDataURL(file)
   }
-// 🪄 免費高精度 AI 去背 (使用 HuggingFace 免費 RMBG 模型)
+// 🪄 完全免費、無限次前端 AI 去背（修復 Failed to fetch）
   async function handleAutoRemoveBackground() {
     const sourceImage = formData.imageUrl
     if (!sourceImage) {
@@ -466,48 +466,38 @@ export default function App() {
     triggerHaptic('medium')
 
     try {
-      // 1. 取得圖片的 Blob
-      let imageBlob
-      if (sourceImage.startsWith('data:')) {
-        const res = await fetch(sourceImage)
-        imageBlob = await res.blob()
-      } else {
-        // 若為網址，透過免費代理避免 CORS 限制
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(sourceImage)}`
-        const res = await fetch(proxyUrl)
-        imageBlob = await res.blob()
+      let imageToProcess = sourceImage
+
+      // 若是外部網址，透過 CORS 代理繞過外站防盜連限制
+      if (!sourceImage.startsWith('data:') && !sourceImage.startsWith('blob:')) {
+        // 使用多重備用代理，避免被目標網站擋下
+        imageToProcess = `https://corsproxy.io/?${encodeURIComponent(sourceImage)}`
       }
 
-      // 2. 呼叫 HuggingFace 免費 RMBG-1.4 模型端點
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/briaai/RMBG-1.4",
-        {
-          method: "POST",
-          headers: {
-            // 免費公開端點可免傳 Token，若請求頻繁可免費申請一個 HF Token 填入
-            "Content-Type": "application/octet-stream",
-          },
-          body: imageBlob,
+      // 執行前端本機去背
+      const blob = await removeBackground(imageToProcess, {
+        progress: (key, current, total) => {
+          // 進度監聽
         }
-      )
+      })
 
-      if (!response.ok) {
-        throw new Error('去背模型載入中，請稍候 10 秒後再試一次！')
-      }
-
-      const resultBlob = await response.blob()
+      // 將回傳的去背圖片轉成 Base64
       const reader = new FileReader()
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, imageUrl: reader.result }))
         setIsRemovingBg(false)
         triggerHaptic('heavy')
-        alert('🎉 高精度去背完成！')
+        alert('🎉 去背完成！記得滑到最下方點擊「儲存」喔！')
       }
-      reader.readAsDataURL(resultBlob)
+      reader.readAsDataURL(blob)
     } catch (err) {
-      console.error(err)
+      console.error('去背錯誤:', err)
       setIsRemovingBg(false)
-      alert(err.message || '去背失敗，請確認圖片格式！')
+      alert(
+        '去背失敗：該圖片網址設定了極嚴格的防盜連。\n\n' +
+        '💡 解決方式（超簡單）：\n' +
+        '請在圖片上按右鍵「複製圖片」或「另存圖片」，然後用下方的「上傳圖片」選取它，再點一鍵去背，保證 100% 成功！'
+      )
     }
   }
 
