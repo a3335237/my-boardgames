@@ -11,17 +11,19 @@
     <link href="https://fonts.googleapis.com/css2?family=jf-open-huninn&display=swap" rel="stylesheet">
 
     <!-- PWA & 行動裝置 App 設定 -->
-    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4f46e5">
 
-    <!-- 隱藏 Safari 與行動瀏覽器網址列，強制全螢幕 App 模式 -->
+    <!-- 強制全螢幕 App 模式 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="桌遊庫">
 
-    <!-- 專用桌面圖示與瀏覽器分頁圖示 -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
-    <link rel="icon" type="image/svg+xml" href="/apple-touch-icon.svg" />
+    <!-- ★ iOS 絕對必須吃 PNG 格式，請指名尺寸與副檔名 ★ -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- 一般瀏覽器分頁 Favicon (可吃 svg 或 png) -->
+    <link rel="icon" type="image/png" href="/apple-touch-icon.png">
   </head>
   <body>
     <div id="root"></div>
