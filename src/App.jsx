@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import './App.css'
 import { supabase } from './supabaseClients'
+import { removeBackground } from '@imgly/background-removal'
 
 // 棋寶常見牌套尺寸選項
 const CHESURE_SLEEVE_OPTIONS = [
@@ -202,6 +203,9 @@ export default function App() {
   const [parentSearchInput, setParentSearchInput] = useState('')
   const [viewDetailGame, setViewDetailGame] = useState(null)
   const [detailTab, setDetailTab] = useState('info')
+
+  // 🪄 AI 免費去背狀態
+  const [isRemovingBg, setIsRemovingBg] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -450,6 +454,61 @@ export default function App() {
       }
     }
     reader.readAsDataURL(file)
+  }
+// 🪄 免費高精度 AI 去背 (使用 HuggingFace 免費 RMBG 模型)
+  async function handleAutoRemoveBackground() {
+    const sourceImage = formData.imageUrl
+    if (!sourceImage) {
+      return alert('請先填入圖片網址，或先上傳一張圖片！')
+    }
+
+    setIsRemovingBg(true)
+    triggerHaptic('medium')
+
+    try {
+      // 1. 取得圖片的 Blob
+      let imageBlob
+      if (sourceImage.startsWith('data:')) {
+        const res = await fetch(sourceImage)
+        imageBlob = await res.blob()
+      } else {
+        // 若為網址，透過免費代理避免 CORS 限制
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(sourceImage)}`
+        const res = await fetch(proxyUrl)
+        imageBlob = await res.blob()
+      }
+
+      // 2. 呼叫 HuggingFace 免費 RMBG-1.4 模型端點
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/briaai/RMBG-1.4",
+        {
+          method: "POST",
+          headers: {
+            // 免費公開端點可免傳 Token，若請求頻繁可免費申請一個 HF Token 填入
+            "Content-Type": "application/octet-stream",
+          },
+          body: imageBlob,
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('去背模型載入中，請稍候 10 秒後再試一次！')
+      }
+
+      const resultBlob = await response.blob()
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, imageUrl: reader.result }))
+        setIsRemovingBg(false)
+        triggerHaptic('heavy')
+        alert('🎉 高精度去背完成！')
+      }
+      reader.readAsDataURL(resultBlob)
+    } catch (err) {
+      console.error(err)
+      setIsRemovingBg(false)
+      alert(err.message || '去背失敗，請確認圖片格式！')
+    }
   }
 
   function handleAddSharedPlayer(e) {
@@ -854,7 +913,7 @@ export default function App() {
       </header>
 
       <main>
-        {/* 💡 現代 App 儀表板風格 Hero 橫幅 */}
+        {/* 現代 App 儀表板風格 Hero 橫幅 */}
         <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
             <div>
@@ -2005,15 +2064,60 @@ export default function App() {
                 </button>
               </div>
 
+              {/* 📷 封面圖片管理（含 AI 去背按鈕） */}
               <div className="form-group">
                 <label>📷 封面圖片網址 (Image URL)</label>
-                <input type="url" placeholder="https://example.com/image.jpg" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="url" 
+                    placeholder="https://example.com/image.jpg" 
+                    value={formData.imageUrl} 
+                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={handleAutoRemoveBackground}
+                    disabled={isRemovingBg || !formData.imageUrl}
+                    className="action-btn"
+                    style={{ 
+                      whiteSpace: 'nowrap', 
+                      background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', 
+                      color: '#fff',
+                      border: 'none',
+                      opacity: isRemovingBg ? 0.7 : 1,
+                      cursor: isRemovingBg ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {isRemovingBg ? '⏳ AI去背中...' : '🪄 一鍵去背'}
+                  </button>
+                </div>
               </div>
 
               <div className="form-group">
                 <label>或 上傳圖片 (自動縮放不裁切)</label>
                 <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
               </div>
+
+              {/* 預覽即時去背成果（經典透明底棋盤格） */}
+              {formData.imageUrl && (
+                <div style={{
+                  padding: '10px',
+                  background: 'repeating-conic-gradient(#cbd5e1 0% 25%, #ffffff 0% 50%) 50% / 16px 16px',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  margin: '8px 0',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  <span style={{ fontSize: '11px', color: '#475569', display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+                    圖片預覽（棋盤格代表透明去背效果）
+                  </span>
+                  <img 
+                    src={formData.imageUrl} 
+                    alt="預覽" 
+                    style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain' }} 
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label>🏷️ 標籤 (以逗號分隔，例如: 新手推薦, 快節奏)</label>
