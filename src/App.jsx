@@ -22,6 +22,41 @@ const TEAM_CONFIG = [
   { name: '紫隊', color: '#7c3aed', bg: 'rgba(124, 58, 237, 0.08)', border: 'rgba(124, 58, 237, 0.25)' }
 ]
 
+// 四大自訂毛玻璃選單選項
+const PLAYER_OPTIONS = [
+  { key: 'all', label: '不限' },
+  { key: '2', label: '2 人' },
+  { key: '3', label: '3 人' },
+  { key: '4', label: '4 人' },
+  { key: '5', label: '5 人' },
+  { key: '6', label: '6 人以上' }
+]
+
+const BEST_PLAYER_OPTIONS = [
+  { key: 'all', label: '不限' },
+  { key: '2', label: '2 人' },
+  { key: '3', label: '3 人' },
+  { key: '4', label: '4 人' },
+  { key: '5', label: '5 人' },
+  { key: '6', label: '6 人' },
+  { key: '7', label: '7 人' },
+  { key: '8', label: '8 人' }
+]
+
+const TIME_OPTIONS = [
+  { key: 'all', label: '不限' },
+  { key: '15', label: '15分內' },
+  { key: '30', label: '30分內' }
+]
+
+const SORT_OPTIONS = [
+  { key: 'rating-desc', label: '⭐ 評分最高' },
+  { key: 'time-asc', label: '⏱️ 時間最短' },
+  { key: 'time-desc', label: '⏳ 時間最長' },
+  { key: 'complexity-desc', label: '🔥 燒腦硬核' },
+  { key: 'name-asc', label: '🔤 名稱順序' }
+]
+
 const initialGames = [
   { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲，選好你的英雄，把其他對手打倒！', cheatSheet: '1. 每回合抽2張牌，打出牌面執行效果。\n2. 攻擊對手血量，歸零者淘汰。\n3. 最後存活的英雄獲勝！', videoUrl: 'https://www.youtube.com/results?search_query=地城無雙+桌遊教學', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (120張)' },
   { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 8.10, complexity: 1.20, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，只能靠感覺依序打出數字牌！', cheatSheet: '1. 牌面數字由小到大依序打出。\n2. 全程絕對不能溝通與暗示。\n3. 容許一定的生命值失誤次數。', videoUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm (120張)' },
@@ -97,6 +132,24 @@ export default function App() {
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
+  // 四大毛玻璃懸浮選單開關狀態
+  const [activeDropdown, setActiveDropdown] = useState(null)
+  const filterRowRef = useRef(null)
+
+  // 點擊選單外部自動收合
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (filterRowRef.current && !filterRowRef.current.contains(e.target)) {
+        setActiveDropdown(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 快速抽卡人數限定
+  const [quickPickPlayers, setQuickPickPlayers] = useState('all')
+
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'default')
 
   useEffect(() => {
@@ -170,12 +223,12 @@ export default function App() {
   const [editingScoreId, setEditingScoreId] = useState(null)
   const [tempScoreVal, setTempScoreVal] = useState('')
 
-  // ⏱️ 計時器狀態
+  // 計時器狀態
   const [initialTimerDuration, setInitialTimerDuration] = useState(60)
   const [timeLeft, setTimeLeft] = useState(60)
   const [timerRunning, setTimerRunning] = useState(false)
 
-  // 🎲 骰子 / 🪙 硬幣狀態
+  // 骰子 / 硬幣狀態
   const [diceToolTab, setDiceToolTab] = useState('dice')
   const [diceSides, setDiceSides] = useState(6)
   const [diceNumber, setDiceNumber] = useState(6)
@@ -184,7 +237,7 @@ export default function App() {
   const [isFlippingCoin, setIsFlippingCoin] = useState(false)
   const [coinDegree, setCoinDegree] = useState(0)
 
-  // ⚔️ 多隊伍分隊狀態
+  // 多隊伍分隊狀態
   const [targetTeamCount, setTargetTeamCount] = useState(2)
   const [assignedTeams, setAssignedTeams] = useState([])
   const [isShufflingTeams, setIsShufflingTeams] = useState(false)
@@ -204,6 +257,25 @@ export default function App() {
   const [detailTab, setDetailTab] = useState('info')
 
   const fileInputRef = useRef(null)
+
+  // 按下 ESC 鍵關閉彈窗與選單
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        if (activeDropdown) {
+          setActiveDropdown(null)
+        } else if (showModal) {
+          setShowModal(false)
+        } else if (viewDetailGame) {
+          setViewDetailGame(null)
+        } else if (randomGame) {
+          setRandomGame(null)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeDropdown, showModal, viewDetailGame, randomGame])
 
   useEffect(() => {
     fetchGamesFromSupabase()
@@ -283,7 +355,7 @@ export default function App() {
     } catch (e) {}
   }
 
-  // ⏱️ 計時器邏輯
+  // 計時器邏輯
   useEffect(() => {
     let interval = null
     if (timerRunning && timeLeft > 0) {
@@ -322,6 +394,7 @@ export default function App() {
     return parseInt(cleanStr, 10) === targetNum
   }
 
+  // 完整排序運算
   const filteredGames = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     return games.filter((game) => {
@@ -357,10 +430,22 @@ export default function App() {
     }).sort((a, b) => {
       if (sortBy === 'rating-desc') return (b.rating || 0) - (a.rating || 0)
       if (sortBy === 'time-asc') return (a.time || 0) - (b.time || 0)
-      if (sortBy === 'complexity-asc') return (a.complexity || 1) - (b.complexity || 1)
+      if (sortBy === 'time-desc') return (b.time || 0) - (a.time || 0)
+      if (sortBy === 'complexity-desc') return (b.complexity || 1) - (a.complexity || 1)
+      if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '', 'zh-Hant')
       return 0
     })
   }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
+
+  // 即時計算當前指定條件下的抽卡庫存數量
+  const availableRandomPoolCount = useMemo(() => {
+    let pool = filteredGames.length > 0 ? filteredGames : games
+    if (quickPickPlayers !== 'all') {
+      const p = parseInt(quickPickPlayers, 10)
+      pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99))
+    }
+    return pool.length
+  }, [filteredGames, games, quickPickPlayers])
 
   function handleExportJSON() {
     const jsonString = JSON.stringify(games, null, 2)
@@ -526,7 +611,6 @@ export default function App() {
     return Math.max(...sharedPlayers.map(p => p.score))
   }, [sharedPlayers])
 
-  // ⏱️ 計時器方法
   function setTimerPreset(seconds) {
     triggerHaptic('light')
     setTimerRunning(false)
@@ -548,7 +632,6 @@ export default function App() {
     setTimeLeft(initialTimerDuration)
   }
 
-  // 🎲 骰子方法
   function rollDice(sides) {
     setDiceSides(sides)
     setIsRollingDice(true)
@@ -567,7 +650,6 @@ export default function App() {
     }, 60)
   }
 
-  // 🪙 硬幣方法
   function flipCoin() {
     if (isFlippingCoin) return
     setIsFlippingCoin(true)
@@ -584,7 +666,6 @@ export default function App() {
     }, 650)
   }
 
-  // ⚔️ 智慧分隊邏輯
   function handleSplitTeams(numTeams = targetTeamCount) {
     triggerHaptic('medium')
     if (sharedPlayers.length < numTeams) {
@@ -608,8 +689,16 @@ export default function App() {
   }
 
   function chooseRandomWithAnimation() {
-    const pool = filteredGames.length > 0 ? filteredGames : games
-    if (pool.length === 0) return alert('⚠️ 目前篩選條件下沒有桌遊可抽取！')
+    let pool = filteredGames.length > 0 ? filteredGames : games
+
+    if (quickPickPlayers !== 'all') {
+      const p = parseInt(quickPickPlayers, 10)
+      pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99))
+    }
+
+    if (pool.length === 0) {
+      return alert(`⚠️ 目前收藏庫中沒有適合 ${quickPickPlayers === 'all' ? '' : quickPickPlayers + ' 人'}的桌遊可抽取！`)
+    }
 
     setIsRevealed(false)
     setIsShuffling(true)
@@ -773,11 +862,32 @@ export default function App() {
     }
   }
 
-  // 環形計時器半徑與周長
+  // 環形計時器數值
   const timerRadius = 78
   const timerCircumference = 2 * Math.PI * timerRadius
   const timerProgress = initialTimerDuration > 0 ? (timeLeft / initialTimerDuration) : 0
   const timerDashoffset = timerCircumference - (timerProgress * timerCircumference)
+
+  // 取得各下拉按鈕目前顯示文字
+  const currentPlayerLabel = useMemo(() => {
+    const f = PLAYER_OPTIONS.find(o => o.key === playerFilter)
+    return f ? f.label : '不限'
+  }, [playerFilter])
+
+  const currentBestLabel = useMemo(() => {
+    const f = BEST_PLAYER_OPTIONS.find(o => o.key === bestPlayerFilter)
+    return f ? f.label : '不限'
+  }, [bestPlayerFilter])
+
+  const currentTimeLabel = useMemo(() => {
+    const f = TIME_OPTIONS.find(o => o.key === maxTimeFilter)
+    return f ? f.label : '不限'
+  }, [maxTimeFilter])
+
+  const currentSortLabel = useMemo(() => {
+    const f = SORT_OPTIONS.find(o => o.key === sortBy)
+    return f ? f.label : '⭐ 評分最高'
+  }, [sortBy])
 
   return (
     <div className="app">
@@ -860,9 +970,12 @@ export default function App() {
             <div>
               <span className="hero-tagline">✨ 聚會推薦助手</span>
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
+              <div className="hero-subtitle-hint">
+                ⚡ 目前共有 <strong>{totalCount}</strong> 款精選桌遊準備就緒
+              </div>
             </div>
 
-            {/* 4 欄 App 儀表板卡片 */}
+            {/* 4 欄 App 儀表板微卡片 */}
             <div className="hero-stats-grid">
               <div 
                 className={`hero-stat-card ${expansionFilter === 'all' ? 'active-all' : ''}`}
@@ -909,14 +1022,60 @@ export default function App() {
               </div>
             </div>
 
-            <button 
-              type="button" 
-              className={`random-button ${isShuffling ? 'spinning' : ''}`} 
-              onClick={chooseRandomWithAnimation} 
-              disabled={isShuffling}
-            >
-              {isShuffling ? '🎴 命運洗牌中...' : '🎲 幫我選一款桌遊'}
-            </button>
+            {/* 🎲 微型人數膠囊列 + 動態抽籤主按鈕（已整合 6+人等寬排版、防抖動與庫存提示） */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+              <div className="quick-pick-container">
+                <span className="quick-pick-label">
+                  👥 指定人數:
+                </span>
+                <div className="quick-pick-track">
+                  {[
+                    { val: 'all', label: '不限' },
+                    { val: '2', label: '2人' },
+                    { val: '3', label: '3人' },
+                    { val: '4', label: '4人' },
+                    { val: '5', label: '5人' },
+                    { val: '6', label: '6+人' }
+                  ].map(item => {
+                    const isSelected = quickPickPlayers === item.val
+                    return (
+                      <button
+                        key={item.val}
+                        type="button"
+                        className={`quick-pick-chip ${isSelected ? 'active' : ''}`}
+                        onClick={() => { triggerHaptic('light'); setQuickPickPlayers(item.val); }}
+                      >
+                        {item.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                className={`random-button ${isShuffling ? 'spinning' : ''}`} 
+                onClick={chooseRandomWithAnimation} 
+                disabled={isShuffling || availableRandomPoolCount === 0}
+                style={{ margin: 0 }}
+              >
+                <span className="random-dice-icon">🎲</span>
+                <span>
+                  {isShuffling 
+                    ? '命運洗牌中...' 
+                    : (quickPickPlayers === 'all' ? '幫我選一款桌遊' : `幫我選 ${quickPickPlayers} 人桌遊`)}
+                </span>
+              </button>
+
+              {/* 抽卡即時庫存提示 */}
+              <div className={`random-pool-counter ${availableRandomPoolCount === 0 ? 'empty' : ''}`}>
+                {availableRandomPoolCount > 0 ? (
+                  <>🎯 符合條件共 <strong>{availableRandomPoolCount}</strong> 款桌遊準備就緒</>
+                ) : (
+                  <>⚠️ 目前篩選條件下沒有符合的桌遊可抽</>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="starter-card" style={{
@@ -924,7 +1083,6 @@ export default function App() {
             borderRadius: '24px',
             padding: '1.4rem',
             border: '1px solid var(--border-color)',
-            boxShadow: 'var(--card-shadow)',
             position: 'relative',
             overflowX: 'hidden'
           }}>
@@ -1140,7 +1298,7 @@ export default function App() {
               </>
             )}
 
-            {/* ⏱️ 環形倒數計時器 */}
+            {/* 環形倒數計時器 */}
             {widgetTab === 'timer' && (
               <div className="timer-container">
                 <div className="timer-preset-bar">
@@ -1204,7 +1362,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 🎲 骰子與 3D 拋硬幣 */}
+            {/* 隨機骰子與 3D 拋硬幣 */}
             {widgetTab === 'dice' && (
               <div>
                 <div className="dice-sub-tabs">
@@ -1282,7 +1440,7 @@ export default function App() {
               </div>
             )}
 
-            {/* ⚔️ 智慧分隊工具 */}
+            {/* 智慧分隊工具 */}
             {widgetTab === 'team' && (
               <div className="team-tool-container">
                 <div className="team-unified-header">
@@ -1360,77 +1518,183 @@ export default function App() {
           </div>
         </section>
 
+        {/* 🎨 篩選面板：全數採用一致的毛玻璃懸浮彈窗 */}
         <section className="filter-panel" id="collection-sec">
-          <div className="filter-row">
+          <div className="filter-row" ref={filterRowRef}>
             <div className="search-box">
               <span>🔍</span>
-              <input type="text" placeholder="搜尋桌遊名稱/英文..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="搜尋桌遊名稱/英文..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+              />
             </div>
 
-            <div className="filter-group">
-              <label>👥 可玩人數：</label>
-              <select value={playerFilter} onChange={(e) => { triggerHaptic('light'); setPlayerFilter(e.target.value); }}>
-                <option value="all">不限</option>
-                <option value="2">2 人</option>
-                <option value="3">3 人</option>
-                <option value="4">4 人</option>
-                <option value="5">5 人</option>
-                <option value="6">6 人以上</option>
-              </select>
+            {/* 1. 👥 可玩人數毛玻璃選單 */}
+            <div className="custom-filter-dropdown-wrapper">
+              <button
+                type="button"
+                className={`custom-filter-trigger ${activeDropdown === 'player' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light')
+                  setActiveDropdown(activeDropdown === 'player' ? null : 'player')
+                }}
+              >
+                <span className="custom-filter-label">👥 人數:</span>
+                <span className="custom-filter-value">{currentPlayerLabel}</span>
+                <span className={`custom-filter-arrow ${activeDropdown === 'player' ? 'open' : ''}`}>▼</span>
+              </button>
+
+              {activeDropdown === 'player' && (
+                <div className="custom-filter-dropdown">
+                  {PLAYER_OPTIONS.map(opt => {
+                    const isSelected = playerFilter === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`custom-filter-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          triggerHaptic('light')
+                          setPlayerFilter(opt.key)
+                          setActiveDropdown(null)
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <span className="custom-filter-check">✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="filter-group">
-              <label>👑 最佳人數：</label>
-              <select value={bestPlayerFilter} onChange={(e) => { triggerHaptic('light'); setBestPlayerFilter(e.target.value); }}>
-                <option value="all">不限</option>
-                <option value="2">最佳 2 人</option>
-                <option value="3">最佳 3 人</option>
-                <option value="4">最佳 4 人</option>
-                <option value="5">最佳 5 人</option>
-                <option value="6">最佳 6 人</option>
-                <option value="7">最佳 7 人</option>
-                <option value="8">最佳 8 人</option>
-              </select>
+            {/* 2. 👑 最佳人數毛玻璃選單 */}
+            <div className="custom-filter-dropdown-wrapper">
+              <button
+                type="button"
+                className={`custom-filter-trigger ${activeDropdown === 'best' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light')
+                  setActiveDropdown(activeDropdown === 'best' ? null : 'best')
+                }}
+              >
+                <span className="custom-filter-label">👑 最佳:</span>
+                <span className="custom-filter-value">{currentBestLabel}</span>
+                <span className={`custom-filter-arrow ${activeDropdown === 'best' ? 'open' : ''}`}>▼</span>
+              </button>
+
+              {activeDropdown === 'best' && (
+                <div className="custom-filter-dropdown">
+                  {BEST_PLAYER_OPTIONS.map(opt => {
+                    const isSelected = bestPlayerFilter === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`custom-filter-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          triggerHaptic('light')
+                          setBestPlayerFilter(opt.key)
+                          setActiveDropdown(null)
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <span className="custom-filter-check">✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="filter-group">
-              <label>⏱️ 時間：</label>
-              <select value={maxTimeFilter} onChange={(e) => { triggerHaptic('light'); setMaxTimeFilter(e.target.value); }}>
-                <option value="all">不限</option>
-                <option value="15">15 分鐘內</option>
-                <option value="30">30 分鐘內</option>
-              </select>
+            {/* 3. ⏱️ 遊戲時間毛玻璃選單 */}
+            <div className="custom-filter-dropdown-wrapper">
+              <button
+                type="button"
+                className={`custom-filter-trigger ${activeDropdown === 'time' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light')
+                  setActiveDropdown(activeDropdown === 'time' ? null : 'time')
+                }}
+              >
+                <span className="custom-filter-label">⏱️ 時間:</span>
+                <span className="custom-filter-value">{currentTimeLabel}</span>
+                <span className={`custom-filter-arrow ${activeDropdown === 'time' ? 'open' : ''}`}>▼</span>
+              </button>
+
+              {activeDropdown === 'time' && (
+                <div className="custom-filter-dropdown">
+                  {TIME_OPTIONS.map(opt => {
+                    const isSelected = maxTimeFilter === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`custom-filter-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          triggerHaptic('light')
+                          setMaxTimeFilter(opt.key)
+                          setActiveDropdown(null)
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <span className="custom-filter-check">✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
-            <div className="filter-group">
-              <label>📊 排序：</label>
-              <select value={sortBy} onChange={(e) => { triggerHaptic('light'); setSortBy(e.target.value); }}>
-                <option value="rating-desc">⭐ 評分最高</option>
-                <option value="time-asc">⏱️ 時間最短</option>
-                <option value="complexity-asc">🧠 最易學入門</option>
-              </select>
+            {/* 4. 📊 排序方式毛玻璃選單 */}
+            <div className="custom-filter-dropdown-wrapper">
+              <button
+                type="button"
+                className={`custom-filter-trigger ${activeDropdown === 'sort' ? 'active' : ''}`}
+                onClick={() => {
+                  triggerHaptic('light')
+                  setActiveDropdown(activeDropdown === 'sort' ? null : 'sort')
+                }}
+              >
+                <span className="custom-filter-label">📊 排序:</span>
+                <span className="custom-filter-value">{currentSortLabel}</span>
+                <span className={`custom-filter-arrow ${activeDropdown === 'sort' ? 'open' : ''}`}>▼</span>
+              </button>
+
+              {activeDropdown === 'sort' && (
+                <div className="custom-filter-dropdown align-right">
+                  {SORT_OPTIONS.map(opt => {
+                    const isSelected = sortBy === opt.key
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        className={`custom-filter-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          triggerHaptic('light')
+                          setSortBy(opt.key)
+                          setActiveDropdown(null)
+                        }}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <span className="custom-filter-check">✓</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="category-bar" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', margin: '14px 0 0 0' }}>
+          <div className="category-bar">
             {categories.map(cat => (
               <button 
                 key={cat} 
                 type="button"
                 className={`cat-btn ${category === cat ? 'active' : ''}`}
                 onClick={() => { triggerHaptic('light'); setCategory(cat); }}
-                style={{
-                  borderRadius: '12px',
-                  padding: '7px 16px',
-                  fontSize: '0.92rem',
-                  fontWeight: '600',
-                  border: category === cat ? '1px solid var(--accent-blue)' : '1px solid var(--border-color)',
-                  backgroundColor: category === cat ? 'var(--accent-blue)' : 'var(--bg-card)',
-                  color: category === cat ? '#ffffff' : 'inherit',
-                  cursor: 'pointer',
-                  boxShadow: category === cat ? '0 4px 12px rgba(79, 70, 229, 0.3)' : '0 2px 4px rgba(0,0,0,0.03)',
-                  transition: 'all 0.2s ease'
-                }}
               >
                 {cat}
               </button>
@@ -1438,64 +1702,79 @@ export default function App() {
           </div>
         </section>
 
+        {/* 收藏庫展示清單：載入時使用骨架光流動效 */}
         <section className="collection">
           <div className="game-grid">
-            {filteredGames.map((game) => {
-              const isFav = favorites.includes(game.id)
-              return (
-                <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
-                  <button 
-                    type="button" 
-                    className="card-fav-btn" 
-                    onClick={(e) => toggleFavorite(e, game.id)}
-                    title={isFav ? "取消收藏" : "加入我的最愛"}
-                  >
-                    {isFav ? '❤️' : '🤍'}
-                  </button>
-
-                  <div className="cover">
-                    {game.imageUrl ? (
-                      <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" />
-                    ) : (
-                      <span className="cover-emoji">{game.emoji}</span>
-                    )}
-
-                    <div className="badge-container">
-                      {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
-                      {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
-                    </div>
-
-                    <span className="category-tag">{game.category}</span>
+            {loading ? (
+              Array.from({ length: 8 }).map((_, idx) => (
+                <div key={idx} className="skeleton-card">
+                  <div className="skeleton-cover" />
+                  <div className="skeleton-info">
+                    <div className="skeleton-bar title" />
+                    <div className="skeleton-bar subtitle" />
+                    <div className="skeleton-bar tags" />
+                    <div className="skeleton-bar bottom" />
                   </div>
+                </div>
+              ))
+            ) : (
+              filteredGames.map((game) => {
+                const isFav = favorites.includes(game.id)
+                return (
+                  <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
+                    <button 
+                      type="button" 
+                      className="card-fav-btn" 
+                      onClick={(e) => toggleFavorite(e, game.id)}
+                      title={isFav ? "取消收藏" : "加入我的最愛"}
+                    >
+                      {isFav ? '❤️' : '🤍'}
+                    </button>
 
-                  <div className="game-info">
-                    <h3>{game.name}</h3>
-                    <p className="english">{game.englishName}</p>
-                    
-                    {Array.isArray(game.tags) && game.tags.length > 0 && (
-                      <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
-                        {game.tags.map(t => (
-                          <span key={t} style={{ fontSize: '11px', background: 'var(--pill-bg)', padding: '2px 6px', borderRadius: '4px' }}>#{t}</span>
-                        ))}
+                    <div className="cover">
+                      {game.imageUrl ? (
+                        <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" />
+                      ) : (
+                        <span className="cover-emoji">{game.emoji}</span>
+                      )}
+
+                      <div className="badge-container">
+                        {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
+                        {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
                       </div>
-                    )}
 
-                    <div className="pill-badges-row">
-                      <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
-                      {game.bestPlayers && <span className="pill-badge best">👑 最佳{game.bestPlayers}人</span>}
-                      <span className="pill-badge">⏱️ {game.time}分</span>
+                      <span className="category-tag">{game.category}</span>
                     </div>
 
-                    <div className="rating-complexity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                      <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
-                      <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>
-                        🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
+                    <div className="game-info">
+                      <h3>{game.name}</h3>
+                      <p className="english">{game.englishName}</p>
+                      
+                      {Array.isArray(game.tags) && game.tags.length > 0 && (
+                        <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
+                          {game.tags.map(t => (
+                            <span key={t} style={{ fontSize: '11px', background: 'var(--pill-bg)', padding: '2px 6px', borderRadius: '4px' }}>#{t}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pill-badges-row">
+                        <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
+                        {game.bestPlayers && <span className="pill-badge best">👑 最佳{game.bestPlayers}人</span>}
+                        <span className="pill-badge">⏱️ {game.time}分</span>
+                      </div>
+
+                      <div className="rating-complexity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                        <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
+                        <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>
+                          🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </article>
-              )
-            })}
+                  </article>
+                )
+              })
+            )}
           </div>
         </section>
       </main>
@@ -1538,10 +1817,9 @@ export default function App() {
 
       {/* 抽卡開箱彈窗 */}
       {randomGame && (
-        <div className="modal-overlay" onClick={() => !isShuffling && setRandomGame(null)}>
+        <div className="modal-overlay">
           <div 
             className="detail-modal-content" 
-            onClick={(e) => e.stopPropagation()} 
             style={{ 
               textAlign: 'center', 
               maxWidth: '460px', 
@@ -1634,8 +1912,8 @@ export default function App() {
 
       {/* 詳細資料 Modal */}
       {viewDetailGame && (
-        <div className="modal-overlay" onClick={() => setViewDetailGame(null)}>
-          <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="detail-modal-content">
             <button className="close-detail-btn" onClick={() => setViewDetailGame(null)}>✕</button>
 
             {isAdmin && (
@@ -1902,8 +2180,8 @@ export default function App() {
 
       {/* 新增/編輯 Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <h2>{editingId ? '✏️ 編輯桌遊' : '➕ 新增桌遊'}</h2>
             
             <form onSubmit={handleSubmitForm}>
@@ -2005,7 +2283,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* 📷 封面圖片管理 */}
               <div className="form-group">
                 <label>📷 封面圖片網址 (Image URL)</label>
                 <input 
