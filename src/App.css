@@ -193,7 +193,7 @@ body {
   border-color: var(--accent-blue);
 }
 
-/* Hero 區域 */
+/* Hero 儀表板區域 */
 .hero {
   display: grid;
   grid-template-columns: 1fr 1.28fr;
@@ -1529,104 +1529,11 @@ body.theme-dark .custom-filter-dropdown {
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
 }
 
-/* 卡片網格 */
+/* 卡片網格與卡片對齊設定 */
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1.5rem;
-}
-
-/* 骨架屏光流動效 */
-.skeleton-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 18px;
-  overflow: hidden;
-  height: 290px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--card-shadow);
-  position: relative;
-}
-
-.skeleton-cover {
-  height: 165px;
-  background: var(--pill-bg);
-  position: relative;
-  overflow: hidden;
-}
-
-.skeleton-info {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-}
-
-.skeleton-bar {
-  background: var(--pill-bg);
-  border-radius: 6px;
-  position: relative;
-  overflow: hidden;
-}
-
-.skeleton-bar.title {
-  height: 18px;
-  width: 70%;
-}
-
-.skeleton-bar.subtitle {
-  height: 12px;
-  width: 45%;
-}
-
-.skeleton-bar.tags {
-  height: 20px;
-  width: 85%;
-  border-radius: 20px;
-  margin-top: auto;
-}
-
-.skeleton-bar.bottom {
-  height: 14px;
-  width: 100%;
-}
-
-.skeleton-cover::after,
-.skeleton-bar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.5) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  animation: shimmerMove 1.6s infinite;
-}
-
-body.dark-theme .skeleton-cover::after,
-body.dark-theme .skeleton-bar::after,
-body.theme-dark .skeleton-cover::after,
-body.theme-dark .skeleton-bar::after {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-
-@keyframes shimmerMove {
-  100% {
-    transform: translateX(100%);
-  }
 }
 
 .game-card {
@@ -1637,9 +1544,10 @@ body.theme-dark .skeleton-bar::after {
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, border-color 0.2s ease;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   box-shadow: var(--card-shadow);
+  height: 100%;
 }
 
 .game-card:hover {
@@ -1748,10 +1656,10 @@ body.theme-dark .skeleton-bar::after {
 }
 
 .game-info {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
+  padding: 0.9rem 1rem 1rem 1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
 }
 
 .game-info h3 {
@@ -1763,31 +1671,55 @@ body.theme-dark .skeleton-bar::after {
 }
 
 .game-info .english {
-  margin: 0.2rem 0 0.5rem 0;
-  font-size: 0.78rem;
+  margin: 0.2rem 0 0.4rem 0;
+  font-size: 0.76rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.pill-badges-row {
+/* 🌟 標籤區：固定單行高度與防溢出，確保所有卡片下方的資訊欄位完美對齊在同一水平線！ */
+.card-tags {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin: 6px 0;
+  gap: 4px;
+  flex-wrap: nowrap !important;
+  overflow: hidden;
+  height: 24px !important;
+  margin: 4px 0 8px 0 !important;
+  white-space: nowrap;
+}
+
+.card-tags span {
+  font-size: 11px;
+  background: var(--pill-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* 🌟 膠囊列：完全齊平對稱 */
+.pill-badges-row {
+  display: flex !important;
+  gap: 4px !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  margin: 4px 0 10px 0 !important;
+  height: 26px !important;
 }
 
 .pill-badge {
   background: var(--pill-bg);
   color: var(--pill-text);
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 2px 6px !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pill-badge.best {
@@ -1795,13 +1727,132 @@ body.theme-dark .skeleton-bar::after {
   background: rgba(245, 158, 11, 0.12);
 }
 
-/* 抽卡開箱動畫 */
+.rating-complexity-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: auto !important;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* 骨架屏光流動畫 */
+.skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  overflow: hidden;
+  height: 290px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--card-shadow);
+  position: relative;
+}
+
+.skeleton-cover {
+  height: 165px;
+  background: var(--pill-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-info {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.skeleton-bar {
+  background: var(--pill-bg);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-bar.title {
+  height: 18px;
+  width: 70%;
+}
+
+.skeleton-bar.subtitle {
+  height: 12px;
+  width: 45%;
+}
+
+.skeleton-bar.tags {
+  height: 20px;
+  width: 85%;
+  border-radius: 20px;
+  margin-top: auto;
+}
+
+.skeleton-bar.bottom {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-cover::after,
+.skeleton-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmerMove 1.6s infinite;
+}
+
+body.dark-theme .skeleton-cover::after,
+body.dark-theme .skeleton-bar::after,
+body.theme-dark .skeleton-cover::after,
+body.theme-dark .skeleton-bar::after {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@keyframes shimmerMove {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ==================== 🌟 抽卡專屬立體小卡 (寬度尺寸黃金比例) ==================== */
+.random-reveal-modal-box {
+  background: var(--bg-card);
+  border-radius: 26px;
+  width: 90%;
+  max-width: 440px;
+  padding: 2.2rem 1.8rem 1.8rem 1.8rem;
+  box-sizing: border-box;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  animation: popScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popScale {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .card-reveal-scene {
   width: 100% !important;
-  max-width: 420px !important;
-  min-height: 480px !important;
-  height: auto !important;
-  position: relative;
+  max-width: 360px !important;
+  min-height: 380px !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1827,34 +1878,27 @@ body.theme-dark .skeleton-bar::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 12px 4px;
+  justify-content: center;
+  padding: 8px 4px;
   box-sizing: border-box;
   animation: zoomInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .card-reveal-img-box {
   width: 100% !important;
-  max-height: 320px !important;
+  height: 260px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  overflow: visible !important;
-  margin-bottom: 10px !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  flex-shrink: 0;
+  margin-bottom: 12px !important;
 }
 
 .card-reveal-img-box img {
   max-width: 100% !important;
-  max-height: 320px !important;
-  width: auto !important;
-  height: auto !important;
+  max-height: 250px !important;
   object-fit: contain !important;
   display: block !important;
-  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.25)) !important;
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25)) !important;
 }
 
 @keyframes zoomInBounce {
@@ -1865,7 +1909,7 @@ body.theme-dark .skeleton-bar::after {
 
 .card-mystery-back {
   width: 100%;
-  height: 440px;
+  height: 360px;
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
   border-radius: 20px;
   border: 2px dashed rgba(255, 255, 255, 0.3);
@@ -1888,7 +1932,7 @@ body.theme-dark .skeleton-bar::after {
   100% { transform: scale(1.1); text-shadow: 0 0 25px rgba(99,102,241,0.8); }
 }
 
-/* 彈窗 */
+/* 彈窗背景 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2057,7 +2101,7 @@ body.theme-dark .skeleton-bar::after {
   cursor: pointer;
 }
 
-/* ==================== 💎 詳細資訊 Modal ==================== */
+/* 詳細資訊 Modal */
 .detail-modal-content {
   background: var(--bg-card);
   border-radius: 28px;
@@ -2190,7 +2234,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* 🌟 圖片展台與懸浮發光微動效 */
 .detail-img-container {
   width: 100%;
   display: flex;
@@ -2205,6 +2248,9 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
 }
 
 .detail-img-container::before {
@@ -2243,7 +2289,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   filter: drop-shadow(0 20px 28px rgba(79, 70, 229, 0.38)) !important;
 }
 
-/* 🌟 工整的 3 排 x 2 欄 雙欄數據卡 */
 .detail-info-card {
   background: var(--bg-main);
   border: 1px solid var(--border-color);
@@ -2270,7 +2315,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   }
 }
 
-/* 🌟 美觀優雅、點擊順手的 BGG 互聯膠囊 */
 .bgg-link-badge-smooth {
   display: inline-flex;
   align-items: center;
@@ -2300,7 +2344,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   opacity: 1;
 }
 
-/* 牌套單列橫排膠囊槽 */
 .sleeve-bar-row {
   display: flex;
   align-items: center;
@@ -2357,7 +2400,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   color: #059669;
 }
 
-/* 精緻型 YouTube 橫幅按鈕 */
 .video-banner-btn {
   display: flex;
   align-items: center;
@@ -2439,7 +2481,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   margin-bottom: 0.8rem;
 }
 
-/* 底部導覽列 */
 .bottom-nav-bar {
   display: none;
   position: fixed;
@@ -2479,7 +2520,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   color: var(--accent-blue);
 }
 
-/* 手機版 RWD */
 @media screen and (max-width: 768px) {
   html, body {
     -webkit-text-size-adjust: 100%;

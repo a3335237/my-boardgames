@@ -354,7 +354,7 @@ export default function App() {
         (game.name && game.name.toLowerCase().includes(keyword)) ||
         (game.englishName && game.englishName.toLowerCase().includes(keyword))
       
-      const matchCat = category === '全部' || game.category === category
+      const matchCat = category === 'all' || category === '全部' || game.category === category
       
       let matchP = true
       if (playerFilter !== 'all') {
@@ -1764,9 +1764,9 @@ export default function App() {
                       <p className="english">{game.englishName}</p>
                       
                       {Array.isArray(game.tags) && game.tags.length > 0 && (
-                        <div className="card-tags" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', margin: '4px 0' }}>
+                        <div className="card-tags">
                           {game.tags.map(t => (
-                            <span key={t} style={{ fontSize: '11px', background: 'var(--pill-bg)', padding: '2px 6px', borderRadius: '4px' }}>#{t}</span>
+                            <span key={t}>#{t}</span>
                           ))}
                         </div>
                       )}
@@ -1777,7 +1777,7 @@ export default function App() {
                         <span className="pill-badge">⏱️ {game.time}分</span>
                       </div>
 
-                      <div className="rating-complexity-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      <div className="rating-complexity-row">
                         <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
                         <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>
                           🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
@@ -1828,18 +1828,10 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 抽卡開箱彈窗 */}
+      {/* 🌟 抽卡開箱專屬小視窗 (按鈕與資訊全部包在卡片內，不再脫鉤) */}
       {randomGame && (
         <div className="modal-overlay">
-          <div 
-            className="detail-modal-content" 
-            style={{ 
-              textAlign: 'center', 
-              maxWidth: '460px', 
-              padding: '2rem 1.6rem', 
-              borderRadius: '28px'
-            }}
-          >
+          <div className="random-reveal-modal-box">
             <button className="detail-close-icon-btn" style={{ position: 'absolute', top: '16px', right: '16px' }} onClick={() => setRandomGame(null)} disabled={isShuffling}>
               ✕
             </button>
@@ -1848,7 +1840,7 @@ export default function App() {
               {isShuffling ? '🎴 命運牌堆洗牌中...' : '✨ 命中注定就是它！'}
             </span>
 
-            <div className={`card-reveal-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1.2rem auto' }}>
+            <div className={`card-reveal-scene ${isShuffling ? 'shuffle-shake' : ''}`} style={{ margin: '1rem auto' }}>
               {isShuffling || !isRevealed ? (
                 <div className="card-mystery-back">
                   <span>🔮</span>
@@ -1863,9 +1855,9 @@ export default function App() {
                       <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '1.3rem', margin: '6px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0 0 8px 0', width: '100%' }}>{randomGame.englishName}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '0.82rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
+                  <h3 style={{ fontSize: '1.25rem', margin: '4px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 6px 0', width: '100%' }}>{randomGame.englishName}</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
                     <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
@@ -1874,7 +1866,7 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1.2rem' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem' }}>
               <button 
                 type="button" 
                 onClick={chooseRandomWithAnimation} 
@@ -1884,9 +1876,9 @@ export default function App() {
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 22px',
+                  padding: '9px 18px',
                   fontWeight: 'bold',
-                  fontSize: '0.9rem',
+                  fontSize: '0.88rem',
                   cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
                 }}
@@ -1909,9 +1901,9 @@ export default function App() {
                   color: '#fff',
                   border: 'none',
                   borderRadius: '25px',
-                  padding: '10px 22px',
+                  padding: '9px 18px',
                   fontWeight: 'bold',
-                  fontSize: '0.9rem',
+                  fontSize: '0.88rem',
                   cursor: isShuffling ? 'not-allowed' : 'pointer',
                   boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                 }}
@@ -1927,7 +1919,6 @@ export default function App() {
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
-            {/* 🎯 頂部固定導航列：與右邊緣維持充足安全距離 */}
             <div className="detail-nav-header">
               <div className="detail-nav-left">
                 <button
@@ -1978,11 +1969,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* 🎯 獨立內部滾動容器 */}
             <div className="detail-body-scrollable">
               {detailTab === 'info' ? (
                 <>
-                  {/* 🌟 帶發光展台效果的圖片容器 */}
                   {viewDetailGame.imageUrl && (
                     <div className="detail-img-container">
                       <img 
@@ -2006,9 +1995,8 @@ export default function App() {
                   </div>
                   <p className="detail-english">{viewDetailGame.englishName}</p>
                   
-                  {/* 🌟 完美工整的 3 排 x 2 欄 雙欄數據卡 */}
+                  {/* 3排 x 2欄 工整資訊卡 */}
                   <div className="detail-info-card">
-                    {/* 第 1 排：基本人數 vs 最佳人數 */}
                     <div className="detail-info-item">
                       👥 <strong>人數：</strong>{viewDetailGame.minPlayers}–{viewDetailGame.maxPlayers}人
                     </div>
@@ -2016,7 +2004,6 @@ export default function App() {
                       👑 <strong>最佳人數：</strong>{viewDetailGame.bestPlayers || '未設定'}人
                     </div>
 
-                    {/* 第 2 排：遊戲時間 vs 遊戲類型 */}
                     <div className="detail-info-item">
                       ⏱️ <strong>遊戲時間：</strong>{viewDetailGame.time} 分鐘
                     </div>
@@ -2024,7 +2011,6 @@ export default function App() {
                       🏷️ <strong>遊戲類型：</strong>{viewDetailGame.category || '未分類'}
                     </div>
 
-                    {/* 第 3 排：BGG 評分 vs 燒腦程度（左右呼應，完美齊平） */}
                     <div className="detail-info-item">
                       <a
                         href={viewDetailGame.bggUrl || `https://boardgamegeek.com/geeksearch.php?action=search&q=${encodeURIComponent(viewDetailGame.englishName || viewDetailGame.name)}`}
@@ -2043,7 +2029,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* 🃏 橫條單列牌套膠囊槽 */}
+                  {/* 牌套規格 */}
                   {viewDetailGame.sleeveSize && (
                     <div className="sleeve-bar-row">
                       <span className="sleeve-bar-label">
@@ -2073,7 +2059,7 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* 🎬 精緻型 YouTube 橫幅按鈕 */}
+                  {/* YouTube 教學影片按鈕 */}
                   {viewDetailGame.videoUrl && (
                     <a 
                       href={viewDetailGame.videoUrl} 
