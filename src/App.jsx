@@ -69,8 +69,8 @@ const emptyForm = {
   bestPlayers: '4',
   time: 30,
   category: '派對',
-  rating: '8.00',
-  complexity: '2.00',
+  rating: '', // 🌟 支援空值
+  complexity: '', // 🌟 支援空值
   emoji: '🎲',
   imageUrl: '',
   tagsInput: '',
@@ -380,10 +380,19 @@ export default function App() {
 
       return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp
     }).sort((a, b) => {
-      if (sortBy === 'rating-desc') return (b.rating || 0) - (a.rating || 0)
+      // 🌟 排序時若評分為空或 0，自動置後
+      if (sortBy === 'rating-desc') {
+        const ra = a.rating != null ? Number(a.rating) : -1
+        const rb = b.rating != null ? Number(b.rating) : -1
+        return rb - ra
+      }
       if (sortBy === 'time-asc') return (a.time || 0) - (b.time || 0)
       if (sortBy === 'time-desc') return (b.time || 0) - (a.time || 0)
-      if (sortBy === 'complexity-desc') return (b.complexity || 1) - (a.complexity || 1)
+      if (sortBy === 'complexity-desc') {
+        const ca = a.complexity != null ? Number(a.complexity) : -1
+        const cb = b.complexity != null ? Number(b.complexity) : -1
+        return cb - ca
+      }
       if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '', 'zh-Hant')
       return 0
     })
@@ -409,8 +418,8 @@ export default function App() {
         bestPlayers: String(g.bestPlayers || ''),
         time: Number(g.time) || 30,
         category: g.category || '未分類',
-        rating: Number(Number(g.rating || 0).toFixed(2)),
-        complexity: Number(Number(g.complexity || 2).toFixed(2)),
+        rating: g.rating != null ? Number(Number(g.rating).toFixed(2)) : null,
+        complexity: g.complexity != null ? Number(Number(g.complexity).toFixed(2)) : null,
         emoji: g.emoji || '🎲',
         imageUrl: safeImage,
         tags: Array.isArray(g.tags) ? g.tags : [],
@@ -475,6 +484,9 @@ export default function App() {
             finalImage = existing.imageUrl
           }
 
+          const parsedRating = item.rating !== undefined && item.rating !== '' && item.rating !== null ? parseFloat(item.rating) : null
+          const parsedComplexity = item.complexity !== undefined && item.complexity !== '' && item.complexity !== null ? parseFloat(item.complexity) : null
+
           const payload = {
             name: cleanName,
             englishName: item.englishName || '',
@@ -483,8 +495,8 @@ export default function App() {
             bestPlayers: item.bestPlayers ? String(item.bestPlayers) : `${item.minPlayers || 1}-${item.maxPlayers || 4}`,
             time: parseInt(item.time, 10) || 30,
             category: item.category || '未分類',
-            rating: parseFloat(item.rating) || 0,
-            complexity: parseFloat(item.complexity) || 0,
+            rating: !isNaN(parsedRating) ? parsedRating : null,
+            complexity: !isNaN(parsedComplexity) ? parsedComplexity : null,
             emoji: item.emoji || '🎲',
             imageUrl: finalImage,
             tags: Array.isArray(item.tags) ? item.tags : (typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()) : []),
@@ -801,8 +813,8 @@ export default function App() {
       bestPlayers: game.bestPlayers || '',
       time: game.time || 30,
       category: game.category || '派對',
-      rating: game.rating ? Number(game.rating).toFixed(2) : '8.00',
-      complexity: game.complexity ? Number(game.complexity).toFixed(2) : '2.00',
+      rating: game.rating != null ? String(game.rating) : '',
+      complexity: game.complexity != null ? String(game.complexity) : '',
       emoji: game.emoji || '🎲',
       imageUrl: game.imageUrl || '',
       tagsInput: Array.isArray(game.tags) ? game.tags.join(', ') : '',
@@ -831,6 +843,9 @@ export default function App() {
     const isExpansion = formData.gameType === 'expansion'
     const isSequel = formData.gameType === 'sequel'
 
+    const parsedRating = formData.rating.trim() !== '' ? parseFloat(formData.rating) : null
+    const parsedComplexity = formData.complexity.trim() !== '' ? parseFloat(formData.complexity) : null
+
     const gamePayload = {
       name: formData.name,
       englishName: formData.englishName,
@@ -839,8 +854,8 @@ export default function App() {
       bestPlayers: formData.bestPlayers.trim() || `${formData.minPlayers}-${formData.maxPlayers}`,
       time: parseInt(formData.time, 10) || 30,
       category: formData.category.trim() || '未分類',
-      rating: parseFloat(Number(formData.rating).toFixed(2)) || 8.00,
-      complexity: parseFloat(Number(formData.complexity).toFixed(2)) || 2.00,
+      rating: parsedRating != null && !isNaN(parsedRating) ? parsedRating : null,
+      complexity: parsedComplexity != null && !isNaN(parsedComplexity) ? parsedComplexity : null,
       emoji: formData.emoji,
       imageUrl: formData.imageUrl,
       tags: tagsArray,
@@ -1778,9 +1793,11 @@ export default function App() {
                       </div>
 
                       <div className="rating-complexity-row">
-                        <div className="rating">⭐ <strong>{Number(game.rating || 0).toFixed(2)}</strong></div>
+                        <div className="rating">
+                          ⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '暫無評分'}</strong>
+                        </div>
                         <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>
-                          🧠 燒腦: {Number(game.complexity || 2.00).toFixed(2)}
+                          🧠 燒腦: {game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}
                         </div>
                       </div>
                     </div>
@@ -1828,7 +1845,7 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 🌟 抽卡開箱專屬小視窗 (按鈕與資訊全部包在卡片內，不再脫鉤) */}
+      {/* 抽卡開箱專屬小視窗 */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1860,7 +1877,9 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
                     <span>⏱️ {randomGame.time}分</span>
-                    <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {Number(randomGame.complexity || 2.00).toFixed(2)}</span>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>
+                      🧠 {randomGame.complexity != null && randomGame.complexity !== '' ? Number(randomGame.complexity).toFixed(2) : '--'}
+                    </span>
                   </div>
                 </div>
               )}
@@ -1915,7 +1934,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ==================== 💎 詳細資料 Modal ==================== */}
+      {/* 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
@@ -1954,7 +1973,7 @@ export default function App() {
                       onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
                       style={{ background: '#EF4444' }}
                     >
-                      🗑️ 刪除
+                      🗑️️ 刪除
                     </button>
                   </>
                 )}
@@ -2020,12 +2039,15 @@ export default function App() {
                         title={viewDetailGame.bggUrl ? "前往 BoardGameGeek 專屬頁面" : "在 BoardGameGeek 搜尋此桌遊"}
                       >
                         ⭐ <strong>BGG 評分：</strong>
-                        <span>{Number(viewDetailGame.rating || 0).toFixed(2)} 分</span>
+                        <span>
+                          {viewDetailGame.rating != null && viewDetailGame.rating !== '' ? `${Number(viewDetailGame.rating).toFixed(2)} 分` : '暫無評分'}
+                        </span>
                         <span className="bgg-external-icon">↗</span>
                       </a>
                     </div>
                     <div className="detail-info-item" style={{ color: 'var(--accent-blue)' }}>
-                      🧠 <strong>燒腦指數：</strong>{Number(viewDetailGame.complexity || 2.00).toFixed(2)} / 5
+                      🧠 <strong>燒腦指數：</strong>
+                      {viewDetailGame.complexity != null && viewDetailGame.complexity !== '' ? `${Number(viewDetailGame.complexity).toFixed(2)} / 5` : '待評估'}
                     </div>
                   </div>
 
@@ -2245,12 +2267,12 @@ export default function App() {
                   <input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
                 </div>
                 <div>
-                  <label>⭐ 評分 (0.00~10.00)</label>
-                  <input type="number" step="0.01" min="0.00" max="10.00" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
+                  <label>⭐ 評分 (留空代表無評分)</label>
+                  <input type="number" step="0.01" min="0.00" max="10.00" placeholder="可留空" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} />
                 </div>
                 <div>
-                  <label>🧠 燒腦度 (1.00~5.00)</label>
-                  <input type="number" step="0.01" min="1.00" max="5.00" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
+                  <label>🧠 燒腦度 (留空代表待評估)</label>
+                  <input type="number" step="0.01" min="1.00" max="5.00" placeholder="可留空" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} />
                 </div>
               </div>
 
