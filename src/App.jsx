@@ -69,8 +69,8 @@ const emptyForm = {
   bestPlayers: '4',
   time: 30,
   category: '派對',
-  rating: '', // 🌟 支援空值
-  complexity: '', // 🌟 支援空值
+  rating: '', 
+  complexity: '', 
   emoji: '🎲',
   imageUrl: '',
   tagsInput: '',
@@ -97,6 +97,7 @@ export default function App() {
 
   const [activeDropdown, setActiveDropdown] = useState(null)
   const filterRowRef = useRef(null)
+  const [isUploadingImg, setIsUploadingImg] = useState(false)
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -235,29 +236,53 @@ export default function App() {
     fetchGamesFromSupabase()
   }, [])
 
-  async function fetchGamesFromSupabase(retryCount = 0) {
-    if (retryCount === 0) setLoading(true) // 第一次抓取才顯示 Loading，重試時保持骨架屏過渡
+  // 🌟 取消自動重試，加入明確報錯與保護快取機制
+  async function fetchGamesFromSupabase() {
+    // 1. 瞬間讀取快取 (秒開)
+    const cachedGames = localStorage.getItem('bg_games_cache')
+    if (cachedGames) {
+      try {
+        const parsedData = JSON.parse(cachedGames)
+        // 確保不是存到假資料才使用快取
+        if (parsedData && parsedData.length > 0 && parsedData[0].name !== '地城無雙 Dungeon Mayhem') {
+          setGames(parsedData)
+          setLoading(false)
+        } else {
+          setLoading(true)
+        }
+      } catch (e) {
+        console.error('快取解析失敗', e)
+        setLoading(true)
+      }
+    } else {
+      setLoading(true)
+    }
 
+    // 2. 向資料庫請求 (只抓 1 次，絕不重試卡死)
     const { data, error } = await supabase
       .from('boardgames')
       .select('*')
       .order('id', { ascending: false })
 
     if (error) {
-      console.error(`抓取資料失敗 (嘗試次數: ${retryCount + 1}):`, error.message)
+      console.error('抓取資料失敗:', error.message)
+      // 明確彈窗告知錯誤，讓你馬上知道哪裡有問題
+      alert('⚠️ 資料庫連線失敗：\n' + error.message + '\n\n(您的 71 款遊戲仍安全存於資料庫中。請確認 Supabase 是否進入休眠，或是否尚未建立 bggUrl 等新欄位)')
       
-      // 如果失敗，且重試不到 3 次，就等 1.5 秒後自動重試
-      if (retryCount < 3) {
-        setTimeout(() => fetchGamesFromSupabase(retryCount + 1), 1500)
-        return // 中斷這次執行，交給 setTimeout 重試
-      } else {
-        // 真的是大斷線（連錯 4 次），才逼不得已顯示預設的 2 款遊戲
+      // 如果完全沒有快取，才顯示預設的 2 款遊戲墊檔
+      if (!cachedGames || JSON.parse(cachedGames).length === 0) {
         setGames(initialGames)
-        setLoading(false)
       }
+      setLoading(false)
     } else if (data) {
-      // 成功抓取！如果是空資料庫就給範例，有資料就顯示真實資料
-      setGames(data.length > 0 ? data : initialGames)
+      // 成功抓取！
+      if (data.length > 0) {
+        setGames(data)
+        // 🌟 只有真正抓到資料，才更新快取 (絕對不把 2 款假遊戲存進去)
+        localStorage.setItem('bg_games_cache', JSON.stringify(data))
+      } else {
+        setGames(initialGames)
+      }
       setLoading(false)
     }
   }
@@ -391,7 +416,6 @@ export default function App() {
 
       return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp
     }).sort((a, b) => {
-      // 🌟 排序時若評分/燒腦為空，自動置後
       if (sortBy === 'rating-desc') {
         const ra = a.rating != null ? Number(a.rating) : -1
         const rb = b.rating != null ? Number(b.rating) : -1
@@ -549,9 +573,11 @@ export default function App() {
     e.target.value = ''
   }
 
-  function handleCroppedImageUpload(e) {
+  async function handleCroppedImageUpload(e) {
     const file = e.target.files && e.target.files[0]
     if (!file) return
+
+    setIsUploadingImg(true)
 
     const reader = new FileReader()
     reader.onload = (event) => {
@@ -580,8 +606,34 @@ export default function App() {
         canvas.height = height
         ctx.clearRect(0, 0, width, height)
         ctx.drawImage(img, 0, 0, width, height)
-        const compressedBase64 = canvas.toDataURL('image/png')
-        setFormData(prev => ({ ...prev, imageUrl: compressedBase64 }))
+        
+        canvas.toBlob(async (blob) => {
+          try {
+            const fileName = `cover_${Date.now()}_${Math.floor(Math.random()*1000)}.png`
+            
+            const { data, error } = await supabase
+              .storage
+              .from('boardgame-covers')
+              .upload(fileName, blob, {
+                contentType: 'image/png',
+                cacheControl: '3600',
+                upsert: false
+              })
+
+            if (error) throw error
+
+            const { data: publicUrlData } = supabase
+              .storage
+              .from('boardgame-covers')
+              .getPublicUrl(fileName)
+
+            setFormData(prev => ({ ...prev, imageUrl: publicUrlData.publicUrl }))
+          } catch (err) {
+            alert('❌ 圖片上傳至 Supabase Storage 失敗：\n' + err.message + '\n\n(請確認已建立名為 boardgame-covers 的公開儲存桶)')
+          } finally {
+            setIsUploadingImg(false)
+          }
+        }, 'image/png', 0.85)
       }
     }
     reader.readAsDataURL(file)
@@ -1856,7 +1908,7 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 🌟 抽卡開箱專屬小視窗 (按鈕與資訊全部包在卡片內，不再脫鉤) */}
+      {/* 🌟 抽卡開箱專屬小視窗 */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1887,7 +1939,7 @@ export default function App() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 6px 0', width: '100%' }}>{randomGame.englishName}</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
-                    <span>⏱️️ {randomGame.time}分</span>
+                    <span>⏱️ {randomGame.time}分</span>
                     <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>
                       🧠 {randomGame.complexity != null && randomGame.complexity !== '' ? Number(randomGame.complexity).toFixed(2) : '--'}
                     </span>
@@ -1945,7 +1997,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 💎 詳細資料 Modal */}
+      {/* 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
@@ -2356,8 +2408,9 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label>或 上傳本機圖片 (自動壓縮不裁切)</label>
-                <input type="file" accept="image/*" onChange={handleCroppedImageUpload} />
+                <label>或 上傳本機圖片 (自動壓縮並上傳雲端)</label>
+                <input type="file" accept="image/*" onChange={handleCroppedImageUpload} disabled={isUploadingImg} />
+                {isUploadingImg && <span style={{fontSize: '0.8rem', color: 'var(--accent-blue)', marginTop: '4px'}}>⏳ 圖片壓縮與上傳中，請稍候...</span>}
               </div>
 
               {formData.imageUrl && (
@@ -2457,7 +2510,9 @@ export default function App() {
 
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>取消</button>
-                <button type="submit" className="submit-btn">儲存</button>
+                <button type="submit" className="submit-btn" disabled={isUploadingImg}>
+                  {isUploadingImg ? '上傳中...' : '儲存'}
+                </button>
               </div>
             </form>
           </div>
