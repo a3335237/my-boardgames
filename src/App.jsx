@@ -235,20 +235,31 @@ export default function App() {
     fetchGamesFromSupabase()
   }, [])
 
-  async function fetchGamesFromSupabase() {
-    setLoading(true)
+  async function fetchGamesFromSupabase(retryCount = 0) {
+    if (retryCount === 0) setLoading(true) // 第一次抓取才顯示 Loading，重試時保持骨架屏過渡
+
     const { data, error } = await supabase
       .from('boardgames')
       .select('*')
       .order('id', { ascending: false })
 
     if (error) {
-      console.error('抓取資料失敗:', error.message)
-      setGames(initialGames)
+      console.error(`抓取資料失敗 (嘗試次數: ${retryCount + 1}):`, error.message)
+      
+      // 如果失敗，且重試不到 3 次，就等 1.5 秒後自動重試
+      if (retryCount < 3) {
+        setTimeout(() => fetchGamesFromSupabase(retryCount + 1), 1500)
+        return // 中斷這次執行，交給 setTimeout 重試
+      } else {
+        // 真的是大斷線（連錯 4 次），才逼不得已顯示預設的 2 款遊戲
+        setGames(initialGames)
+        setLoading(false)
+      }
     } else if (data) {
+      // 成功抓取！如果是空資料庫就給範例，有資料就顯示真實資料
       setGames(data.length > 0 ? data : initialGames)
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   function triggerHaptic(type = 'light') {
