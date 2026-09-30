@@ -2189,7 +2189,7 @@ export default function App() {
                   {viewDetailGame.isSequel && (
                     <div style={{ margin: '14px 0', padding: '12px 16px', background: 'rgba(14, 165, 233, 0.08)', borderRadius: '12px', border: '1px solid rgba(14, 165, 233, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                       <span style={{ fontSize: '0.88rem', color: '#0369A1', fontWeight: 'bold' }}>
-                        ✨ 獨立續作：可單獨遊玩，亦可與前作混合！
+                        ✨ 獨立續作：可單獨遊玩，有些作品可與前作混合！
                       </span>
                       {viewDetailGame.parentId && games.find(g => g.id === viewDetailGame.parentId) && (
                         <button
