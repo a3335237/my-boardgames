@@ -121,7 +121,7 @@ body {
   padding: calc(env(safe-area-inset-top, 0px) + 1.2rem) 2rem 1.5rem 2rem;
 }
 
-/* Header 區塊 */
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
@@ -2531,45 +2531,63 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
     padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 10px 8px !important;
   }
 
-  /* 1. Header 頂部緊湊化：釋放垂直高度 */
+  /* 🌟 修正頂部被擠壓：改為「上下垂直置中排列」，釋放橫向空間 */
   .header {
-    margin-bottom: 0.7rem !important;
-    padding-bottom: 0.5rem !important;
-    gap: 6px !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding-bottom: 0.8rem !important;
+    margin-bottom: 1rem !important;
   }
 
   .logo {
-    font-size: 1.35rem !important;
-    gap: 0.4rem !important;
+    width: 100%;
+    justify-content: center !important;
+    font-size: 1.45rem !important;
   }
+  
   .logo strong {
-    font-size: 1.1rem !important;
+    font-size: 1.15rem !important;
   }
 
+  /* 按鈕區塊允許自動換行置中 */
   .header-actions {
-    gap: 4px !important;
+    width: 100%;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
   }
+
   .header-actions button,
   .action-btn,
   .add-game-btn,
   .theme-selector {
-    padding: 3px 8px !important;
-    font-size: 0.7rem !important;
-    height: 28px !important;
+    padding: 6px 12px !important;
+    font-size: 0.78rem !important;
+    height: auto !important;
   }
 
   /* 2. Hero 區域緊湊化 */
   .hero {
     grid-template-columns: 1fr !important;
-    padding: 0.9rem 0.8rem !important;
+    padding: 1rem 0.8rem !important;
     margin-bottom: 1rem !important;
-    gap: 8px !important;
+    gap: 12px !important;
   }
 
   .hero h1 {
-    font-size: 1.4rem !important;
+    font-size: 1.6rem !important;
     line-height: 1.25 !important;
     white-space: normal !important;
+    text-align: center;
+  }
+
+  .hero-tagline {
+    margin: 0 auto 6px auto;
+  }
+
+  .hero-subtitle-hint {
+    text-align: center;
   }
 
   /* 3. 4 欄統計卡片：在手機上平鋪不臃腫 */
@@ -2631,7 +2649,7 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   }
 
   .card-tags {
-    height: 20px !important;
+    height: 24px !important;
     overflow-x: auto !important;
     white-space: nowrap !important;
     scrollbar-width: none !important;
@@ -2641,7 +2659,7 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   }
   .card-tags span {
     font-size: 10px !important;
-    padding: 1px 4px !important;
+    padding: 2px 5px !important;
   }
 
   .pill-badges-row {
@@ -2649,7 +2667,7 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
     flex-wrap: wrap !important;
     height: auto !important;
     min-height: 24px !important;
-    gap: 2px !important;
+    gap: 3px !important;
     margin: 4px 0 6px 0 !important;
   }
 

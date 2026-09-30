@@ -1845,7 +1845,7 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 抽卡開箱專屬小視窗 */}
+      {/* 🌟 抽卡開箱專屬小視窗 (按鈕與資訊全部包在卡片內，不再脫鉤) */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1876,7 +1876,7 @@ export default function App() {
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 6px 0', width: '100%' }}>{randomGame.englishName}</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
                     <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span>
-                    <span>⏱️ {randomGame.time}分</span>
+                    <span>⏱️️ {randomGame.time}分</span>
                     <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>
                       🧠 {randomGame.complexity != null && randomGame.complexity !== '' ? Number(randomGame.complexity).toFixed(2) : '--'}
                     </span>
@@ -1934,7 +1934,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal */}
+      {/* 💎 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
@@ -1973,7 +1973,7 @@ export default function App() {
                       onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)}
                       style={{ background: '#EF4444' }}
                     >
-                      🗑️️ 刪除
+                      🗑 刪除
                     </button>
                   </>
                 )}
