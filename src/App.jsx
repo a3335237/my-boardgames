@@ -380,7 +380,7 @@ export default function App() {
 
       return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp
     }).sort((a, b) => {
-      // 🌟 排序時若評分為空或 0，自動置後
+      // 🌟 排序時若評分/燒腦為空，自動置後
       if (sortBy === 'rating-desc') {
         const ra = a.rating != null ? Number(a.rating) : -1
         const rb = b.rating != null ? Number(b.rating) : -1

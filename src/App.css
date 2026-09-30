@@ -121,7 +121,7 @@ body {
   padding: calc(env(safe-area-inset-top, 0px) + 1.2rem) 2rem 1.5rem 2rem;
 }
 
-/* Header */
+/* Header 區塊 */
 .header {
   display: flex;
   justify-content: space-between;
@@ -1312,7 +1312,7 @@ body {
   color: var(--text-main);
 }
 
-/* ==================== 🎨 篩選面板 ==================== */
+/* 篩選面板 */
 .filter-panel {
   background: var(--bg-card);
   padding: 1.25rem 1.4rem;
@@ -1679,7 +1679,7 @@ body.theme-dark .custom-filter-dropdown {
   text-overflow: ellipsis;
 }
 
-/* 🌟 標籤區：固定單行高度與防溢出，確保所有卡片下方的資訊欄位完美對齊在同一水平線！ */
+/* 標籤區：固定單行高度與防溢出，確保所有卡片下方的資訊欄位完美對齊 */
 .card-tags {
   display: flex;
   gap: 4px;
@@ -1698,7 +1698,7 @@ body.theme-dark .custom-filter-dropdown {
   flex-shrink: 0;
 }
 
-/* 🌟 膠囊列：完全齊平對稱 */
+/* 膠囊列：完全齊平對稱 */
 .pill-badges-row {
   display: flex !important;
   gap: 4px !important;
@@ -1829,7 +1829,7 @@ body.theme-dark .skeleton-bar::after {
   }
 }
 
-/* ==================== 🌟 抽卡專屬立體小卡 (寬度尺寸黃金比例) ==================== */
+/* 抽卡專屬立體小卡 (寬度尺寸黃金比例) */
 .random-reveal-modal-box {
   background: var(--bg-card);
   border-radius: 26px;
@@ -2520,6 +2520,7 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   color: var(--accent-blue);
 }
 
+/* ==================== 📱 手機版專屬 RWD 深度優化 ==================== */
 @media screen and (max-width: 768px) {
   html, body {
     -webkit-text-size-adjust: 100%;
@@ -2527,7 +2528,140 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
   }
 
   .app {
-    padding: calc(env(safe-area-inset-top, 0px) + 10px) 10px 10px 10px !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 10px 8px !important;
+  }
+
+  /* 1. Header 頂部緊湊化：釋放垂直高度 */
+  .header {
+    margin-bottom: 0.7rem !important;
+    padding-bottom: 0.5rem !important;
+    gap: 6px !important;
+  }
+
+  .logo {
+    font-size: 1.35rem !important;
+    gap: 0.4rem !important;
+  }
+  .logo strong {
+    font-size: 1.1rem !important;
+  }
+
+  .header-actions {
+    gap: 4px !important;
+  }
+  .header-actions button,
+  .action-btn,
+  .add-game-btn,
+  .theme-selector {
+    padding: 3px 8px !important;
+    font-size: 0.7rem !important;
+    height: 28px !important;
+  }
+
+  /* 2. Hero 區域緊湊化 */
+  .hero {
+    grid-template-columns: 1fr !important;
+    padding: 0.9rem 0.8rem !important;
+    margin-bottom: 1rem !important;
+    gap: 8px !important;
+  }
+
+  .hero h1 {
+    font-size: 1.4rem !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+  }
+
+  /* 3. 4 欄統計卡片：在手機上平鋪不臃腫 */
+  .hero-stats-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .hero-stat-card {
+    padding: 6px 2px !important;
+    border-radius: 12px !important;
+  }
+  .hero-stat-card .stat-icon {
+    font-size: 0.9rem !important;
+    margin-bottom: 0 !important;
+  }
+  .hero-stat-card .stat-title {
+    font-size: 0.65rem !important;
+  }
+  .hero-stat-card .stat-num {
+    font-size: 0.95rem !important;
+  }
+  .hero-stat-card .stat-unit {
+    font-size: 0.6rem !important;
+  }
+
+  /* 4. 指定人數膠囊與抽卡按鈕間距微調 */
+  .quick-pick-container {
+    height: 36px !important;
+    padding: 2px 4px 2px 6px !important;
+  }
+  .quick-pick-chip {
+    height: 26px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .random-button {
+    padding: 10px 14px !important;
+    font-size: 0.92rem !important;
+    border-radius: 12px !important;
+  }
+
+  /* 5. 雙欄卡片標籤與膠囊防截斷排版 */
+  .game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .cover {
+    height: 125px !important;
+  }
+
+  .card-fav-btn {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 12px !important;
+    top: 6px !important;
+    left: 6px !important;
+  }
+
+  .card-tags {
+    height: 20px !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    scrollbar-width: none !important;
+  }
+  .card-tags::-webkit-scrollbar {
+    display: none !important;
+  }
+  .card-tags span {
+    font-size: 10px !important;
+    padding: 1px 4px !important;
+  }
+
+  .pill-badges-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    height: auto !important;
+    min-height: 24px !important;
+    gap: 2px !important;
+    margin: 4px 0 6px 0 !important;
+  }
+
+  .pill-badge {
+    font-size: 0.65rem !important;
+    padding: 2px 4px !important;
+    gap: 1px !important;
+  }
+
+  .rating-complexity-row {
+    padding-top: 6px !important;
+    font-size: 0.78rem !important;
   }
 
   .bottom-nav-bar {
@@ -2548,61 +2682,6 @@ body.theme-dark .detail-body-scrollable::-webkit-scrollbar-thumb {
     display: flex !important;
     flex-direction: column !important;
     gap: 0.85rem !important;
-  }
-
-  .header {
-    flex-direction: column !important;
-    gap: 10px !important;
-    padding: 6px !important;
-  }
-
-  .header-actions {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-
-  .action-btn,
-  .add-game-btn {
-    padding: 6px 10px !important;
-    font-size: 0.78rem !important;
-  }
-
-  .hero {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-    padding: 1.2rem 1rem !important;
-  }
-
-  .hero h1 {
-    font-size: 1.7rem !important;
-    line-height: 1.3 !important;
-    white-space: normal !important;
-    word-break: keep-all !important;
-  }
-
-  .hero-stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 6px !important;
-  }
-
-  .game-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .cover {
-    height: 125px !important;
-  }
-
-  .card-fav-btn {
-    width: 26px !important;
-    height: 26px !important;
-    font-size: 12px !important;
-    top: 6px !important;
-    left: 6px !important;
   }
 
   .detail-modal-content {
