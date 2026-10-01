@@ -118,7 +118,7 @@ function Die3D({ sides, index, rollTrigger, isRolling, onResult }) {
   return <DiePoly sides={sides} index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
 }
 
-/* 🌟 工具二：完美手工 3D 尋寶箱 (實心積木法，完全解決破圖與黑屏，無黃球色塊) */
+/* 🌟 工具二：完美手工 3D 尋寶箱 (純木紋金邊，完全刪除假金光球體，僅保留真實物理光源) */
 function MysteryBox3D() {
   const boxRef = useRef()
   const lidRef = useRef()
@@ -552,7 +552,7 @@ export default function App() {
     setTimeout(() => { setAssignedTeams(buckets); setIsShufflingTeams(false); playSound('victory'); triggerHaptic('heavy') }, 280)
   }
 
-  // 🌟 點子二：觸發 3D 盲盒抽卡 (等待時間設為 2.5 秒，讓寶箱有充足時間落地彈跳與翻蓋發光)
+  // 🌟 點子二：觸發 3D 盲盒抽卡 (等待時間設為 2.5 秒，讓寶箱有充足時間落地彈跳與翻蓋)
   function chooseRandomWithAnimation() {
     let pool = filteredGames.length > 0 ? filteredGames : games
     if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) }
@@ -740,7 +740,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* 👑 先攻面板 */}
+            {/* 👑 先攻面板 (維持 2D 文字輪盤) */}
             {widgetTab === 'starter' && (
               <>
                 <div className="player-chips-container">
@@ -1102,7 +1102,7 @@ export default function App() {
         <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']; setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]) }}><span>🎨</span>換主題</button>
       </nav>
 
-      {/* 🌟 點子二：3D 盲盒抽卡 (完美還原實體木紋金邊寶箱與開蓋發光特效) */}
+      {/* 🌟 點子二：3D 盲盒抽卡 (手工木紋黃金寶箱開蓋特效 + 完美還原的透亮背景) */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1120,7 +1120,7 @@ export default function App() {
                     <ambientLight intensity={1.2} />
                     <directionalLight position={[5, 10, 5]} intensity={2.5} />
                     <Environment preset="city" />
-                    {/* 🌟 完全沒有黃球的純實體光影寶箱 */}
+                    {/* 使用純手工打造的實木黃金寶箱 */}
                     <MysteryBox3D />
                   </Canvas>
                 </div>
@@ -1137,7 +1137,7 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem', position: 'relative', zIndex: 20 }}>
               <button type="button" onClick={chooseRandomWithAnimation} disabled={isShuffling} style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>{isShuffling ? '抽卡中...' : '🎲 再抽一次'}</button>
               <button type="button" onClick={() => { triggerHaptic('light'); const target = randomGame; setRandomGame(null); setDetailTab('info'); setViewDetailGame(target) }} disabled={isShuffling} style={{ background: '#10B981', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}>📖 查看詳情</button>
             </div>
