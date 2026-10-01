@@ -740,7 +740,7 @@ export default function App() {
               ))}
             </div>
 
-            {/* 👑 先攻面板 (維持 2D 文字輪盤) */}
+            {/* 👑 先攻面板 */}
             {widgetTab === 'starter' && (
               <>
                 <div className="player-chips-container">
@@ -1102,7 +1102,7 @@ export default function App() {
         <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']; setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]) }}><span>🎨</span>換主題</button>
       </nav>
 
-      {/* 🌟 點子二：3D 盲盒抽卡 (手工木紋黃金寶箱開蓋特效 + 完美還原的透亮背景) */}
+      {/* 🌟 點子二：3D 盲盒抽卡 (手工木紋黃金寶箱開蓋特效，已徹底移除發光假球) */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1120,7 +1120,7 @@ export default function App() {
                     <ambientLight intensity={1.2} />
                     <directionalLight position={[5, 10, 5]} intensity={2.5} />
                     <Environment preset="city" />
-                    {/* 使用純手工打造的實木黃金寶箱 */}
+                    {/* 使用純手工打造的實木黃金寶箱，沒有任何假黃色光球，純粹物理光線！ */}
                     <MysteryBox3D />
                   </Canvas>
                 </div>
@@ -1137,7 +1137,7 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem', position: 'relative', zIndex: 20 }}>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem' }}>
               <button type="button" onClick={chooseRandomWithAnimation} disabled={isShuffling} style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>{isShuffling ? '抽卡中...' : '🎲 再抽一次'}</button>
               <button type="button" onClick={() => { triggerHaptic('light'); const target = randomGame; setRandomGame(null); setDetailTab('info'); setViewDetailGame(target) }} disabled={isShuffling} style={{ background: '#10B981', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}>📖 查看詳情</button>
             </div>
