@@ -660,11 +660,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* ⚙️ 設定區塊 */}
-        <div className="header-actions mobile-section-settings">
-          <div style={{ textAlign: 'center', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 'bold' }}>
-            ✨ Version 1.0.0 完美版
-          </div>
+        {/* ⚙️ 正常電腦版按鈕區（維持原本第二張圖的乾淨俐落） */}
+        <div className="header-actions">
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
             <option value="dark">🌙 柔和暗黑</option>
@@ -683,11 +680,36 @@ export default function App() {
           <button type="button" className="action-btn" onClick={handleAdminToggle} style={{ backgroundColor: isAdmin ? '#EF4444' : 'var(--accent-blue)', color: '#fff', border: 'none', fontWeight: 'bold' }}>{isAdmin ? '🔒 登出管理' : '🔑 站長登入'}</button>
           {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
         </div>
+
+        {/* 🌟 手機版專屬設定面板（只在手機設定頁顯示，完全不影響電腦版） */}
+        <div className="mobile-section-settings" style={{ display: 'none' }}>
+          <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
+            <option value="default">☀️ 淺色簡約</option>
+            <option value="dark">🌙 柔和暗黑</option>
+            <option value="forest">🌲 森之木質</option>
+            <option value="medieval">🏰 中古世紀</option>
+            <option value="cyberpunk">🌌 賽博龐克</option>
+          </select>
+          <button type="button" className="action-btn" onClick={() => { triggerHaptic('light'); setSoundEnabled(!soundEnabled); }} title="聚會音效">{soundEnabled ? '🔊 聲音開' : '🔇 靜音'}</button>
+          {isAdmin && (
+            <>
+              <input type="file" accept=".json,application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportJSON} />
+              <button type="button" className="action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入 JSON</button>
+            </>
+          )}
+          <button type="button" className="action-btn" onClick={handleExportJSON}>📤 匯出 JSON</button>
+          <button type="button" className="action-btn" onClick={handleAdminToggle} style={{ backgroundColor: isAdmin ? '#EF4444' : 'var(--accent-blue)', color: '#fff', border: 'none', fontWeight: 'bold' }}>{isAdmin ? '🔒 登出管理' : '🔑 站長登入'}</button>
+          {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
+          
+          <div style={{ textAlign: 'center', marginTop: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 'bold', width: '100%' }}>
+            ✨ Version 1.0.0 完美版
+          </div>
+        </div>
       </header>
 
       <main>
-        {/* 🎲 聚會大廳 (包含 4 個可用於點擊篩選的統計方塊與抽卡工具) */}
-        <section className="hero" id="hero-sec">
+        {/* 🎲 聚會大廳 */}
+        <section className="hero mobile-section-hall" id="hero-sec">
           <div className="hero-dashboard-left">
             <div>
               <span className="hero-tagline">✨ 聚會推薦助手</span>

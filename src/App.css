@@ -254,7 +254,7 @@ body.dark-theme .dice-sum-badge, body.theme-dark .dice-sum-badge { background: #
 .coin-flip-action-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(217, 119, 6, 0.38); }
 .coin-flip-action-btn:disabled { background: var(--pill-bg); color: var(--text-muted); box-shadow: none; cursor: not-allowed; }
 
-/* ⚔️ 分隊 */
+/* ⚔️️ 分隊 */
 .team-tool-container { display: flex; flex-direction: column; gap: 14px; }
 .team-unified-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--bg-main); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color); }
 .team-segmented-control { display: flex; gap: 4px; }
@@ -366,7 +366,6 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .card-reveal-img-box { width: 100% !important; height: 240px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 12px !important; }
 .card-reveal-img-box img { max-width: 100% !important; max-height: 230px !important; object-fit: contain !important; display: block !important; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25)) !important; }
 
-
 /* 詳細與編輯 Modal */
 .modal-content, .detail-modal-content { 
   background: var(--bg-card); border-radius: 24px; width: 100%; max-width: 680px; 
@@ -389,8 +388,11 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .detail-tab-btn.active-info { background: var(--accent-blue); color: #fff; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
 .detail-tab-btn.active-cheat { background: #10b981; color: #fff; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
 .detail-nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+/* 🌟 電腦版右上角編輯按鈕 */
 .detail-admin-btn { padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: bold; cursor: pointer; border: none; color: #fff; display: inline-flex; align-items: center; gap: 4px; transition: transform 0.15s ease; }
 .detail-admin-btn:hover { transform: translateY(-1px); }
+
 .detail-close-icon-btn { background: var(--pill-bg); border: 1px solid var(--border-color); width: 34px; height: 34px; border-radius: 50%; font-size: 1rem; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; flex-shrink: 0; z-index: 50; }
 .detail-close-icon-btn:hover { background: var(--border-color); transform: scale(1.08); }
 .detail-body-scrollable { flex: 1; overflow-y: auto !important; overflow-x: hidden !important; padding: 1.2rem 1.6rem 1.6rem 1.6rem !important; box-sizing: border-box; }
@@ -418,11 +420,13 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 .video-banner-btn:hover { background: #ef4444; color: #ffffff; border-color: #ef4444; transform: translateY(-1px); }
 .detail-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
 .detail-tag-pill { background: var(--pill-bg); color: var(--pill-text); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-color); transition: transform 0.15s ease; }
+
+/* 🌟 手機版專屬編輯/刪除底栏 (預設隱藏) */
 .mobile-admin-bar { display: none; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); gap: 10px; }
-.mobile-admin-btn { flex: 1; padding: 10px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; border: none; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.mobile-admin-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; border: none; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 .detail-english { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.1rem; margin-bottom: 0.8rem; }
 
-/* 🌟 底部導覽列 */
+/* 🌟 底部導覽列 (預設隱藏) */
 .bottom-nav-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border-color); z-index: 900; justify-content: space-around; align-items: center; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: content-box; }
 .bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; cursor: pointer; flex: 1; padding: 6px 0; }
 .bottom-nav-item span { font-size: 1.2rem; margin-bottom: 1px; }
@@ -443,7 +447,9 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 .submit-btn { background: var(--accent-blue) !important; color: white !important; border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .cancel-btn { background: var(--border-color); color: var(--text-main); border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
-/* 🌟 手機版排版與分頁切換邏輯 */
+/* ========================================================================= */
+/* 🌟 手機版專屬 RWD (嚴格限制在 768px 以下，電腦版絕對不會受到任何影響)       */
+/* ========================================================================= */
 @media screen and (max-width: 768px) {
   html, body { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
   .app { padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 10px 8px !important; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -482,7 +488,11 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .rating-complexity-row { padding-top: 6px !important; font-size: 0.78rem !important; }
   
   .bottom-nav-bar { display: flex !important; }
+  
+  /* 🌟 手機版隱藏上方雞肋編輯按鈕，開啟下方按鈕列 */
+  .detail-nav-right .detail-admin-btn { display: none !important; }
   .mobile-admin-bar { display: flex !important; }
+
   .modal-content form .form-group[style*="grid"] { display: flex !important; flex-direction: column !important; gap: 0.85rem !important; }
   
   .detail-nav-header { padding: 1.2rem 1rem 0.8rem 1rem !important; }
@@ -494,25 +504,26 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   @media screen and (max-width: 520px) { .detail-info-card { grid-template-columns: 1fr; gap: 10px; } }
 
   /* ========================================================================= */
-  /* 🌟 手機版三分頁連動邏輯 (桌遊庫與聚會大廳都能使用統計方塊進行篩選) */
+  /* 🌟 手機版三分頁連動與設定頁排版修正                                       */
   /* ========================================================================= */
   
-  /* 📦 桌遊庫 Tab 下：顯示搜尋、過濾與卡片，隱藏大廳工具與設定 */
+  /* 📦 桌遊庫 Tab：顯示過濾器與卡片，隱藏大廳與設定 */
   .app[data-tab="collection"] .hero,
   .app[data-tab="collection"] .mobile-section-settings { display: none !important; }
 
-  /* 🎲 聚會大廳 Tab 下：顯示大廳工具，隱藏搜尋與卡片列表與設定 */
+  /* 🎲 聚會大廳 Tab：顯示大廳工具，隱藏過濾器、卡片與設定 */
   .app[data-tab="hall"] .filter-panel,
   .app[data-tab="hall"] .collection,
   .app[data-tab="hall"] .mobile-section-settings { display: none !important; }
 
-  /* ⚙️ 設定 Tab 下：僅顯示設定區塊，隱藏大廳與桌遊庫 */
+  /* ⚙ 設定 Tab：僅在手機版設定頁生效，排版整齊置中，版本資訊在最下方 */
   .app[data-tab="settings"] .hero,
   .app[data-tab="settings"] .filter-panel,
   .app[data-tab="settings"] .collection { display: none !important; }
 
-  .app[data-tab="settings"] .header { flex-direction: column !important; border-bottom: none; }
-  .app[data-tab="settings"] .mobile-section-settings { flex-direction: column !important; gap: 16px !important; margin-top: 20px; width: 100%; display: flex !important; }
+  .app[data-tab="settings"] .header { flex-direction: column !important; border-bottom: none; align-items: center !important; }
+  .app[data-tab="settings"] .logo { justify-content: center !important; text-align: center !important; }
+  .app[data-tab="settings"] .mobile-section-settings { flex-direction: column !important; gap: 14px !important; margin-top: 16px; width: 100%; display: flex !important; align-items: center !important; }
   .app[data-tab="settings"] .mobile-section-settings button,
-  .app[data-tab="settings"] .mobile-section-settings select { width: 100% !important; padding: 14px !important; font-size: 1.05rem !important; border-radius: 16px !important; }
+  .app[data-tab="settings"] .mobile-section-settings select { width: 100% !important; max-width: 300px !important; padding: 12px !important; font-size: 1rem !important; border-radius: 14px !important; text-align: center !important; }
 }
