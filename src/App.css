@@ -129,7 +129,7 @@ body { margin: 0; padding: 0; font-family: 'jf-open-huninn', 'jf open 粉圓', -
 .hero-stat-card .stat-num { font-size: 1.18rem; font-weight: 900; line-height: 1.2; }
 .hero-stat-card .stat-unit { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-left: 1px; }
 
-/* ✅ 保留：4 個統計方塊的選中狀態 */
+/* ✅ 統計方塊選中狀態 */
 .hero-stat-card.active-all { border-color: var(--accent-blue); background: rgba(79, 70, 229, 0.06); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18); transform: translateY(-2px); }
 .hero-stat-card.active-main { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18); transform: translateY(-2px); }
 .hero-stat-card.active-expansion { border-color: #f59e0b; background: rgba(245, 158, 11, 0.06); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
@@ -192,7 +192,7 @@ body { margin: 0; padding: 0; font-family: 'jf-open-huninn', 'jf open 粉圓', -
 .step-btn-app:hover { background: var(--bg-card); color: var(--text-main); border-color: var(--border-color); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
 .score-display-number { min-width: 46px; text-align: center; font-weight: 900; font-size: 1.15rem; color: var(--text-main); cursor: pointer; }
 
-/* ⏱️ 純淨版 2D 計時器 */
+/* ⏱️ 倒數計時 */
 .timer-container { display: flex; flex-direction: column; align-items: center; padding: 4px 0 8px 0; }
 .timer-preset-bar { display: flex; gap: 6px; background: var(--bg-main); padding: 4px; border-radius: 14px; border: 1px solid var(--border-color); margin-bottom: 18px; flex-wrap: wrap; justify-content: center; }
 .timer-preset-chip { padding: 5px 12px; border-radius: 10px; border: none; background: transparent; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; cursor: pointer; }
@@ -335,46 +335,48 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .skeleton-cover::after, .skeleton-bar::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; transform: translateX(-100%); background: linear-gradient( 90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100% ); animation: shimmerMove 1.6s infinite; }
 @keyframes shimmerMove { 100% { transform: translateX(100%); } }
 
-/* 🌟 完整還原：所有 Modal 與彈窗設定 (退回完美版) */
+/* 🌟 完整還原：所有 Modal 與彈窗設定 */
 .modal-overlay { 
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
   background: var(--modal-overlay); display: flex; align-items: center; justify-content: center; 
-  z-index: 1000; backdrop-filter: blur(4px); 
+  z-index: 1000; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 20px) 16px;
+  box-sizing: border-box;
 }
 
 /* 🌟 完美的 3D 盲盒抽卡 Modal */
 .random-reveal-modal-box { 
-  background: var(--bg-card); border-radius: 26px; width: 90%; max-width: 440px; 
+  background: var(--bg-card); border-radius: 26px; width: 100%; max-width: 420px; 
   padding: 2.2rem 1.8rem 1.8rem 1.8rem; box-sizing: border-box; text-align: center; position: relative; 
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); 
   animation: popScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
 }
 @keyframes popScale { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-/* 提昇標題層級，避免被卡片蓋住 */
 .random-reveal-modal-box > span { position: relative; z-index: 20; display: inline-block; }
-.card-reveal-scene { width: 100% !important; max-width: 360px !important; min-height: 380px !important; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
+.card-reveal-scene { width: 100% !important; max-width: 360px !important; min-height: 350px !important; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
 
-/* 🌟 徹底還原原本最乾淨透亮的畫布背景 (刪除醜陋的深色背景) */
 .mystery-box-canvas-container { 
-  width: 100%; height: 380px; border-radius: 20px; overflow: hidden; 
-  background: radial-gradient(circle at center, var(--bg-main) 0%, transparent 100%);
-  border: 1px solid var(--border-color); 
-  box-shadow: inset 0 4px 20px rgba(0,0,0,0.03); 
+  width: 100%; height: 350px; border-radius: 20px; overflow: hidden; 
+  background: transparent;
 }
 
-/* 桌遊卡片彈出動畫 (已完美修復縮放極限，只會放大到 1 倍，絕對不擋字) */
 .card-reveal-box { width: 100%; background: var(--bg-card); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; box-sizing: border-box; animation: zoomInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; position: relative; z-index: 10; }
 @keyframes zoomInBounce { 0% { transform: scale(0.6) translateY(20px); opacity: 0; } 60% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.card-reveal-img-box { width: 100% !important; height: 260px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 12px !important; }
-.card-reveal-img-box img { max-width: 100% !important; max-height: 250px !important; object-fit: contain !important; display: block !important; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25)) !important; }
+.card-reveal-img-box { width: 100% !important; height: 240px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 12px !important; }
+.card-reveal-img-box img { max-width: 100% !important; max-height: 230px !important; object-fit: contain !important; display: block !important; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25)) !important; }
 
 
 /* 詳細與編輯 Modal */
-.modal-content { background: var(--bg-card); padding: 2rem; border-radius: 24px; width: 95% !important; max-width: 680px !important; max-height: 90vh; overflow-y: auto; overflow-x: hidden !important; border: 1px solid var(--border-color); box-sizing: border-box !important; }
-.detail-modal-content { background: var(--bg-card); border-radius: 28px; width: 92%; max-width: 640px; max-height: 88vh !important; overflow: hidden !important; position: relative; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); box-sizing: border-box !important; display: flex !important; flex-direction: column !important; padding: 0 !important; }
+.modal-content, .detail-modal-content { 
+  background: var(--bg-card); border-radius: 24px; width: 100%; max-width: 680px; 
+  max-height: 100% !important; overflow: hidden; position: relative; 
+  border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); 
+  box-sizing: border-box !important; display: flex; flex-direction: column; padding: 0 !important; 
+  z-index: 1;
+}
+.modal-content { padding: 2rem !important; overflow-y: auto; }
 
-/* ✅ 加上 position: relative 讓 z-index 真正生效，擋掉所有模糊溢出 Bug */
 .detail-nav-header { 
   display: flex; align-items: center; justify-content: space-between; gap: 12px; 
   padding: 1.2rem 1.6rem 1rem 1.6rem !important; border-bottom: 1px solid var(--border-color); 
@@ -420,7 +422,7 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 .mobile-admin-btn { flex: 1; padding: 10px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; border: none; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 .detail-english { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.1rem; margin-bottom: 0.8rem; }
 
-/* 🌟 底部導覽列 (完美恢復置底顯示) */
+/* 🌟 底部導覽列 */
 .bottom-nav-bar { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border-color); z-index: 900; justify-content: space-around; align-items: center; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: content-box; }
 .bottom-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; cursor: pointer; flex: 1; padding: 6px 0; }
 .bottom-nav-item span { font-size: 1.2rem; margin-bottom: 1px; }
@@ -441,7 +443,7 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 .submit-btn { background: var(--accent-blue) !important; color: white !important; border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .cancel-btn { background: var(--border-color); color: var(--text-main); border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
-/* 🌟 完整還原：手機版完美 RWD 排版設定 */
+/* 🌟 手機版排版與分頁切換邏輯 */
 @media screen and (max-width: 768px) {
   html, body { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
   .app { padding: calc(env(safe-area-inset-top, 0px) + 8px) 8px 10px 8px !important; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
@@ -461,7 +463,6 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .hero-stat-card .stat-num { font-size: 0.95rem !important; }
   .hero-stat-card .stat-unit { font-size: 0.6rem !important; }
   
-  /* 補回上方 4 個統計方塊的選中狀態 */
   .hero-stat-card.active-all { border-color: var(--accent-blue); background: rgba(79, 70, 229, 0.06); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18); transform: translateY(-2px); }
   .hero-stat-card.active-main { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18); transform: translateY(-2px); }
   .hero-stat-card.active-expansion { border-color: #f59e0b; background: rgba(245, 158, 11, 0.06); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
@@ -481,11 +482,9 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .rating-complexity-row { padding-top: 6px !important; font-size: 0.78rem !important; }
   
   .bottom-nav-bar { display: flex !important; }
-  .detail-nav-right .detail-admin-btn { display: none !important; }
   .mobile-admin-bar { display: flex !important; }
   .modal-content form .form-group[style*="grid"] { display: flex !important; flex-direction: column !important; gap: 0.85rem !important; }
   
-  /* 🌟 手機版彈窗安全邊界調整：增加 top margin 並限制高度，絕對避開頂部原生陰影 */
   .detail-nav-header { padding: 1.2rem 1rem 0.8rem 1rem !important; }
   .detail-body-scrollable { padding: 1rem !important; }
   
@@ -495,20 +494,25 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   @media screen and (max-width: 520px) { .detail-info-card { grid-template-columns: 1fr; gap: 10px; } }
 
   /* ========================================================================= */
-  /* 🌟 以下為手機版獨立分頁邏輯 (僅在小螢幕生效，電腦版不受影響)              */
+  /* 🌟 手機版三分頁連動邏輯 (桌遊庫與聚會大廳都能使用統計方塊進行篩選) */
   /* ========================================================================= */
-  .app[data-tab="collection"] .mobile-section-hall,
+  
+  /* 📦 桌遊庫 Tab 下：顯示搜尋、過濾與卡片，隱藏大廳工具與設定 */
+  .app[data-tab="collection"] .hero,
   .app[data-tab="collection"] .mobile-section-settings { display: none !important; }
 
-  .app[data-tab="hall"] .mobile-section-collection,
+  /* 🎲 聚會大廳 Tab 下：顯示大廳工具，隱藏搜尋與卡片列表與設定 */
+  .app[data-tab="hall"] .filter-panel,
+  .app[data-tab="hall"] .collection,
   .app[data-tab="hall"] .mobile-section-settings { display: none !important; }
 
-  .app[data-tab="settings"] .mobile-section-collection,
-  .app[data-tab="settings"] .mobile-section-hall { display: none !important; }
+  /* ⚙️ 設定 Tab 下：僅顯示設定區塊，隱藏大廳與桌遊庫 */
+  .app[data-tab="settings"] .hero,
+  .app[data-tab="settings"] .filter-panel,
+  .app[data-tab="settings"] .collection { display: none !important; }
 
-  /* ⚙️ 手機版「設定」頁面專屬按鈕美化 */
   .app[data-tab="settings"] .header { flex-direction: column !important; border-bottom: none; }
-  .app[data-tab="settings"] .mobile-section-settings { flex-direction: column !important; gap: 16px !important; margin-top: 20px; width: 100%; }
+  .app[data-tab="settings"] .mobile-section-settings { flex-direction: column !important; gap: 16px !important; margin-top: 20px; width: 100%; display: flex !important; }
   .app[data-tab="settings"] .mobile-section-settings button,
   .app[data-tab="settings"] .mobile-section-settings select { width: 100% !important; padding: 14px !important; font-size: 1.05rem !important; border-radius: 16px !important; }
 }

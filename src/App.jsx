@@ -508,6 +508,7 @@ export default function App() {
     if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
     setIsPickingStarter(true); setStarterWinner(null)
     triggerHaptic('medium')
+    
     let count = 0
     const interval = setInterval(() => {
       setStarterWinner(sharedPlayers[Math.floor(Math.random() * sharedPlayers.length)].name)
@@ -551,7 +552,6 @@ export default function App() {
     setTimeout(() => { setAssignedTeams(buckets); setIsShufflingTeams(false); playSound('victory'); triggerHaptic('heavy') }, 280)
   }
 
-  // 🌟 點子二：觸發 3D 盲盒抽卡
   function chooseRandomWithAnimation() {
     let pool = filteredGames.length > 0 ? filteredGames : games
     if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) }
@@ -650,7 +650,6 @@ export default function App() {
   const currentSortLabel = useMemo(() => { const f = SORT_OPTIONS.find(o => o.key === sortBy); return f ? f.label : '⭐ 評分最高' }, [sortBy])
 
   return (
-    // 🌟 在外層套用 data-tab 屬性，交給 CSS 來決定手機版顯示哪個區塊
     <div className="app" data-tab={activeTab}>
       <header className="header">
         <div className="logo">
@@ -661,8 +660,11 @@ export default function App() {
           </div>
         </div>
 
-        {/* ⚙️ 設定區塊（手機版會在「設定」Tab 被抽出顯示） */}
+        {/* ⚙️ 設定區塊 */}
         <div className="header-actions mobile-section-settings">
+          <div style={{ textAlign: 'center', marginBottom: '8px', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+            ✨ Version 1.0.0 完美版
+          </div>
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
             <option value="dark">🌙 柔和暗黑</option>
@@ -684,8 +686,8 @@ export default function App() {
       </header>
 
       <main>
-        {/* 🎲 聚會大廳區塊 */}
-        <section className="hero mobile-section-hall" id="hero-sec">
+        {/* 🎲 聚會大廳 (包含 4 個可用於點擊篩選的統計方塊與抽卡工具) */}
+        <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
             <div>
               <span className="hero-tagline">✨ 聚會推薦助手</span>
@@ -1001,7 +1003,7 @@ export default function App() {
         </section>
 
         {/* 📦 桌遊庫過濾器與格線區 */}
-        <section className="filter-panel mobile-section-collection" id="collection-sec">
+        <section className="filter-panel" id="collection-sec">
           <div className="filter-row" ref={filterRowRef}>
             <div className="search-box">
               <span>🔍</span><input type="text" placeholder="搜尋桌遊名稱/英文..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -1057,7 +1059,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="collection mobile-section-collection">
+        <section className="collection">
           <div className="game-grid">
             {loading ? (
               Array.from({ length: 8 }).map((_, idx) => (
@@ -1098,7 +1100,7 @@ export default function App() {
         </section>
       </main>
 
-      {/* 🌟 底部真實導覽列 (加入 Tab 切換邏輯) */}
+      {/* 🌟 底部真實導覽列 */}
       <nav className="bottom-nav-bar">
         <button type="button" className={`bottom-nav-item ${activeTab === 'collection' ? 'active' : ''}`} onClick={() => { triggerHaptic('light'); setActiveTab('collection'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
           <span>📦</span>桌遊庫
@@ -1111,13 +1113,12 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 🌟 點子二：3D 盲盒抽卡 (手工木紋黃金寶箱開蓋特效，已徹底移除發光假球) */}
+      {/* 🌟 3D 盲盒抽卡 Modal */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
             <button className="detail-close-icon-btn" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }} onClick={() => setRandomGame(null)} disabled={isShuffling}>✕</button>
             
-            {/* 提昇標題層級，絕對不會被蓋住 */}
             <span style={{ position: 'relative', zIndex: 20, display: 'inline-block', fontSize: '13px', fontWeight: 'bold', color: 'var(--accent-blue)', letterSpacing: '1px' }}>
               {isShuffling ? '🎴 命運寶箱降落中...' : '✨ 命中注定就是它！'}
             </span>
@@ -1129,7 +1130,6 @@ export default function App() {
                     <ambientLight intensity={1.2} />
                     <directionalLight position={[5, 10, 5]} intensity={2.5} />
                     <Environment preset="city" />
-                    {/* 使用純手工打造的實木黃金寶箱，沒有任何假黃色光球，純粹物理光線！ */}
                     <MysteryBox3D />
                   </Canvas>
                 </div>
@@ -1252,6 +1252,12 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  {isAdmin && (
+                    <div className="mobile-admin-bar">
+                      <button type="button" className="mobile-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
+                      <button type="button" className="mobile-admin-btn" onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)} style={{ background: '#EF4444' }}>🗑 刪除</button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div style={{ padding: '6px 0' }}>
@@ -1270,6 +1276,7 @@ export default function App() {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
+            <button type="button" className="detail-close-icon-btn" onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }}>✕</button>
             <h2>{editingId ? '✏️ 編輯桌遊' : '➕ 新增桌遊'}</h2>
             
             <form onSubmit={handleSubmitForm}>
