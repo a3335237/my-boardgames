@@ -217,15 +217,24 @@ export default function App() {
   const [playerFilter, setPlayerFilter] = useState('all')
   const [bestPlayerFilter, setBestPlayerFilter] = useState('all')
   const [maxTimeFilter, setMaxTimeFilter] = useState('all')
-  const [sortBy, setSortBy] = useState('rating-desc')
+  
+  // 🌟 預設排序邏輯：從 localStorage 讀取
+  const [sortBy, setSortBy] = useState(() => localStorage.getItem('app_sort_by') || 'rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // 🌟 手機版 Tab 控制狀態 (預設首頁為桌遊庫)
+  // 🌟 手機版 Tab 控制狀態與 View 模式
   const [activeTab, setActiveTab] = useState('collection')
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('app_view_mode') || 'grid')
 
   const [activeDropdown, setActiveDropdown] = useState(null)
   const filterRowRef = useRef(null)
   const [isUploadingImg, setIsUploadingImg] = useState(false)
+
+  // 🌟 牌咖群組管理
+  const [playerGroups, setPlayerGroups] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('app_player_groups')) || [] } catch(e){ return [] }
+  })
+  const [newGroupName, setNewGroupName] = useState('')
 
   useEffect(() => {
     function handleClickOutside(e) { if (filterRowRef.current && !filterRowRef.current.contains(e.target)) setActiveDropdown(null) }
@@ -241,6 +250,10 @@ export default function App() {
     if (theme !== 'default') document.body.classList.add(`theme-${theme}`)
     localStorage.setItem('app_theme', theme)
   }, [theme])
+
+  useEffect(() => { localStorage.setItem('app_sort_by', sortBy) }, [sortBy])
+  useEffect(() => { localStorage.setItem('app_view_mode', viewMode) }, [viewMode])
+  useEffect(() => { localStorage.setItem('app_player_groups', JSON.stringify(playerGroups)) }, [playerGroups])
 
   const [favorites, setFavorites] = useState(() => {
     try { const saved = localStorage.getItem('bg_favorite_ids'); if (saved) return JSON.parse(saved) } catch (e) {} return []
@@ -422,6 +435,39 @@ export default function App() {
     if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) }
     return pool.length
   }, [filteredGames, games, quickPickPlayers])
+
+  // 🌟 各種設定專屬操作 Function
+  function handleClearFavorites() {
+    triggerHaptic('medium')
+    if (window.confirm('確定要清除所有加入最愛的桌遊嗎？')) setFavorites([])
+  }
+  function handleResetPlayersData() {
+    triggerHaptic('medium')
+    if (window.confirm('確定要將玩家名單重置為預設，並將所有分數歸零嗎？')) {
+      setSharedPlayers([{ id: 1, name: '玩家 1', score: 0 }, { id: 2, name: '玩家 2', score: 0 }, { id: 3, name: '玩家 3', score: 0 }, { id: 4, name: '玩家 4', score: 0 }])
+      setRoundCount(1)
+    }
+  }
+  function handleSavePlayerGroup() {
+    if (!newGroupName.trim()) { alert('請輸入群組名稱！'); return }
+    triggerHaptic('light')
+    const newGroup = { name: newGroupName.trim(), players: sharedPlayers }
+    setPlayerGroups([...playerGroups.filter(g => g.name !== newGroup.name), newGroup])
+    setNewGroupName('')
+  }
+  function handleLoadPlayerGroup(group) {
+    triggerHaptic('medium')
+    if (window.confirm(`確定要載入「${group.name}」？這將覆蓋目前大廳的玩家與分數。`)) {
+      setSharedPlayers(group.players)
+      setRoundCount(1)
+    }
+  }
+  function handleDeletePlayerGroup(groupName) {
+    triggerHaptic('light')
+    if (window.confirm(`確定要刪除「${groupName}」這個群組嗎？`)) {
+      setPlayerGroups(playerGroups.filter(g => g.name !== groupName))
+    }
+  }
 
   function handleExportJSON() {
     const cleanGames = games.map(g => ({ ...g, imageUrl: g.imageUrl && g.imageUrl.startsWith('data:') ? '' : (g.imageUrl || '') }))
@@ -660,7 +706,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* ⚙️ 正常電腦版按鈕區（維持原本第二張圖的乾淨俐落） */}
+        {/* ⚙️ 電腦版維持原本第二張圖的乾淨俐落，不會出現奇奇怪怪的設定模組 */}
         <div className="header-actions">
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
@@ -681,34 +727,117 @@ export default function App() {
           {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
         </div>
 
-        {/* 🌟 手機版專屬設定面板（只在手機設定頁顯示，完全不影響電腦版） */}
+        {/* 🌟 手機版專屬：iOS 風格設定儀表板 (在桌面版保證 display:none 徹底隱形) */}
         <div className="mobile-section-settings" style={{ display: 'none' }}>
-          <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
-            <option value="default">☀️ 淺色簡約</option>
-            <option value="dark">🌙 柔和暗黑</option>
-            <option value="forest">🌲 森之木質</option>
-            <option value="medieval">🏰 中古世紀</option>
-            <option value="cyberpunk">🌌 賽博龐克</option>
-          </select>
-          <button type="button" className="action-btn" onClick={() => { triggerHaptic('light'); setSoundEnabled(!soundEnabled); }} title="聚會音效">{soundEnabled ? '🔊 聲音開' : '🔇 靜音'}</button>
-          {isAdmin && (
-            <>
-              <input type="file" accept=".json,application/json" ref={fileInputRef} style={{ display: 'none' }} onChange={handleImportJSON} />
-              <button type="button" className="action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入 JSON</button>
-            </>
-          )}
-          <button type="button" className="action-btn" onClick={handleExportJSON}>📤 匯出 JSON</button>
-          <button type="button" className="action-btn" onClick={handleAdminToggle} style={{ backgroundColor: isAdmin ? '#EF4444' : 'var(--accent-blue)', color: '#fff', border: 'none', fontWeight: 'bold' }}>{isAdmin ? '🔒 登出管理' : '🔑 站長登入'}</button>
-          {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
-          
-          <div style={{ textAlign: 'center', marginTop: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 'bold', width: '100%' }}>
-            ✨ Version 1.0.0 完美版
+          <div className="settings-dashboard-container">
+            
+            {/* 👑 狀態橫幅 */}
+            <div className={`status-banner ${isAdmin ? 'admin' : 'visitor'}`}>
+              <div className="status-info">
+                <span className="status-avatar">{isAdmin ? '👑' : '👤'}</span>
+                <div className="status-text">
+                  <h4>{isAdmin ? '站長模式 (Admin)' : '訪客模式 (Visitor)'}</h4>
+                  <p>{isAdmin ? '已解鎖所有編輯與管理權限' : '僅提供瀏覽與聚會輔助功能'}</p>
+                </div>
+              </div>
+              <button className="status-login-btn" onClick={handleAdminToggle}>
+                {isAdmin ? '登出' : '站長登入'}
+              </button>
+            </div>
+
+            {/* 🎨 模組卡片 1：外觀與檢視 */}
+            <div className="settings-card">
+              <h3 className="settings-card-title">🎨 外觀與檢視</h3>
+              <div className="settings-row">
+                <span>外觀主題</span>
+                <select className="settings-select" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
+                  <option value="default">☀️ 淺色簡約</option>
+                  <option value="dark">🌙 柔和暗黑</option>
+                  <option value="forest">🌲 森之木質</option>
+                  <option value="medieval">🏰 中古世紀</option>
+                  <option value="cyberpunk">🌌 賽博龐克</option>
+                </select>
+              </div>
+              <div className="settings-row">
+                <span>聚會音效</span>
+                <button className="settings-toggle-btn" onClick={() => { triggerHaptic('light'); setSoundEnabled(!soundEnabled); }}>
+                  {soundEnabled ? '🔊 已開啟' : '🔇 已靜音'}
+                </button>
+              </div>
+              <div className="settings-row">
+                <span>首頁預設排序</span>
+                <select className="settings-select" value={sortBy} onChange={(e) => { triggerHaptic('light'); setSortBy(e.target.value); }}>
+                  {SORT_OPTIONS.map(opt => <option key={opt.key} value={opt.key}>{opt.label}</option>)}
+                </select>
+              </div>
+              <div className="settings-row">
+                <span>清單檢視模式</span>
+                <div className="settings-segment">
+                  <button type="button" className={viewMode === 'grid' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setViewMode('grid'); }}>大圖網格</button>
+                  <button type="button" className={viewMode === 'list' ? 'active' : ''} onClick={() => { triggerHaptic('light'); setViewMode('list'); }}>緊湊列表</button>
+                </div>
+              </div>
+            </div>
+
+            {/* 👥 模組卡片 2：牌咖群組管理 */}
+            <div className="settings-card">
+              <h3 className="settings-card-title">👥 牌咖群組管理</h3>
+              <p className="settings-desc">將聚會大廳目前的玩家名單儲存為群組，方便日後一鍵載入，免去重複打字的麻煩。</p>
+              <div className="settings-group-input">
+                <input type="text" placeholder="群組名稱 (例: 週末桌遊團)" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
+                <button type="button" onClick={handleSavePlayerGroup}>儲存</button>
+              </div>
+              {playerGroups.length > 0 && (
+                <div className="settings-group-list">
+                  {playerGroups.map(g => (
+                    <div key={g.name} className="settings-group-item">
+                      <div className="group-info"><strong>{g.name}</strong><span>({g.players.length}人)</span></div>
+                      <div className="group-actions">
+                        <button type="button" className="btn-load" onClick={() => handleLoadPlayerGroup(g)}>載入名單</button>
+                        <button type="button" className="btn-del" onClick={() => handleDeletePlayerGroup(g.name)}>✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 💾 模組卡片 3：資料與進階管理 */}
+            <div className="settings-card">
+              <h3 className="settings-card-title">💾 資料與進階管理</h3>
+              <div className="settings-row">
+                <span>清除所有最愛</span>
+                <button type="button" className="settings-danger-btn" onClick={handleClearFavorites}>🗑️ 清除最愛</button>
+              </div>
+              <div className="settings-row">
+                <span>重置玩家名單與分數</span>
+                <button type="button" className="settings-danger-btn" onClick={handleResetPlayersData}>🔄 重置大廳</button>
+              </div>
+              <div className="settings-row">
+                <span>匯出桌遊資料 (JSON)</span>
+                <button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button>
+              </div>
+              {isAdmin && (
+                <>
+                  <div className="settings-row">
+                    <span>匯入桌遊資料 (JSON)</span>
+                    <button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button>
+                  </div>
+                  <div className="settings-row">
+                    <span>新增桌遊資料庫</span>
+                    <button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="mobile-version-badge">✨ Version 1.0.0 完美版</div>
           </div>
         </div>
       </header>
 
       <main>
-        {/* 🎲 聚會大廳 */}
+        {/* 🎲 聚會大廳 (包含 4 個可用於點擊篩選的統計方塊與抽卡工具) */}
         <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
             <div className="hero-title-block">
@@ -1081,17 +1210,18 @@ export default function App() {
           </div>
         </section>
 
+        {/* 🌟 根據 viewMode 決定是否套用 list-view 樣式 (預設為網格 grid) */}
         <section className="collection">
-          <div className="game-grid">
+          <div className={`game-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
             {loading ? (
               Array.from({ length: 8 }).map((_, idx) => (
-                <div key={idx} className="skeleton-card"><div className="skeleton-cover" /><div className="skeleton-info"><div className="skeleton-bar title" /><div className="skeleton-bar subtitle" /><div className="skeleton-bar tags" /><div className="skeleton-bar bottom" /></div></div>
+                <div key={idx} className={`skeleton-card ${viewMode === 'list' ? 'list-view' : ''}`}><div className="skeleton-cover" /><div className="skeleton-info"><div className="skeleton-bar title" /><div className="skeleton-bar subtitle" /><div className="skeleton-bar tags" /><div className="skeleton-bar bottom" /></div></div>
               ))
             ) : (
               filteredGames.map((game) => {
                 const isFav = favorites.includes(game.id)
                 return (
-                  <article className="game-card box-3d-card" key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
+                  <article className={`game-card box-3d-card ${viewMode === 'list' ? 'list-view' : ''}`} key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
                     <button type="button" className="card-fav-btn" onClick={(e) => toggleFavorite(e, game.id)} title={isFav ? "取消收藏" : "加入我的最愛"}>{isFav ? '❤️' : '🤍'}</button>
                     <div className="cover">
                       {game.imageUrl ? ( <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" /> ) : ( <span className="cover-emoji">{game.emoji}</span> )}
@@ -1099,19 +1229,20 @@ export default function App() {
                         {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
                         {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
                       </div>
-                      <span className="category-tag">{game.category}</span>
+                      {/* List View 時隱藏左下角方塊避免太擠 */}
+                      {viewMode !== 'list' && <span className="category-tag">{game.category}</span>}
                     </div>
                     <div className="game-info">
                       <h3>{game.name}</h3><p className="english">{game.englishName}</p>
-                      {Array.isArray(game.tags) && game.tags.length > 0 && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
+                      {Array.isArray(game.tags) && game.tags.length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
                       <div className="pill-badges-row">
                         <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
-                        {game.bestPlayers && <span className="pill-badge best">👑 最佳{game.bestPlayers}人</span>}
+                        {game.bestPlayers && <span className="pill-badge best">👑 {viewMode === 'list' ? game.bestPlayers : `最佳${game.bestPlayers}`}人</span>}
                         <span className="pill-badge">⏱️ {game.time}分</span>
                       </div>
                       <div className="rating-complexity-row">
-                        <div className="rating">⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '暫無評分'}</strong></div>
-                        <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 燒腦: {game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}</div>
+                        <div className="rating">⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '--'}</strong></div>
+                        <div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {viewMode === 'list' ? '' : '燒腦: '}{game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}</div>
                       </div>
                     </div>
                   </article>
@@ -1186,7 +1317,7 @@ export default function App() {
                 <button type="button" onClick={() => { triggerHaptic('light'); setDetailTab('cheatSheet'); }} className={`detail-tab-btn ${detailTab === 'cheatSheet' ? 'active-cheat' : ''}`}>⚡ 快速規則 / 提示卡</button>
               </div>
               <div className="detail-nav-right">
-                {/* 🌟 電腦版編輯與刪除按鈕 (手機版透過 CSS 隱藏並於下方顯示) */}
+                {/* 🌟 電腦版編輯與刪除按鈕 */}
                 {isAdmin && (
                   <>
                     <button type="button" className="detail-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
@@ -1275,7 +1406,7 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  {/* 🌟 手機版下方專屬管理列 (預設隱藏，只在小螢幕出現) */}
+                  {/* 🌟 手機版下方專屬管理列 (預設隱藏，小螢幕顯示) */}
                   {isAdmin && (
                     <div className="mobile-admin-bar">
                       <button type="button" className="mobile-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
