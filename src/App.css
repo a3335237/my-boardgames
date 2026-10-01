@@ -299,6 +299,7 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .category-bar button:hover { color: var(--text-main); border-color: var(--accent-blue); transform: translateY(-1px); }
 .category-bar button.active { background: var(--accent-blue); color: #ffffff; border-color: var(--accent-blue); }
 
+/* 🌟 卡片與網格共用 */
 .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
 .game-card { position: relative; background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border-color); overflow: hidden; cursor: pointer; transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, border-color 0.2s ease; display: flex !important; flex-direction: column !important; box-shadow: var(--card-shadow); height: 100%; }
 .game-card:hover { transform: translateY(-8px) scale(1.01); box-shadow: var(--card-hover-shadow); border-color: var(--accent-blue); }
@@ -323,19 +324,32 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .pill-badge.best { color: #d97706; background: rgba(245, 158, 11, 0.12); }
 .rating-complexity-row { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-top: auto !important; padding-top: 8px; border-top: 1px dashed var(--border-color); }
 
-/* 🌟 卡片列表檢視模式 (List View) CSS */
-.game-grid.list-view { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; align-items: stretch !important; box-sizing: border-box !important; }
-.game-card.list-view { display: flex !important; flex-direction: row !important; align-items: center !important; padding: 10px !important; height: auto !important; min-height: 90px !important; border-radius: 16px !important; width: 100% !important; box-sizing: border-box !important; }
-.game-card.list-view .cover { width: 90px !important; height: 90px !important; flex-shrink: 0 !important; border-radius: 12px !important; margin-right: 12px !important; background: var(--pill-bg) !important; position: relative !important; }
+/* ========================================================================= */
+/* 🌟 卡片列表檢視模式 (List View 完美融合排版)                               */
+/* ========================================================================= */
+.game-grid.list-view { display: flex !important; flex-direction: column !important; gap: 10px !important; width: 100% !important; align-items: stretch !important; box-sizing: border-box !important; }
+.game-card.list-view { display: flex !important; flex-direction: row !important; align-items: center !important; padding: 8px !important; height: auto !important; min-height: 90px !important; border-radius: 16px !important; width: 100% !important; box-sizing: border-box !important; }
+.game-card.list-view .cover { width: 85px !important; height: 85px !important; flex-shrink: 0 !important; border-radius: 12px !important; margin-right: 12px !important; background: var(--pill-bg) !important; position: relative !important; overflow: hidden !important; }
 .game-card.list-view .game-info { padding: 0 !important; flex: 1 !important; justify-content: center !important; min-width: 0 !important; }
-.game-card.list-view .game-info h3 { font-size: 1.05rem !important; margin-bottom: 2px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.game-card.list-view .game-info .english { margin-bottom: 6px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.game-card.list-view .pill-badges-row { margin: 0 !important; flex-wrap: wrap !important; }
-.game-card.list-view .rating-complexity-row { border-top: none !important; padding-top: 4px !important; margin-top: 4px !important; gap: 12px !important; justify-content: flex-start !important; }
 
-/* 🔥 完美修復：列表模式愛心不被裁切，安全放在縮圖左上角！ */
-.game-card.list-view .card-fav-btn { top: 14px !important; left: 14px !important; transform: none !important; width: 28px !important; height: 28px !important; font-size: 14px !important; }
-.game-card.list-view:hover .card-fav-btn { transform: scale(1.15) !important; }
+/* 標題行：Flex 佈局，標題自動縮略，徽章固定在最右側絕不換行 */
+.list-title-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; margin-bottom: 2px; }
+.list-title-row h3 { flex: 1; font-size: 1.05rem !important; margin: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+.list-badge { flex-shrink: 0 !important; font-size: 0.65rem !important; padding: 2px 6px !important; box-shadow: none !important; }
+
+/* 英文與分類無縫結合 */
+.game-card.list-view .game-info .english { margin-bottom: 6px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; font-size: 0.75rem !important; color: var(--text-muted) !important; }
+.list-cat-tag { color: var(--accent-blue); font-weight: 800; }
+
+/* 藥丸與底部數據緊湊排版 */
+.game-card.list-view .pill-badges-row { margin: 0 !important; flex-wrap: wrap !important; gap: 4px !important; }
+.game-card.list-view .rating-complexity-row { border-top: none !important; padding-top: 4px !important; margin-top: 2px !important; gap: 12px !important; justify-content: flex-start !important; }
+
+/* 🔥 完美修復：愛心縮小，貼齊左上角安全區，絕不擋主圖 */
+.game-card.list-view .card-fav-btn { top: 4px !important; left: 4px !important; transform: none !important; width: 22px !important; height: 22px !important; font-size: 11px !important; background: rgba(255, 255, 255, 0.75) !important; backdrop-filter: blur(2px) !important; }
+.game-card.list-view:hover .card-fav-btn { transform: scale(1.1) !important; background: rgba(255, 255, 255, 0.95) !important; }
+
+/* ========================================================================= */
 
 /* 骨架屏 */
 .skeleton-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; height: 290px; display: flex; flex-direction: column; box-shadow: var(--card-shadow); position: relative; }
@@ -493,6 +507,8 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .quick-pick-container { height: 36px !important; padding: 2px 4px 2px 6px !important; }
   .quick-pick-chip { height: 26px !important; font-size: 0.72rem !important; }
   .random-button { padding: 10px 14px !important; font-size: 0.92rem !important; border-radius: 12px !important; }
+  
+  /* 針對網格或列表做寬度自適應 */
   .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; width: 100% !important; }
   .cover { height: 125px !important; }
   .card-fav-btn { width: 26px !important; height: 26px !important; font-size: 12px !important; top: 6px !important; left: 6px !important; }

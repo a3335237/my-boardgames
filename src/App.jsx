@@ -706,7 +706,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* ⚙️ 電腦版維持原本第二張圖的乾淨俐落，不會出現奇奇怪怪的設定模組 */}
+        {/* ⚙️ 正常電腦版按鈕區（維持原本第二張圖的乾淨俐落） */}
         <div className="header-actions">
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
@@ -727,7 +727,7 @@ export default function App() {
           {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
         </div>
 
-        {/* 🌟 手機版專屬：iOS 風格設定儀表板 (在桌面版保證 display:none 徹底隱形) */}
+        {/* 🌟 手機版專屬設定面板（只在手機設定頁顯示，完全不影響電腦版） */}
         <div className="mobile-section-settings" style={{ display: 'none' }}>
           <div className="settings-dashboard-container">
             
@@ -1225,15 +1225,39 @@ export default function App() {
                     <button type="button" className="card-fav-btn" onClick={(e) => toggleFavorite(e, game.id)} title={isFav ? "取消收藏" : "加入我的最愛"}>{isFav ? '❤️' : '🤍'}</button>
                     <div className="cover">
                       {game.imageUrl ? ( <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" /> ) : ( <span className="cover-emoji">{game.emoji}</span> )}
-                      <div className="badge-container">
-                        {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
-                        {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
-                      </div>
-                      {/* List View 時隱藏左下角方塊避免太擠 */}
-                      {viewMode !== 'list' && <span className="category-tag">{game.category}</span>}
+                      
+                      {/* List View 時徹底隱藏圖片上的所有徽章與標籤，還原 100% 乾淨封面 */}
+                      {viewMode !== 'list' && (
+                        <>
+                          <div className="badge-container">
+                            {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
+                            {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
+                          </div>
+                          <span className="category-tag">{game.category}</span>
+                        </>
+                      )}
                     </div>
+                    
                     <div className="game-info">
-                      <h3>{game.name}</h3><p className="english">{game.englishName}</p>
+                      {/* 🌟 完美融合排版魔法：動態切換渲染邏輯 */}
+                      {viewMode === 'list' ? (
+                        <>
+                          {/* 標題與徽章並排，利用 Flex 保證高度不變，字太長自動 ... */}
+                          <div className="list-title-row">
+                            <h3>{game.name}</h3>
+                            {game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}
+                            {game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}
+                          </div>
+                          {/* 分類標籤化為前綴，與英文名稱無縫連接 */}
+                          <p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p>
+                        </>
+                      ) : (
+                        <>
+                          <h3>{game.name}</h3>
+                          <p className="english">{game.englishName}</p>
+                        </>
+                      )}
+                      
                       {Array.isArray(game.tags) && game.tags.length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
                       <div className="pill-badges-row">
                         <span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>
@@ -1317,7 +1341,7 @@ export default function App() {
                 <button type="button" onClick={() => { triggerHaptic('light'); setDetailTab('cheatSheet'); }} className={`detail-tab-btn ${detailTab === 'cheatSheet' ? 'active-cheat' : ''}`}>⚡ 快速規則 / 提示卡</button>
               </div>
               <div className="detail-nav-right">
-                {/* 🌟 電腦版編輯與刪除按鈕 */}
+                {/* 🌟 電腦版編輯與刪除按鈕 (手機版透過 CSS 隱藏並於下方顯示) */}
                 {isAdmin && (
                   <>
                     <button type="button" className="detail-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
