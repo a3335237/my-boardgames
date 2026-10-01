@@ -324,16 +324,18 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .rating-complexity-row { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-top: auto !important; padding-top: 8px; border-top: 1px dashed var(--border-color); }
 
 /* 🌟 卡片列表檢視模式 (List View) CSS */
-.game-grid.list-view { display: flex !important; flex-direction: column !important; gap: 12px !important; }
-.game-card.list-view { display: flex !important; flex-direction: row !important; align-items: center !important; padding: 10px !important; height: auto !important; min-height: 90px !important; border-radius: 16px !important; }
-.game-card.list-view .cover { width: 90px !important; height: 90px !important; flex-shrink: 0 !important; border-radius: 12px !important; margin-right: 12px !important; background: var(--pill-bg) !important; }
-.game-card.list-view .game-info { padding: 0 !important; flex: 1 !important; justify-content: center !important; }
+.game-grid.list-view { display: flex !important; flex-direction: column !important; gap: 12px !important; width: 100% !important; align-items: stretch !important; box-sizing: border-box !important; }
+.game-card.list-view { display: flex !important; flex-direction: row !important; align-items: center !important; padding: 10px !important; height: auto !important; min-height: 90px !important; border-radius: 16px !important; width: 100% !important; box-sizing: border-box !important; }
+.game-card.list-view .cover { width: 90px !important; height: 90px !important; flex-shrink: 0 !important; border-radius: 12px !important; margin-right: 12px !important; background: var(--pill-bg) !important; position: relative !important; }
+.game-card.list-view .game-info { padding: 0 !important; flex: 1 !important; justify-content: center !important; min-width: 0 !important; }
 .game-card.list-view .game-info h3 { font-size: 1.05rem !important; margin-bottom: 2px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-.game-card.list-view .game-info .english { margin-bottom: 6px !important; }
+.game-card.list-view .game-info .english { margin-bottom: 6px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 .game-card.list-view .pill-badges-row { margin: 0 !important; flex-wrap: wrap !important; }
 .game-card.list-view .rating-complexity-row { border-top: none !important; padding-top: 4px !important; margin-top: 4px !important; gap: 12px !important; justify-content: flex-start !important; }
-.game-card.list-view .card-fav-btn { top: -4px !important; left: -4px !important; transform: scale(0.85) !important; }
-.game-card.list-view:hover .card-fav-btn { transform: scale(1) !important; }
+
+/* 🔥 完美修復：列表模式愛心不被裁切，安全放在縮圖左上角！ */
+.game-card.list-view .card-fav-btn { top: 14px !important; left: 14px !important; transform: none !important; width: 28px !important; height: 28px !important; font-size: 14px !important; }
+.game-card.list-view:hover .card-fav-btn { transform: scale(1.15) !important; }
 
 /* 骨架屏 */
 .skeleton-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; height: 290px; display: flex; flex-direction: column; box-shadow: var(--card-shadow); position: relative; }
@@ -491,7 +493,7 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .quick-pick-container { height: 36px !important; padding: 2px 4px 2px 6px !important; }
   .quick-pick-chip { height: 26px !important; font-size: 0.72rem !important; }
   .random-button { padding: 10px 14px !important; font-size: 0.92rem !important; border-radius: 12px !important; }
-  .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+  .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; width: 100% !important; }
   .cover { height: 125px !important; }
   .card-fav-btn { width: 26px !important; height: 26px !important; font-size: 12px !important; top: 6px !important; left: 6px !important; }
   .card-tags { height: 24px !important; overflow-x: auto !important; white-space: nowrap !important; scrollbar-width: none !important; }
