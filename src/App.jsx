@@ -204,7 +204,6 @@ function MysteryBox3D() {
   )
 }
 
-
 /* ========================================================================= */
 /* 主要 App 元件                                                             */
 /* ========================================================================= */
@@ -220,6 +219,9 @@ export default function App() {
   const [maxTimeFilter, setMaxTimeFilter] = useState('all')
   const [sortBy, setSortBy] = useState('rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
+
+  // 🌟 手機版 Tab 控制狀態 (預設首頁為桌遊庫)
+  const [activeTab, setActiveTab] = useState('collection')
 
   const [activeDropdown, setActiveDropdown] = useState(null)
   const filterRowRef = useRef(null)
@@ -271,7 +273,6 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(60)
   const [timerRunning, setTimerRunning] = useState(false)
 
-  // 骰子與硬幣 State
   const [diceToolTab, setDiceToolTab] = useState('dice')
   const [diceCount, setDiceCount] = useState(1) 
   const [diceSides, setDiceSides] = useState(6)
@@ -503,12 +504,10 @@ export default function App() {
   }
   function handleRemoveSharedPlayer(idToRemove) { triggerHaptic('light'); if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！'); setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove)) }
 
-  // 🌟 先攻大亂鬥：還原純文字輪盤
   function pickStarterPlayer() {
     if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
     setIsPickingStarter(true); setStarterWinner(null)
     triggerHaptic('medium')
-    
     let count = 0
     const interval = setInterval(() => {
       setStarterWinner(sharedPlayers[Math.floor(Math.random() * sharedPlayers.length)].name)
@@ -552,7 +551,7 @@ export default function App() {
     setTimeout(() => { setAssignedTeams(buckets); setIsShufflingTeams(false); playSound('victory'); triggerHaptic('heavy') }, 280)
   }
 
-  // 🌟 點子二：觸發 3D 盲盒抽卡 (等待時間設為 2.5 秒，讓寶箱有充足時間落地彈跳與翻蓋)
+  // 🌟 點子二：觸發 3D 盲盒抽卡
   function chooseRandomWithAnimation() {
     let pool = filteredGames.length > 0 ? filteredGames : games
     if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) }
@@ -651,7 +650,8 @@ export default function App() {
   const currentSortLabel = useMemo(() => { const f = SORT_OPTIONS.find(o => o.key === sortBy); return f ? f.label : '⭐ 評分最高' }, [sortBy])
 
   return (
-    <div className="app">
+    // 🌟 在外層套用 data-tab 屬性，交給 CSS 來決定手機版顯示哪個區塊
+    <div className="app" data-tab={activeTab}>
       <header className="header">
         <div className="logo">
           <span>🎲</span>
@@ -661,7 +661,8 @@ export default function App() {
           </div>
         </div>
 
-        <div className="header-actions">
+        {/* ⚙️ 設定區塊（手機版會在「設定」Tab 被抽出顯示） */}
+        <div className="header-actions mobile-section-settings">
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
             <option value="dark">🌙 柔和暗黑</option>
@@ -683,7 +684,8 @@ export default function App() {
       </header>
 
       <main>
-        <section className="hero" id="hero-sec">
+        {/* 🎲 聚會大廳區塊 */}
+        <section className="hero mobile-section-hall" id="hero-sec">
           <div className="hero-dashboard-left">
             <div>
               <span className="hero-tagline">✨ 聚會推薦助手</span>
@@ -998,8 +1000,8 @@ export default function App() {
           </div>
         </section>
 
-        {/* 遊戲列表過濾器與格線區 */}
-        <section className="filter-panel" id="collection-sec">
+        {/* 📦 桌遊庫過濾器與格線區 */}
+        <section className="filter-panel mobile-section-collection" id="collection-sec">
           <div className="filter-row" ref={filterRowRef}>
             <div className="search-box">
               <span>🔍</span><input type="text" placeholder="搜尋桌遊名稱/英文..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -1055,7 +1057,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="collection">
+        <section className="collection mobile-section-collection">
           <div className="game-grid">
             {loading ? (
               Array.from({ length: 8 }).map((_, idx) => (
@@ -1096,10 +1098,17 @@ export default function App() {
         </section>
       </main>
 
+      {/* 🌟 底部真實導覽列 (加入 Tab 切換邏輯) */}
       <nav className="bottom-nav-bar">
-        <button type="button" className="bottom-nav-item active" onClick={() => { triggerHaptic('light'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><span>📦</span>收藏庫</button>
-        <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const heroSec = document.getElementById('hero-sec'); if (heroSec) heroSec.scrollIntoView({ behavior: 'smooth' }) }}><span>🎲</span>隨機選</button>
-        <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']; setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]) }}><span>🎨</span>換主題</button>
+        <button type="button" className={`bottom-nav-item ${activeTab === 'collection' ? 'active' : ''}`} onClick={() => { triggerHaptic('light'); setActiveTab('collection'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <span>📦</span>桌遊庫
+        </button>
+        <button type="button" className={`bottom-nav-item ${activeTab === 'hall' ? 'active' : ''}`} onClick={() => { triggerHaptic('light'); setActiveTab('hall'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <span>🎲</span>聚會大廳
+        </button>
+        <button type="button" className={`bottom-nav-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => { triggerHaptic('light'); setActiveTab('settings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+          <span>⚙️</span>設定
+        </button>
       </nav>
 
       {/* 🌟 點子二：3D 盲盒抽卡 (手工木紋黃金寶箱開蓋特效，已徹底移除發光假球) */}
@@ -1145,7 +1154,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 🌟 詳細資料 Modal (修復 iOS Safari 黑影 Bug) */}
+      {/* 🌟 詳細資料 Modal */}
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
