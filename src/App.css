@@ -129,6 +129,12 @@ body { margin: 0; padding: 0; font-family: 'jf-open-huninn', 'jf open 粉圓', -
 .hero-stat-card .stat-num { font-size: 1.18rem; font-weight: 900; line-height: 1.2; }
 .hero-stat-card .stat-unit { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-left: 1px; }
 
+/* 🌟 補回四個篩選分類方塊的「選中(Active)」樣式 */
+.hero-stat-card.active-all { border-color: var(--accent-blue); background: rgba(79, 70, 229, 0.06); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18); transform: translateY(-2px); }
+.hero-stat-card.active-main { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18); transform: translateY(-2px); }
+.hero-stat-card.active-expansion { border-color: #f59e0b; background: rgba(245, 158, 11, 0.06); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
+.hero-stat-card.active-favorite { border-color: #e11d48; background: rgba(225, 29, 72, 0.06); box-shadow: 0 6px 16px rgba(225, 29, 72, 0.18); transform: translateY(-2px); }
+
 .quick-pick-container { display: flex; align-items: center; background: var(--bg-card); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); padding: 4px 6px 4px 12px; border-radius: 16px; border: 1px solid var(--border-color); gap: 8px; height: 44px; box-sizing: border-box; }
 .quick-pick-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 800; white-space: nowrap; flex-shrink: 0; }
 .quick-pick-track { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; flex: 1; height: 100%; align-items: center; }
@@ -351,7 +357,7 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .random-reveal-modal-box > span { position: relative; z-index: 20; display: inline-block; }
 .card-reveal-scene { width: 100% !important; max-width: 360px !important; min-height: 350px !important; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
 
-/* 🌟 手工 3D 寶箱專屬畫布背景 (移除醜陋漸層，完美融合 UI) */
+/* 🌟 已徹底移除醜陋黃色球，還原為與 UI 完美融合的乾淨畫布背景 */
 .mystery-box-canvas-container { 
   width: 100%; height: 350px; border-radius: 20px; overflow: hidden; 
   background: radial-gradient(circle at center, var(--bg-main) 0%, transparent 100%);
@@ -456,6 +462,13 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .hero-stat-card .stat-title { font-size: 0.65rem !important; }
   .hero-stat-card .stat-num { font-size: 0.95rem !important; }
   .hero-stat-card .stat-unit { font-size: 0.6rem !important; }
+  
+  /* 補回上方 4 個統計方塊的選中狀態 */
+  .hero-stat-card.active-all { border-color: var(--accent-blue); background: rgba(79, 70, 229, 0.06); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18); transform: translateY(-2px); }
+  .hero-stat-card.active-main { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18); transform: translateY(-2px); }
+  .hero-stat-card.active-expansion { border-color: #f59e0b; background: rgba(245, 158, 11, 0.06); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
+  .hero-stat-card.active-favorite { border-color: #e11d48; background: rgba(225, 29, 72, 0.06); box-shadow: 0 6px 16px rgba(225, 29, 72, 0.18); transform: translateY(-2px); }
+
   .quick-pick-container { height: 36px !important; padding: 2px 4px 2px 6px !important; }
   .quick-pick-chip { height: 26px !important; font-size: 0.72rem !important; }
   .random-button { padding: 10px 14px !important; font-size: 0.92rem !important; border-radius: 12px !important; }
@@ -475,6 +488,6 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .modal-content form .form-group[style*="grid"] { display: flex !important; flex-direction: column !important; gap: 0.85rem !important; }
   .detail-nav-header { padding: 0.9rem 1rem !important; }
   .detail-body-scrollable { padding: 1rem !important; }
-  .modal-content { padding: 1.2rem !important; }
+  .modal-content { padding: 1.2rem !important; width: 95vw !important; max-height: 88vh !important; }
   @media screen and (max-width: 520px) { .detail-info-card { grid-template-columns: 1fr; gap: 10px; } }
 }

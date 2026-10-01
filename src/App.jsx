@@ -118,14 +118,14 @@ function Die3D({ sides, index, rollTrigger, isRolling, onResult }) {
   return <DiePoly sides={sides} index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
 }
 
-/* 🌟 工具二：完美手工 3D 尋寶箱 (徹底拔除假發光球體，只保留真實物理點光源) */
+/* 🌟 工具二：完美手工 3D 尋寶箱 (實心積木法，完全解決破圖與黑屏，無黃球色塊) */
 function MysteryBox3D() {
   const boxRef = useRef()
   const lidRef = useRef()
   const [isOpen, setIsOpen] = useState(false)
   const timeRef = useRef(0)
 
-  // 🌟 材質安全宣告：使用 useMemo 確保不重複渲染，並強制開啟 DoubleSide 徹底防止破圖與背面剔除
+  // 🌟 材質安全宣告：強制開啟 DoubleSide 徹底防止破圖與背面剔除
   const woodMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#5C4033", roughness: 0.9, side: THREE.DoubleSide }), [])
   const goldMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#FFD700", metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }), [])
   const blackMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#000000" }), [])
@@ -203,6 +203,7 @@ function MysteryBox3D() {
     </group>
   )
 }
+
 
 /* ========================================================================= */
 /* 主要 App 元件                                                             */
@@ -502,10 +503,12 @@ export default function App() {
   }
   function handleRemoveSharedPlayer(idToRemove) { triggerHaptic('light'); if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！'); setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove)) }
 
+  // 🌟 先攻大亂鬥：還原純文字輪盤
   function pickStarterPlayer() {
     if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
     setIsPickingStarter(true); setStarterWinner(null)
     triggerHaptic('medium')
+    
     let count = 0
     const interval = setInterval(() => {
       setStarterWinner(sharedPlayers[Math.floor(Math.random() * sharedPlayers.length)].name)
@@ -1099,7 +1102,7 @@ export default function App() {
         <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']; setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]) }}><span>🎨</span>換主題</button>
       </nav>
 
-      {/* 🌟 點子二：3D 盲盒抽卡 (木質黃金寶箱開蓋特效 + 完美修復版) */}
+      {/* 🌟 點子二：3D 盲盒抽卡 (完美還原實體木紋金邊寶箱與開蓋發光特效) */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1142,7 +1145,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 詳細資料 Modal */}
+      {/* 🌟 詳細資料 Modal (修復 iOS Safari 黑影 Bug) */}
       {viewDetailGame && (
         <div className="modal-overlay">
           <div className="detail-modal-content">
