@@ -254,7 +254,7 @@ body.dark-theme .dice-sum-badge, body.theme-dark .dice-sum-badge { background: #
 .coin-flip-action-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(217, 119, 6, 0.38); }
 .coin-flip-action-btn:disabled { background: var(--pill-bg); color: var(--text-muted); box-shadow: none; cursor: not-allowed; }
 
-/* ⚔️️ 分隊 */
+/* ⚔️ 分隊 */
 .team-tool-container { display: flex; flex-direction: column; gap: 14px; }
 .team-unified-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--bg-main); padding: 5px; border-radius: 14px; border: 1px solid var(--border-color); }
 .team-segmented-control { display: flex; gap: 4px; }
@@ -389,7 +389,7 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
 .detail-tab-btn.active-cheat { background: #10b981; color: #fff; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
 .detail-nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
-/* 🌟 電腦版右上角編輯按鈕 */
+/* 🌟 電腦版右上角保留編輯與刪除按鈕 */
 .detail-admin-btn { padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: bold; cursor: pointer; border: none; color: #fff; display: inline-flex; align-items: center; gap: 4px; transition: transform 0.15s ease; }
 .detail-admin-btn:hover { transform: translateY(-1px); }
 
@@ -456,8 +456,10 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .header { flex-direction: column !important; gap: 12px !important; padding-bottom: 0.8rem !important; margin-bottom: 1rem !important; }
   .logo { width: 100%; justify-content: center !important; font-size: 1.45rem !important; }
   .logo strong { font-size: 1.15rem !important; }
-  .header-actions { width: 100%; display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 6px !important; }
-  .header-actions button, .action-btn, .add-game-btn, .theme-selector { padding: 6px 12px !important; font-size: 0.78rem !important; height: auto !important; }
+  
+  /* 🌟 手機版完全隱藏原本電腦版的右側按鈕群！設定頁會由另一個區塊接手顯示 */
+  .header-actions { display: none !important; }
+  
   .hero { grid-template-columns: 1fr !important; padding: 1rem 0.8rem !important; margin-bottom: 1rem !important; gap: 12px !important; }
   .hero h1 { font-size: 1.6rem !important; line-height: 1.25 !important; white-space: normal !important; text-align: center; }
   .hero-tagline { margin: 0 auto 6px auto; }
@@ -489,7 +491,7 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   
   .bottom-nav-bar { display: flex !important; }
   
-  /* 🌟 手機版隱藏上方雞肋編輯按鈕，開啟下方按鈕列 */
+  /* 🌟 手機版隱藏上方雞肋編輯與刪除按鈕，開啟專屬下方按鈕列 */
   .detail-nav-right .detail-admin-btn { display: none !important; }
   .mobile-admin-bar { display: flex !important; }
 
@@ -504,14 +506,24 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   @media screen and (max-width: 520px) { .detail-info-card { grid-template-columns: 1fr; gap: 10px; } }
 
   /* ========================================================================= */
-  /* 🌟 手機版三分頁連動與設定頁排版修正                                       */
+  /* 🌟 手機版三分頁連動邏輯 (桌遊庫與大廳皆保留 4 個方塊供篩選)                 */
   /* ========================================================================= */
   
-  /* 📦 桌遊庫 Tab：顯示過濾器與卡片，隱藏大廳與設定 */
-  .app[data-tab="collection"] .hero,
+  /* 📦 桌遊庫 Tab：保留 hero 裡的方塊，隱藏抽卡區、標題區與大廳工具。隱藏設定區 */
+  .app[data-tab="collection"] .hero-title-block,
+  .app[data-tab="collection"] .hero-random-picker,
+  .app[data-tab="collection"] .starter-card,
   .app[data-tab="collection"] .mobile-section-settings { display: none !important; }
 
-  /* 🎲 聚會大廳 Tab：顯示大廳工具，隱藏過濾器、卡片與設定 */
+  .app[data-tab="collection"] .hero {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin-bottom: 12px !important;
+  }
+
+  /* 🎲 聚會大廳 Tab：顯示大廳完整工具，隱藏過濾器、卡片網格與設定區 */
   .app[data-tab="hall"] .filter-panel,
   .app[data-tab="hall"] .collection,
   .app[data-tab="hall"] .mobile-section-settings { display: none !important; }

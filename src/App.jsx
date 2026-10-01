@@ -709,9 +709,9 @@ export default function App() {
 
       <main>
         {/* 🎲 聚會大廳 */}
-        <section className="hero mobile-section-hall" id="hero-sec">
+        <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
-            <div>
+            <div className="hero-title-block">
               <span className="hero-tagline">✨ 聚會推薦助手</span>
               <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
               <div className="hero-subtitle-hint">⚡ 目前共有 <strong>{totalCount}</strong> 款精選桌遊準備就緒</div>
@@ -732,7 +732,7 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <div className="hero-random-picker" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
               <div className="quick-pick-container">
                 <span className="quick-pick-label">👥 指定人數:</span>
                 <div className="quick-pick-track">
@@ -1186,6 +1186,7 @@ export default function App() {
                 <button type="button" onClick={() => { triggerHaptic('light'); setDetailTab('cheatSheet'); }} className={`detail-tab-btn ${detailTab === 'cheatSheet' ? 'active-cheat' : ''}`}>⚡ 快速規則 / 提示卡</button>
               </div>
               <div className="detail-nav-right">
+                {/* 🌟 電腦版編輯與刪除按鈕 (手機版透過 CSS 隱藏並於下方顯示) */}
                 {isAdmin && (
                   <>
                     <button type="button" className="detail-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
@@ -1274,6 +1275,7 @@ export default function App() {
                       </div>
                     </div>
                   )}
+                  {/* 🌟 手機版下方專屬管理列 (預設隱藏，只在小螢幕出現) */}
                   {isAdmin && (
                     <div className="mobile-admin-bar">
                       <button type="button" className="mobile-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
