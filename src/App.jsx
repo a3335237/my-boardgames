@@ -118,14 +118,14 @@ function Die3D({ sides, index, rollTrigger, isRolling, onResult }) {
   return <DiePoly sides={sides} index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
 }
 
-/* 🌟 工具二：完美手工 3D 尋寶箱 (實心積木法，完全解決破圖與黑屏，帶開蓋動畫) */
+/* 🌟 工具二：完美手工 3D 尋寶箱 (徹底拔除假發光球體，只保留真實物理點光源) */
 function MysteryBox3D() {
   const boxRef = useRef()
   const lidRef = useRef()
   const [isOpen, setIsOpen] = useState(false)
   const timeRef = useRef(0)
 
-  // 🌟 材質安全宣告：使用 useMemo 確保不重複渲染，並強制開啟 DoubleSide 徹底防止破圖
+  // 🌟 材質安全宣告：使用 useMemo 確保不重複渲染，並強制開啟 DoubleSide 徹底防止破圖與背面剔除
   const woodMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#5C4033", roughness: 0.9, side: THREE.DoubleSide }), [])
   const goldMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#FFD700", metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }), [])
   const blackMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#000000" }), [])
@@ -138,7 +138,7 @@ function MysteryBox3D() {
   useFrame((state, delta) => {
     timeRef.current += delta; const t = timeRef.current
     
-    // 箱體彈跳動畫
+    // 箱體物理掉落與阻尼彈跳效果
     if (boxRef.current) {
       if (t < 1.2) {
         boxRef.current.position.y = Math.max(0, Math.abs(Math.cos(t * 10)) * 5 * Math.exp(-t * 4))
@@ -147,7 +147,7 @@ function MysteryBox3D() {
       }
     }
     
-    // 蓋子打開動畫
+    // 蓋子打開動畫 (平滑向後掀開)
     if (lidRef.current) {
       lidRef.current.rotation.x = THREE.MathUtils.lerp(lidRef.current.rotation.x, isOpen ? -Math.PI * 0.55 : 0, delta * 6)
     }
@@ -159,46 +159,45 @@ function MysteryBox3D() {
         
         {/* === 寶箱下半部 === */}
         {/* 木質主體 */}
-        <mesh position={[0, 0.6, 0]} material={woodMat}><boxGeometry args={[2.2, 1.2, 1.6]} /></mesh>
+        <mesh position={[0, 0.75, 0]} material={woodMat}><boxGeometry args={[2, 1.5, 1.5]} /></mesh>
         {/* 底部與頂部金邊 */}
-        <mesh position={[0, 0.05, 0]} material={goldMat}><boxGeometry args={[2.3, 0.1, 1.7]} /></mesh>
-        <mesh position={[0, 1.15, 0]} material={goldMat}><boxGeometry args={[2.3, 0.1, 1.7]} /></mesh>
+        <mesh position={[0, 0.1, 0]} material={goldMat}><boxGeometry args={[2.1, 0.2, 1.6]} /></mesh>
+        <mesh position={[0, 1.4, 0]} material={goldMat}><boxGeometry args={[2.1, 0.2, 1.6]} /></mesh>
         {/* 四周角柱金邊 */}
-        <mesh position={[1.05, 0.6, 0.75]} material={goldMat}><boxGeometry args={[0.2, 1.2, 0.2]} /></mesh>
-        <mesh position={[-1.05, 0.6, 0.75]} material={goldMat}><boxGeometry args={[0.2, 1.2, 0.2]} /></mesh>
-        <mesh position={[1.05, 0.6, -0.75]} material={goldMat}><boxGeometry args={[0.2, 1.2, 0.2]} /></mesh>
-        <mesh position={[-1.05, 0.6, -0.75]} material={goldMat}><boxGeometry args={[0.2, 1.2, 0.2]} /></mesh>
+        <mesh position={[0.95, 0.75, 0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
+        <mesh position={[-0.95, 0.75, 0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
+        <mesh position={[0.95, 0.75, -0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
+        <mesh position={[-0.95, 0.75, -0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
 
         {/* === 寶箱上半部 (蓋子) === */}
         {/* 將蓋子的軸心移到後方邊緣，實現真實的開合效果 */}
         <group ref={lidRef} position={[0, 1.2, -0.8]}>
           <group position={[0, 0, 0.8]}>
-            {/* 木質半圓蓋 (使用 DoubleSide 避免剔除隱形) */}
+            {/* 木質半圓蓋 (已使用 DoubleSide 避免剔除隱形) */}
             <mesh rotation={[0, 0, Math.PI / 2]} material={woodMat}>
-              <cylinderGeometry args={[0.8, 0.8, 2.2, 32, 1, false, 0, Math.PI]} />
+              <cylinderGeometry args={[0.75, 0.75, 2, 32, 1, false, 0, Math.PI]} />
             </mesh>
-            {/* 蓋子左右金邊 */}
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[1.05, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.82, 0.82, 0.2, 32, 1, false, 0, Math.PI]} />
+            {/* 蓋子左右與中央金邊 */}
+            <mesh rotation={[0, 0, Math.PI / 2]} position={[0.9, 0, 0]} material={goldMat}>
+              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
             </mesh>
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[-1.05, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.82, 0.82, 0.2, 32, 1, false, 0, Math.PI]} />
+            <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.9, 0, 0]} material={goldMat}>
+              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
             </mesh>
-            {/* 蓋子中央金邊 */}
             <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.82, 0.82, 0.2, 32, 1, false, 0, Math.PI]} />
+              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
             </mesh>
             {/* 鎖扣與黑洞 */}
-            <mesh position={[0, -0.1, 0.82]} material={goldMat}>
-              <boxGeometry args={[0.4, 0.5, 0.1]} />
+            <mesh position={[0, -0.2, 0.8]} material={goldMat}>
+              <boxGeometry args={[0.4, 0.6, 0.1]} />
             </mesh>
-            <mesh position={[0, -0.1, 0.86]} material={blackMat}>
-              <boxGeometry args={[0.06, 0.15, 0.05]} />
+            <mesh position={[0, -0.2, 0.86]} material={blackMat}>
+              <boxGeometry args={[0.06, 0.2, 0.05]} />
             </mesh>
           </group>
         </group>
         
-        {/* 🌟 內部金光照明 (取代醜黃球)，只有打開時才會亮 */}
+        {/* 🌟 隱藏式真實內部照明，沒有醜陋假球體色塊 */}
         <pointLight position={[0, 1.5, 0]} intensity={isOpen ? 8 : 0} color="#FFD700" distance={10} />
       </group>
     </group>
@@ -503,12 +502,10 @@ export default function App() {
   }
   function handleRemoveSharedPlayer(idToRemove) { triggerHaptic('light'); if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！'); setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove)) }
 
-  // 🌟 先攻大亂鬥：還原純文字輪盤
   function pickStarterPlayer() {
     if (sharedPlayers.length < 2) return alert('請至少加入 2 位玩家！')
     setIsPickingStarter(true); setStarterWinner(null)
     triggerHaptic('medium')
-    
     let count = 0
     const interval = setInterval(() => {
       setStarterWinner(sharedPlayers[Math.floor(Math.random() * sharedPlayers.length)].name)
@@ -1102,7 +1099,7 @@ export default function App() {
         <button type="button" className="bottom-nav-item" onClick={() => { triggerHaptic('light'); const themes = ['default', 'dark', 'forest', 'medieval', 'cyberpunk']; setTheme(themes[(themes.indexOf(theme) + 1) % themes.length]) }}><span>🎨</span>換主題</button>
       </nav>
 
-      {/* 🌟 點子二：3D 盲盒抽卡 (完美還原實體木紋金邊寶箱與開蓋發光特效) */}
+      {/* 🌟 點子二：3D 盲盒抽卡 (木質黃金寶箱開蓋特效 + 完美修復版) */}
       {randomGame && (
         <div className="modal-overlay">
           <div className="random-reveal-modal-box">
@@ -1120,7 +1117,7 @@ export default function App() {
                     <ambientLight intensity={1.2} />
                     <directionalLight position={[5, 10, 5]} intensity={2.5} />
                     <Environment preset="city" />
-                    {/* 使用純手工打造的實木黃金寶箱與金光特效 (已修復破圖與背面剔除問題) */}
+                    {/* 🌟 完全沒有黃球的純實體光影寶箱 */}
                     <MysteryBox3D />
                   </Canvas>
                 </div>
