@@ -2,11 +2,12 @@ import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import './App.css'
 import { supabase } from './supabaseClients'
 
-// 🌟 引入 3D 與物理引擎套件
+// 🌟 引入 3D 套件
 import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Physics, useBox, usePlane, useSphere } from '@react-three/cannon'
 import { Environment } from '@react-three/drei'
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 
 // =========================================================================
 // 常數設定 (Constants)
@@ -30,75 +31,584 @@ const initialGames = [
 const ADMIN_PASSWORD = '1234'
 const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '' }
 
-/* ========================================================================= */
-/* 🌟 3D 資源生成與物理共用元件 */
-/* ========================================================================= */
-let cachedD6Materials = null
-const getD6Materials = () => {
-  if (cachedD6Materials) return cachedD6Materials
-  const mats = []; const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256; const ctx = canvas.getContext('2d')
-  for (let i = 1; i <= 6; i++) {
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 256, 256); ctx.fillStyle = '#1e293b'
-    const drawDot = (x, y) => { ctx.beginPath(); ctx.arc(x, y, 22, 0, Math.PI*2); ctx.fill(); }
-    const c = 128, o = 64
-    if ([1,3,5].includes(i)) drawDot(c, c); if ([2,3,4,5,6].includes(i)) { drawDot(c-o, c-o); drawDot(c+o, c+o) }
-    if ([4,5,6].includes(i)) { drawDot(c-o, c+o); drawDot(c+o, c-o) }; if (i === 6) { drawDot(c-o, c); drawDot(c+o, c) }
-    const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 16 
-    mats.push(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.25, metalness: 0.05 }))
+// =========================================================================
+// 🌟 真實搖骰音效 (請確保 shake.m4a 放置於專案的 public 資料夾中)
+// =========================================================================
+const shakeSound = new Audio('/shake.m4a'); 
+shakeSound.preload = 'auto';
+let fadeInterval = null;
+
+const playShakeSound = () => {
+  try {
+    if (fadeInterval) clearInterval(fadeInterval);
+    if (shakeSound.readyState >= 2) { 
+      shakeSound.currentTime = 0; 
+    }
+    shakeSound.volume = 1.0; 
+    const playPromise = shakeSound.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(e => console.warn("需要互動才能播放音效:", e));
+    }
+  } catch (err) {
+    console.warn("Audio playback issue:", err);
   }
-  cachedD6Materials = mats; return mats
-}
+};
 
-function PhysicsFloor() { usePlane(() => ({ rotation: [-Math.PI / 2, 0, 0], position: [0, -1.2, 0] })); return null }
-function PhysicsBorders() {
-  usePlane(() => ({ position: [0, 0, -2.2], rotation: [0, 0, 0] })); usePlane(() => ({ position: [0, 0, 2.6], rotation: [0, -Math.PI, 0] }))
-  usePlane(() => ({ position: [-2.2, 0, 0], rotation: [0, Math.PI / 2, 0] })); usePlane(() => ({ position: [2.2, 0, 0], rotation: [0, -Math.PI / 2, 0] }))
-  return null
-}
+const fadeOutShakeSound = () => {
+  let vol = 1.0;
+  fadeInterval = setInterval(() => {
+    vol -= 0.1; 
+    if (vol <= 0) { clearInterval(fadeInterval); shakeSound.pause(); shakeSound.volume = 1.0; } 
+    else { shakeSound.volume = vol; }
+  }, 30);
+};
 
-function DieBox({ index, rollTrigger, isRolling, onResult }) {
-  const [ref, api] = useBox(() => ({ mass: 1, args: [1.2, 1.2, 1.2], position: [(Math.random()-0.5)*2, 3+Math.random()*3, (Math.random()-0.5)*2] }))
-  const quat = useRef([0, 0, 0, 1])
-  useEffect(() => { const unsub = api.quaternion.subscribe(q => (quat.current = q)); return unsub }, [api.quaternion])
-  useEffect(() => {
-    if (rollTrigger > 0) {
-      api.position.set((Math.random()-0.5)*3, 4 + Math.random()*2, (Math.random()-0.5)*3); api.velocity.set((Math.random()-0.5)*8, 8 + Math.random()*6, (Math.random()-0.5)*8); api.angularVelocity.set(Math.random()*15, Math.random()*15, Math.random()*15)
+/* ========================================================================= */
+/* 🌟 3D 原生骰子與材質引擎 (4K 高解析度與零重疊排版) */
+/* ========================================================================= */
+const AVAILABLE_DICE_SIDES = [6, 8, 12, 20];
+
+const createLeatherTextures = () => {
+  const cvs = document.createElement('canvas'); const bumpCvs = document.createElement('canvas');
+  cvs.width = bumpCvs.width = 512; cvs.height = bumpCvs.height = 512;
+  const ctx = cvs.getContext('2d'); const bCtx = bumpCvs.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,512,512); 
+  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,512,512);
+  for(let i=0; i<80000; i++) {
+     let x = Math.random()*512; let y = Math.random()*512; let r = Math.random()*1.5 + 0.5; 
+     bCtx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)';
+     bCtx.beginPath(); bCtx.arc(x, y, r, 0, Math.PI*2); bCtx.fill();
+     ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.05})`;
+     ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+  }
+  const map = new THREE.CanvasTexture(cvs); const bump = new THREE.CanvasTexture(bumpCvs);
+  map.wrapS = map.wrapT = bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(4, 4); bump.repeat.set(4, 4); map.anisotropy = 16; bump.anisotropy = 16;
+  return { map, bump };
+};
+
+const createWoodTextures = () => {
+  const cvs = document.createElement('canvas'); const bumpCvs = document.createElement('canvas');
+  cvs.width = bumpCvs.width = 1024; cvs.height = bumpCvs.height = 1024;
+  const ctx = cvs.getContext('2d'); const bCtx = bumpCvs.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,1024,1024);
+  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,1024,1024);
+  for(let i=0; i<600; i++) {
+     ctx.beginPath(); bCtx.beginPath();
+     let startY = Math.random() * 1024; let endY = startY + (Math.random() - 0.5) * 100;
+     ctx.moveTo(0, startY); bCtx.moveTo(0, startY);
+     ctx.bezierCurveTo(340, startY + (Math.random()-0.5)*50, 680, endY + (Math.random()-0.5)*50, 1024, endY);
+     bCtx.bezierCurveTo(340, startY + (Math.random()-0.5)*50, 680, endY + (Math.random()-0.5)*50, 1024, endY);
+     let op = Math.random() * 0.15 + 0.05;
+     ctx.strokeStyle = `rgba(0,0,0,${op})`; ctx.lineWidth = Math.random() * 3 + 1; ctx.stroke();
+     bCtx.strokeStyle = `rgba(0,0,0,${op * 0.5})`; bCtx.lineWidth = ctx.lineWidth; bCtx.stroke();
+  }
+  const map = new THREE.CanvasTexture(cvs); const bump = new THREE.CanvasTexture(bumpCvs);
+  map.wrapS = map.wrapT = bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(1, 3); bump.repeat.set(1, 3); map.anisotropy = 16; bump.anisotropy = 16;
+  return { map, bump };
+};
+
+const createFeltBump = () => {
+  const cvs = document.createElement('canvas'); cvs.width = 512; cvs.height = 512; const ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#888888'; ctx.fillRect(0,0,512,512);
+  for(let i=0; i<150000; i++) {
+     ctx.fillStyle = Math.random()>0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+     ctx.fillRect(Math.random()*512, Math.random()*512, 1.5, 1.5);
+  }
+  const tex = new THREE.CanvasTexture(cvs);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(6, 6); tex.anisotropy = 16; return tex;
+};
+
+// ⚡ 4K 級別解析度 (1024x1024)
+const createPremiumMats = (sides) => {
+  const mats = [];
+  const SIZE = 1024;
+  const CENTER = SIZE / 2;
+  
+  for (let i = 1; i <= sides; i++) {
+    const cvs = document.createElement('canvas'); cvs.width = SIZE; cvs.height = SIZE; const ctx = cvs.getContext('2d');
+    const bumpCvs = document.createElement('canvas'); bumpCvs.width = SIZE; bumpCvs.height = SIZE; const bumpCtx = bumpCvs.getContext('2d');
+    
+    ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, 0, SIZE, SIZE); 
+    bumpCtx.fillStyle = '#000000'; bumpCtx.fillRect(0, 0, SIZE, SIZE); 
+    
+    const grad = bumpCtx.createRadialGradient(CENTER, CENTER, SIZE * 0.25, CENTER, CENTER, CENTER);
+    grad.addColorStop(0, '#888888'); grad.addColorStop(0.8, '#888888'); grad.addColorStop(1, '#000000');
+    bumpCtx.fillStyle = grad; bumpCtx.fillRect(0, 0, SIZE, SIZE);
+
+    ctx.fillStyle = i === sides ? '#ef4444' : '#1e293b'; 
+    bumpCtx.fillStyle = '#000000';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
+    bumpCtx.textAlign = 'center'; bumpCtx.textBaseline = 'middle';
+    
+    let fontSize = 400;
+    if (sides === 12) fontSize = 320; 
+    if (sides === 20) fontSize = 280;
+    if (i > 9) fontSize *= 0.85; 
+    
+    ctx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`; 
+    bumpCtx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`;
+    
+    const yOffset = CENTER; const text = i.toString();
+    ctx.fillText(text, CENTER, yOffset); 
+    bumpCtx.fillText(text, CENTER, yOffset);
+
+    // 專屬防呆底線
+    if (sides >= 12 && (i === 6 || i === 9)) {
+       const lineY = yOffset + fontSize * 0.45; 
+       const lineW = fontSize * 0.6; 
+       const lineH = fontSize * 0.1;
+       ctx.fillRect(CENTER - lineW/2, lineY, lineW, lineH); 
+       bumpCtx.fillRect(CENTER - lineW/2, lineY, lineW, lineH);
     }
-  }, [rollTrigger, api])
-  const prevIsRolling = useRef(isRolling)
-  useEffect(() => {
-    if (prevIsRolling.current && !isRolling && rollTrigger > 0) {
-      const quaternion = new THREE.Quaternion(quat.current[0], quat.current[1], quat.current[2], quat.current[3]); const upVector = new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion.invert())
-      let max = -Infinity; let faceIndex = 0;
-      const axes = [ new THREE.Vector3(1,0,0), new THREE.Vector3(-1,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,-1) ]
-      axes.forEach((ax, id) => { let dot = ax.dot(upVector); if (dot > max) { max = dot; faceIndex = id } })
-      onResult(index, faceIndex + 1)
+    
+    const tex = new THREE.CanvasTexture(cvs); 
+    tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
+    const bumpTex = new THREE.CanvasTexture(bumpCvs); 
+    bumpTex.anisotropy = 16; bumpTex.generateMipmaps = true; bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
+    
+    mats.push(new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: 0.04, roughness: 0.1, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.1, side: THREE.DoubleSide }));
+  }
+  return mats;
+};
+
+// ⚡ 終極 D6 貼圖引擎：加入立體凹陷陰影與極緻深藍色
+const createPremiumD6Mats = () => {
+  const mats = [];
+  const SIZE = 1024;
+  const CENTER = SIZE / 2;
+  
+  for (let i = 1; i <= 6; i++) {
+    const cvs = document.createElement('canvas'); cvs.width = SIZE; cvs.height = SIZE; const ctx = cvs.getContext('2d');
+    const bumpCvs = document.createElement('canvas'); bumpCvs.width = SIZE; bumpCvs.height = SIZE; const bumpCtx = bumpCvs.getContext('2d');
+    
+    // 骰面底色
+    ctx.fillStyle = '#fcfcfc'; ctx.fillRect(0, 0, SIZE, SIZE); 
+    bumpCtx.fillStyle = '#888888'; bumpCtx.fillRect(0, 0, SIZE, SIZE); 
+    
+    // 微弱的放射漸層讓表面有自然的凸起感
+    const grad = bumpCtx.createRadialGradient(CENTER, CENTER, SIZE * 0.3, CENTER, CENTER, SIZE * 0.55);
+    grad.addColorStop(0, '#aaaaaa'); grad.addColorStop(1, '#888888');
+    bumpCtx.fillStyle = grad; bumpCtx.fillRect(0, 0, SIZE, SIZE);
+    
+    // 畫具有凹陷立體感與深色質感的點數
+    const drawDot = (x, y) => { 
+        ctx.fillStyle = '#2c3e50'; // 深灰藍色
+        ctx.beginPath(); ctx.arc(x, y, 65, 0, Math.PI*2); ctx.fill(); 
+        
+        // 強烈的陰影邊緣營造凹陷感
+        const dotBumpGrad = bumpCtx.createRadialGradient(x, y, 0, x, y, 75);
+        dotBumpGrad.addColorStop(0, '#000000'); // 中心最深
+        dotBumpGrad.addColorStop(0.7, '#555555'); // 邊緣漸層
+        dotBumpGrad.addColorStop(1, 'rgba(136, 136, 136, 0)'); // 完美融合表面
+        bumpCtx.fillStyle = dotBumpGrad;
+        bumpCtx.beginPath(); bumpCtx.arc(x, y, 75, 0, Math.PI*2); bumpCtx.fill(); 
     }
-    prevIsRolling.current = isRolling
-  }, [isRolling, rollTrigger, index, onResult])
-  return ( <mesh ref={ref} material={getD6Materials()}><boxGeometry args={[1.2, 1.2, 1.2]} /></mesh> )
+    
+    const c = CENTER, o = 230; 
+    if ([1,3,5].includes(i)) drawDot(c, c);
+    if ([2,3,4,5,6].includes(i)) { drawDot(c-o, c-o); drawDot(c+o, c+o); }
+    if ([4,5,6].includes(i)) { drawDot(c-o, c+o); drawDot(c+o, c-o); }
+    if (i === 6) { drawDot(c-o, c); drawDot(c+o, c); }
+    
+    const tex = new THREE.CanvasTexture(cvs); 
+    tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
+    const bumpTex = new THREE.CanvasTexture(bumpCvs); 
+    bumpTex.anisotropy = 16; bumpTex.generateMipmaps = true; bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
+    
+    mats.push(new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: 0.045, roughness: 0.12, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.05 }));
+  }
+  
+  // 對應 BoxGeometry 預設面順序
+  return [mats[0], mats[5], mats[1], mats[4], mats[2], mats[3]]; 
+};
+
+// ⚡ 防彈級幾何智能重組引擎 (確保物理圓角與 6 面獨立貼圖完美融合，絕不白屏)
+const createGroupedRoundedBox = (size, radius, segments) => {
+  try {
+    const geom = new RoundedBoxGeometry(size, size, size, segments, radius);
+    
+    // 確保擁有 Index 緩衝區防崩潰
+    if (!geom.index) {
+      const count = geom.attributes.position.count;
+      const indices = new Uint16Array(count);
+      for(let i=0; i<count; i++) indices[i] = i;
+      geom.setIndex(new THREE.BufferAttribute(indices, 1));
+    }
+    
+    geom.clearGroups();
+    const pos = geom.attributes.position;
+    const index = geom.index;
+    const groups = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[] };
+    
+    // 精準面相掃描
+    for(let i=0; i < index.count; i+=3) {
+        const a = index.getX(i); const b = index.getX(i+1); const c = index.getX(i+2);
+        const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c))/3;
+        const cy = (pos.getY(a) + pos.getY(b) + pos.getY(c))/3;
+        const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c))/3;
+        const absX = Math.abs(cx); const absY = Math.abs(cy); const absZ = Math.abs(cz);
+        
+        let faceIndex = 0;
+        if (absX >= absY && absX >= absZ) faceIndex = cx > 0 ? 0 : 1;
+        else if (absY >= absX && absY >= absZ) faceIndex = cy > 0 ? 2 : 3;
+        else faceIndex = cz > 0 ? 4 : 5;
+        
+        groups[faceIndex].push(a, b, c);
+    }
+    
+    const newIndices = [];
+    let start = 0;
+    for(let i=0; i<6; i++) {
+        const g = groups[i];
+        newIndices.push(...g);
+        geom.addGroup(start, g.length, i);
+        start += g.length;
+    }
+    
+    geom.setIndex(new THREE.BufferAttribute(new Uint16Array(newIndices), 1));
+    geom.computeVertexNormals();
+    return geom;
+  } catch (err) {
+    console.error("幾何體生成安全降級:", err);
+    return new THREE.BoxGeometry(size, size, size);
+  }
 }
 
-function DiePoly({ sides, index, rollTrigger, isRolling, onResult }) {
-  const [ref, api] = useSphere(() => ({ mass: 1, args: [0.8], position: [(Math.random()-0.5)*2, 3+Math.random()*3, (Math.random()-0.5)*2] }))
-  useEffect(() => {
-    if (rollTrigger > 0) {
-      api.position.set((Math.random()-0.5)*3, 4 + Math.random()*2, (Math.random()-0.5)*3); api.velocity.set((Math.random()-0.5)*8, 8 + Math.random()*6, (Math.random()-0.5)*8); api.angularVelocity.set(Math.random()*15, Math.random()*15, Math.random()*15)
-    }
-  }, [rollTrigger, api])
-  const prevIsRolling = useRef(isRolling)
-  useEffect(() => {
-    if (prevIsRolling.current && !isRolling && rollTrigger > 0) onResult(index, Math.floor(Math.random() * sides) + 1)
-    prevIsRolling.current = isRolling
-  }, [isRolling, rollTrigger, index, sides, onResult])
-  let geometry = <sphereGeometry args={[0.8, 32, 32]} />; if (sides === 8) geometry = <octahedronGeometry args={[1]} />; else if (sides === 10) geometry = <dodecahedronGeometry args={[0.9]} />; else if (sides === 20) geometry = <icosahedronGeometry args={[1.1]} />
-  return ( <mesh ref={ref}>{geometry}<meshStandardMaterial color="#f8fafc" roughness={0.18} metalness={0.1} /></mesh> )
-}
-function Die3D({ sides, index, rollTrigger, isRolling, onResult }) {
-  if (sides === 6) return <DieBox index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
-  return <DiePoly sides={sides} index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
-}
+const buildTRPGGeometry = (type, radius) => {
+  let geom;
+  if (type === 8) geom = new THREE.OctahedronGeometry(radius).toNonIndexed();
+  if (type === 12) geom = new THREE.DodecahedronGeometry(radius).toNonIndexed();
+  if (type === 20) geom = new THREE.IcosahedronGeometry(radius).toNonIndexed();
+  const pos = geom.attributes.position;
+  const uv = new Float32Array(pos.count * 2);
+  geom.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  const totalTris = pos.count / 3; const trisPerFace = totalTris / type; 
+  geom.clearGroups();
 
+  for (let f = 0; f < type; f++) {
+    geom.addGroup(f * trisPerFace * 3, trisPerFace * 3, f);
+    const centroid = new THREE.Vector3();
+    for (let t = 0; t < trisPerFace * 3; t++) centroid.add(new THREE.Vector3().fromBufferAttribute(pos, f * trisPerFace * 3 + t));
+    centroid.divideScalar(trisPerFace * 3);
+    
+    const normal = centroid.clone().normalize();
+    const vFirst = new THREE.Vector3().fromBufferAttribute(pos, f * trisPerFace * 3);
+    let upLocal = new THREE.Vector3().subVectors(vFirst, centroid).normalize();
+    let rightLocal = new THREE.Vector3().crossVectors(upLocal, normal).normalize();
+    upLocal.crossVectors(normal, rightLocal).normalize();
+
+    const projected = [];
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (let i = 0; i < trisPerFace * 3; i++) {
+      const v = new THREE.Vector3().fromBufferAttribute(pos, f * trisPerFace * 3 + i);
+      const local = v.clone().sub(centroid);
+      const x = local.dot(rightLocal); const y = local.dot(upLocal);
+      projected.push({x, y});
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    const scale = Math.max(maxX - minX, maxY - minY) * 1.35; 
+    
+    for (let i = 0; i < trisPerFace * 3; i++) {
+      uv[(f * trisPerFace * 3 + i) * 2] = 0.5 + (projected[i].x / scale);
+      uv[(f * trisPerFace * 3 + i) * 2 + 1] = 0.5 + (projected[i].y / scale);
+    }
+    geom.groups[f].userData = { normal: normal.clone(), upLocal: upLocal.clone() };
+  }
+  return geom;
+};
+
+const alignFaceToUp = (mesh, resultNum) => {
+  const group = mesh.geometry.groups.find(g => g.materialIndex === (resultNum - 1));
+  if (!group || !group.userData) return;
+  const targetNormal = new THREE.Vector3(0, 1, 0);
+  const q1 = new THREE.Quaternion().setFromUnitVectors(group.userData.normal.clone(), targetNormal);
+  const faceUpWorld = group.userData.upLocal.clone().applyQuaternion(q1);
+  faceUpWorld.y = 0; faceUpWorld.normalize();
+  const targetFaceUp = new THREE.Vector3(0, 0, -1); 
+  const q2 = new THREE.Quaternion().setFromUnitVectors(faceUpWorld, targetFaceUp);
+  mesh.quaternion.copy(q2.multiply(q1));
+};
+
+const themeStyles = {
+  default:   { bg: '#f8fafc', cup: 0x080808, cupR: 0.8, map: 'leatherTex', bump: 'leatherTex', bumpScale: 0.005, tray: 0x080808, felt: 0x0a8f60, metalness: 0.05, clearcoat: 0.05 }, 
+  dark:      { bg: '#0b0f19', cup: 0x1e293b, cupR: 0.7, map: 'leatherTex', bump: 'leatherTex', bumpScale: 0.003, tray: 0x0f172a, felt: 0x6366f1, metalness: 0.1,  clearcoat: 0.0 }, 
+  forest:    { bg: '#f4efe6', cup: 0x3d1c04, cupR: 0.4, map: 'woodTex',    bump: 'woodTex',    bumpScale: 0.015, tray: 0x3d1c04, felt: 0x2d5a27, metalness: 0.05, clearcoat: 0.3 }, 
+  medieval:  { bg: '#1c1917', cup: 0x2d1a11, cupR: 0.9, map: 'leatherTex', bump: 'leatherTex', bumpScale: 0.008, tray: 0x2d1a11, felt: 0x8b1c1c, metalness: 0.0,  clearcoat: 0.0 }, 
+  cyberpunk: { bg: '#05050f', cup: 0x1a1a24, cupR: 0.2, map: null,         bump: null,         bumpScale: 0.0,   tray: 0x0a0a12, felt: 0xff007f, metalness: 0.8,  clearcoat: 0.8 }  
+};
+
+const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
+  const mountRef = useRef(null);
+  const sceneRef = useRef(null);
+  const state = useRef({ count, sides, theme, isAnimating: false, animProgress: 0, finalTotal: 0, finalDetails: [], hasCompleted: true, hasUpdatedDice: false, hasFadedSound: false });
+  const onRollCompleteRef = useRef(onRollComplete);
+
+  useEffect(() => { onRollCompleteRef.current = onRollComplete; }, [onRollComplete]);
+
+  const applyLayout = useCallback((c, s) => {
+    if (!sceneRef.current) return;
+    const { activeDiceGroup, diceGroups, res } = sceneRef.current;
+    
+    // 安全卸載舊幾何體，防記憶體洩漏
+    diceGroups.forEach(g => { activeDiceGroup.remove(g.pivot); if (g.mesh.geometry) g.mesh.geometry.dispose(); });
+    sceneRef.current.diceGroups = [];
+
+    const maxTrayRadius = 1.45; let sizeMult = 1.0;
+    if (s === 20 || s === 12) sizeMult = 1.2; else if (s === 8) sizeMult = 1.1;
+
+    const dieSize = c === 1 ? 0.9 * sizeMult : Math.max(0.15, Math.min(0.7, (maxTrayRadius * 1.15) / Math.sqrt(c))) * sizeMult;
+    const yOffset = 0.11 + dieSize / 2; 
+    const minDistance = s === 6 ? dieSize * 1.45 : dieSize * 1.2; 
+    let layoutPositions = []; let useFallback = false;
+
+    for (let i = 0; i < c; i++) {
+      let placed = false;
+      for (let attempt = 0; attempt < 2000; attempt++) {
+        const r = Math.sqrt(Math.random()) * (maxTrayRadius - dieSize / 2);
+        const theta = Math.random() * Math.PI * 2;
+        const px = Math.cos(theta) * r; const pz = Math.sin(theta) * r;
+        let overlap = false;
+        for (let j = 0; j < layoutPositions.length; j++) {
+          const dx = px - layoutPositions[j].x; const dz = pz - layoutPositions[j].z;
+          if (Math.sqrt(dx * dx + dz * dz) < minDistance) { overlap = true; break; }
+        }
+        if (!overlap) { layoutPositions.push({ x: px, z: pz }); placed = true; break; }
+      }
+      if (!placed) { useFallback = true; break; }
+    }
+
+    if (useFallback) {
+       layoutPositions = [];
+       const globalAngleOffset = Math.random() * Math.PI * 2; 
+       for (let i = 0; i < c; i++) {
+          let finalX = 0, finalZ = 0;
+          if (c > 1) {
+            const r = (maxTrayRadius - dieSize / 2) * Math.sqrt((i + 0.5) / c);
+            const theta = i * 2.39996323 + globalAngleOffset;
+            finalX = Math.cos(theta) * r; finalZ = Math.sin(theta) * r;
+          }
+          layoutPositions.push({ x: finalX, z: finalZ });
+       }
+    }
+
+    for (let i = 0; i < c; i++) {
+      const pivotGroup = new THREE.Group();
+      pivotGroup.position.set(layoutPositions[i].x, yOffset, layoutPositions[i].z);
+
+      let geometry, mats;
+      if (s === 6) {
+        // ⚡ 套用全新物理圓角重組引擎
+        geometry = createGroupedRoundedBox(dieSize, dieSize * 0.18, 5); 
+        mats = res.mats[6];
+      } else {
+        geometry = buildTRPGGeometry(s, dieSize * 0.85); 
+        mats = res.mats[s];
+      }
+
+      const dieMesh = new THREE.Mesh(geometry, mats);
+      dieMesh.castShadow = true; dieMesh.receiveShadow = true; 
+      pivotGroup.add(dieMesh); activeDiceGroup.add(pivotGroup); sceneRef.current.diceGroups.push({ pivot: pivotGroup, mesh: dieMesh });
+    }
+  }, []);
+
+  const applyTheme = useCallback((themeName) => {
+    if (!sceneRef.current) return;
+    const { scene, cupMat, trayBorderMat, trayFeltMat, res } = sceneRef.current;
+    const style = themeStyles[themeName] || themeStyles.default;
+
+    scene.fog.color.set(style.bg);
+    cupMat.color.setHex(style.cup); cupMat.roughness = style.cupR; 
+    cupMat.map = style.map ? res[style.map].map : null; cupMat.bumpMap = style.bump ? res[style.bump].bump : null; cupMat.bumpScale = style.bumpScale;
+    cupMat.metalness = style.metalness; cupMat.clearcoat = style.clearcoat; cupMat.needsUpdate = true;
+
+    trayBorderMat.color.setHex(style.tray); trayBorderMat.roughness = style.cupR;
+    trayBorderMat.map = style.map ? res[style.map].map : null; trayBorderMat.bumpMap = style.bump ? res[style.bump].bump : null; trayBorderMat.bumpScale = style.bumpScale;
+    trayBorderMat.metalness = style.metalness; trayBorderMat.clearcoat = style.clearcoat; trayBorderMat.needsUpdate = true;
+
+    trayFeltMat.color.setHex(style.felt); trayFeltMat.needsUpdate = true;
+  }, []);
+
+  useEffect(() => {
+    state.current.count = count; state.current.sides = sides;
+    if (!state.current.isAnimating && sceneRef.current) {
+      applyLayout(count, sides);
+      sceneRef.current.renderer.render(sceneRef.current.scene, sceneRef.current.camera);
+    }
+  }, [count, sides, applyLayout]);
+
+  useEffect(() => {
+    if (sceneRef.current) {
+      applyTheme(theme);
+      if (!state.current.isAnimating) sceneRef.current.renderer.render(sceneRef.current.scene, sceneRef.current.camera);
+    }
+  }, [theme, applyTheme]);
+
+  useEffect(() => {
+    if (rollTrigger > 0 && sceneRef.current && !state.current.isAnimating) {
+      state.current.isAnimating = true; state.current.animProgress = 0; state.current.hasUpdatedDice = false; state.current.hasCompleted = false; state.current.hasFadedSound = false;
+      const { cup, masterGroup } = sceneRef.current;
+      cup.rotation.set(0, 0, 0); cup.position.set(0, 8, 0);
+      masterGroup.rotation.set(0, 0, 0); masterGroup.position.set(0, 0, 0);
+    }
+  }, [rollTrigger]);
+
+  useEffect(() => {
+    const currentMount = mountRef.current;
+    if (!currentMount) return;
+    
+    // ⚡ 強制清空，防呆防護，絕對沒有第二個重疊的畫布
+    currentMount.innerHTML = ''; 
+
+    const res = {
+      leatherTex: createLeatherTextures(),
+      woodTex: createWoodTextures(),
+      feltBump: createFeltBump(),
+      mats: { 6: createPremiumD6Mats(), 8: createPremiumMats(8), 12: createPremiumMats(12), 20: createPremiumMats(20) }
+    };
+
+    const scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0xf8fafc, 0.015);
+    
+    const width = currentMount.clientWidth || 300;
+    const height = currentMount.clientHeight || 280;
+    
+    const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+    camera.position.set(0, 7.5, 11.5); camera.lookAt(0, -0.2, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height, false); 
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+    
+    currentMount.appendChild(renderer.domElement);
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 12, 6); dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048; dirLight.shadow.bias = -0.0001; 
+    scene.add(dirLight);
+
+    const pLight1 = new THREE.PointLight(0xffffff, 0.5, 20); pLight1.position.set(3, 5, 3); scene.add(pLight1);
+    const pLight2 = new THREE.PointLight(0xffffff, 0.3, 20); pLight2.position.set(-3, 4, -3); scene.add(pLight2);
+
+    const masterGroup = new THREE.Group(); scene.add(masterGroup);
+    const trayGroup = new THREE.Group(); masterGroup.add(trayGroup);
+    
+    const trayPts = [ new THREE.Vector2(0, 0.0), new THREE.Vector2(3.0, 0.0), new THREE.Vector2(3.3, 0.3), new THREE.Vector2(3.3, 0.6), new THREE.Vector2(2.9, 0.6), new THREE.Vector2(2.7, 0.1), new THREE.Vector2(0, 0.1) ];
+    const trayBorderMat = new THREE.MeshPhysicalMaterial({ color: 0x080808, roughness: 0.8, metalness: 0.05, map: res.leatherTex.map, bumpMap: res.leatherTex.bump, bumpScale: 0.005 });
+    // ⚡ 修正：確保是 THREE.Mesh (上一個白屏 Bug 的禍首)
+    const trayBorder = new THREE.Mesh(new THREE.LatheGeometry(trayPts, 128), trayBorderMat); trayBorder.receiveShadow = true; trayBorder.castShadow = true; trayGroup.add(trayBorder);
+
+    const trayFeltMat = new THREE.MeshPhysicalMaterial({ color: 0x0a8f60, roughness: 0.95, metalness: 0.0, bumpMap: res.feltBump, bumpScale: 0.01 });
+    const trayFelt = new THREE.Mesh(new THREE.CylinderGeometry(2.65, 2.65, 0.01, 128), trayFeltMat); trayFelt.position.y = 0.11; trayFelt.receiveShadow = true; trayGroup.add(trayFelt);
+
+    const cupPts = [ new THREE.Vector2(0, 3.2), new THREE.Vector2(1.0, 3.2), new THREE.Vector2(1.6, 2.0), new THREE.Vector2(2.1, 0.4), new THREE.Vector2(2.55, 0.0), new THREE.Vector2(2.68, 0.0), new THREE.Vector2(2.4, 0.4), new THREE.Vector2(1.8, 2.0), new THREE.Vector2(1.1, 3.4), new THREE.Vector2(0.5, 3.5), new THREE.Vector2(1.0, 3.7), new THREE.Vector2(0.9, 4.0), new THREE.Vector2(0, 4.1) ];
+    const cupMat = new THREE.MeshPhysicalMaterial({ color: 0x080808, roughness: 0.8, metalness: 0.05, side: THREE.DoubleSide, map: res.leatherTex.map, bumpMap: res.leatherTex.bump, bumpScale: 0.005 });
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(cupPts, 128), cupMat); cup.position.y = 8; cup.castShadow = true; cup.receiveShadow = true; masterGroup.add(cup);
+
+    const activeDiceGroup = new THREE.Group(); masterGroup.add(activeDiceGroup);
+
+    sceneRef.current = { scene, camera, renderer, cup, masterGroup, cupMat, trayBorderMat, trayFeltMat, activeDiceGroup, diceGroups: [], res };
+
+    const updateSize = () => {
+      if (!currentMount || !renderer || !camera) return;
+      const { clientWidth, clientHeight } = currentMount;
+      if (clientWidth === 0 || clientHeight === 0) return;
+      renderer.setSize(clientWidth, clientHeight, false);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      camera.aspect = clientWidth / clientHeight;
+      camera.updateProjectionMatrix();
+      if(!state.current.isAnimating) renderer.render(scene, camera);
+    };
+    const observer = new ResizeObserver(updateSize); observer.observe(currentMount);
+
+    applyLayout(state.current.count, state.current.sides);
+    applyTheme(state.current.theme);
+
+    let animationFrameId; const clock = new THREE.Clock();
+    const renderLoop = () => {
+      animationFrameId = requestAnimationFrame(renderLoop);
+      const delta = Math.min(clock.getDelta(), 0.1); 
+
+      if (state.current.isAnimating) {
+        state.current.animProgress += delta;
+        const t = state.current.animProgress;
+        const { cup, masterGroup } = sceneRef.current;
+
+        if (t <= 0.3) {
+          cup.position.y = THREE.MathUtils.lerp(8, 0.1, Math.pow(t / 0.3, 3));
+        } else if (t > 0.3 && t <= 1.3) {
+          if (!state.current.hasUpdatedDice) {
+            applyLayout(state.current.count, state.current.sides);
+            let finalTotal = 0; let finalDetails = [];
+            sceneRef.current.diceGroups.forEach(g => {
+              const result = Math.floor(Math.random() * state.current.sides) + 1;
+              finalTotal += result; finalDetails.push(result);
+              if (state.current.sides === 6) {
+                switch(result) {
+                  case 1: g.mesh.rotation.set(0, 0, Math.PI/2); break;   
+                  case 6: g.mesh.rotation.set(0, 0, -Math.PI/2); break;  
+                  case 2: g.mesh.rotation.set(0, 0, 0); break;           
+                  case 5: g.mesh.rotation.set(Math.PI, 0, 0); break;     
+                  case 3: g.mesh.rotation.set(-Math.PI/2, 0, 0); break;  
+                  case 4: g.mesh.rotation.set(Math.PI/2, 0, 0); break;   
+                }
+              } else alignFaceToUp(g.mesh, result);
+              g.pivot.rotation.set(0, (Math.random() - 0.5) * Math.PI, 0);
+            });
+            cup.position.y = 0.1; 
+            state.current.hasUpdatedDice = true;
+            state.current.finalTotal = finalTotal; state.current.finalDetails = finalDetails;
+          }
+          const shakeT = (t - 0.3) / 1.0; 
+          masterGroup.position.y = Math.abs(Math.sin(shakeT * Math.PI * 3)) * 1.5;
+          masterGroup.rotation.x = Math.sin(shakeT * Math.PI * 6) * 0.05;
+          masterGroup.rotation.z = Math.cos(shakeT * Math.PI * 6) * 0.03;
+        } else if (t > 1.3 && t <= 1.6) {
+          masterGroup.position.y = 0; masterGroup.rotation.set(0,0,0);
+          if (!state.current.hasFadedSound) { fadeOutShakeSound(); state.current.hasFadedSound = true; }
+        } else if (t > 1.6 && t <= 2.2) {
+          const easeOut = 1 - Math.pow(1 - (t - 1.6)/0.6, 3);
+          cup.position.y = THREE.MathUtils.lerp(0.1, 8, easeOut);
+          cup.rotation.x = THREE.MathUtils.lerp(0, -0.2, easeOut); 
+        } else if (t > 2.2) {
+          state.current.isAnimating = false;
+          if (!state.current.hasCompleted) {
+             state.current.hasCompleted = true;
+             onRollCompleteRef.current(state.current.finalTotal, state.current.finalDetails);
+          }
+        }
+      }
+      renderer.render(sceneRef.current.scene, sceneRef.current.camera);
+    };
+    renderLoop();
+
+    return () => {
+      observer.disconnect(); cancelAnimationFrame(animationFrameId);
+      renderer.dispose(); 
+      if (currentMount && currentMount.contains(renderer.domElement)) {
+          currentMount.removeChild(renderer.domElement);
+      }
+      // ⚡ 清空內部，保證嚴格模式不留幽靈節點
+      currentMount.innerHTML = ''; 
+    };
+  }, [applyLayout, applyTheme]); 
+
+  return <div ref={mountRef} style={{ width: '100%', height: '100%', outline: 'none', overflow: 'hidden' }} />;
+};
+
+/* ========================================================================= */
+/* 📦 3D 紙箱 (使用 React Three Fiber) */
+/* ========================================================================= */
 const ThickBoard = ({ w, h, d, faceMat, edgeMat, position, rotation, children }) => {
   const materials = useMemo(() => {
     const mats = [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat];
@@ -216,9 +726,6 @@ function RealisticMysteryBox({ game, onComplete }) {
   )
 }
 
-/* ========================================================================= */
-/* 🌟 輔助函數：計算長標題的字體大小 */
-/* ========================================================================= */
 const getDynamicTitleSize = (name) => {
   if (!name) return '1.7rem'; const len = name.length;
   if (len >= 16) return '1.15rem'; if (len >= 12) return '1.35rem'; if (len >= 8) return '1.5rem';
@@ -261,11 +768,14 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(60)
   const [timerRunning, setTimerRunning] = useState(false)
   const [diceToolTab, setDiceToolTab] = useState('dice')
+  
+  // 🌟 3D Dice States
   const [diceCount, setDiceCount] = useState(1) 
   const [diceSides, setDiceSides] = useState(6)
   const [diceResults, setDiceResults] = useState([6]) 
   const [isRollingDice, setIsRollingDice] = useState(false)
   const [rollTrigger, setRollTrigger] = useState(0)
+  
   const [coinSide, setCoinSide] = useState('👑 正面')
   const [isFlippingCoin, setIsFlippingCoin] = useState(false)
   const [coinDegreeX, setCoinDegreeX] = useState(0) 
@@ -333,8 +843,7 @@ export default function App() {
   function playSound(type) {
     if (!soundEnabled) return; try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime
-      if (type === 'dice') { osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.15); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); osc.start(now); osc.stop(now + 0.15) } 
-      else if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2) } 
+      if (type === 'coin') { osc.type = 'sine'; osc.frequency.setValueAtTime(900, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2); osc.start(now); osc.stop(now + 0.2) } 
       else if (type === 'victory') { osc.type = 'triangle'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.12); osc.frequency.setValueAtTime(783.99, now + 0.24); osc.frequency.setValueAtTime(1046.50, now + 0.36); gain.gain.setValueAtTime(0.25, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); osc.start(now); osc.stop(now + 0.6) } 
       else if (type === 'alarm') { osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.exponentialRampToValueAtTime(440, now + 0.6); gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6); osc.start(now); osc.stop(now + 0.6) }
     } catch (e) {}
@@ -383,8 +892,19 @@ export default function App() {
   function setTimerPreset(seconds) { triggerHaptic('light'); setTimerRunning(false); setInitialTimerDuration(seconds); setTimeLeft(seconds) }
   function toggleTimer() { triggerHaptic('medium'); if (timeLeft === 0) setTimeLeft(initialTimerDuration); setTimerRunning(!timerRunning) }
   function resetTimer() { triggerHaptic('light'); setTimerRunning(false); setTimeLeft(initialTimerDuration) }
-  function executeCustomRoll() { if (diceCount <= 0 || diceSides <= 1) return alert('數量必須大於0，面數必須大於1'); setIsRollingDice(true); setDiceResults(Array(diceCount).fill('?')); setRollTrigger(prev => prev + 1); playSound('dice'); triggerHaptic('medium'); setTimeout(() => { setIsRollingDice(false); triggerHaptic('heavy') }, 1500) }
-  const handleDiceResult = useCallback((index, val) => { setDiceResults(prev => { const next = [...prev]; next[index] = val; return next }) }, [])
+  
+  // 🌟 3D Dice Logic
+  const handlePrevSide = () => { const idx = AVAILABLE_DICE_SIDES.indexOf(diceSides); if (idx > 0) setDiceSides(AVAILABLE_DICE_SIDES[idx - 1]); }
+  const handleNextSide = () => { const idx = AVAILABLE_DICE_SIDES.indexOf(diceSides); if (idx < AVAILABLE_DICE_SIDES.length - 1) setDiceSides(AVAILABLE_DICE_SIDES[idx + 1]); }
+  
+  function executeCustomRoll() { 
+    if (diceCount <= 0 || diceSides < 6) return alert('數量必須大於0，面數必須大於1'); 
+    setIsRollingDice(true); setDiceResults(Array(diceCount).fill('?')); setRollTrigger(prev => prev + 1); 
+    
+    if (soundEnabled) playShakeSound();
+    triggerHaptic('medium'); 
+  }
+  
   function flipCoin() { if (isFlippingCoin) return; setIsFlippingCoin(true); playSound('coin'); triggerHaptic('medium'); const isHead = Math.random() < 0.5; const targetDegree = coinDegreeX + 1800 + (isHead ? 0 : 180) - (coinDegreeX % 360); setCoinDegreeX(targetDegree); setTimeout(() => { setCoinSide(isHead ? '👑 正面（金）' : '🪙 反面（銀）'); setIsFlippingCoin(false); triggerHaptic('light') }, 1500) }
   function handleSplitTeams(numTeams = targetTeamCount) { triggerHaptic('medium'); if (sharedPlayers.length < numTeams) return alert(`至少需要 ${numTeams} 位玩家！`); setIsShufflingTeams(true); const shuffled = [...sharedPlayers].sort(() => Math.random() - 0.5); const buckets = Array.from({ length: numTeams }, () => []); shuffled.forEach((player, idx) => buckets[idx % numTeams].push(player)); setTimeout(() => { setAssignedTeams(buckets); setIsShufflingTeams(false); playSound('victory'); triggerHaptic('heavy') }, 280) }
 
@@ -418,7 +938,6 @@ export default function App() {
   const currentBestLabel = useMemo(() => { const f = BEST_PLAYER_OPTIONS.find(o => o.key === bestPlayerFilter); return f ? f.label : '不限' }, [bestPlayerFilter])
   const currentTimeLabel = useMemo(() => { const f = TIME_OPTIONS.find(o => o.key === maxTimeFilter); return f ? f.label : '不限' }, [maxTimeFilter])
   const currentSortLabel = useMemo(() => { const f = SORT_OPTIONS.find(o => o.key === sortBy); return f ? f.label : '⭐ 評分最高' }, [sortBy])
-
 
   // ===================== UI Component Renders =====================
 
@@ -465,7 +984,7 @@ export default function App() {
           <div className="settings-row"><span>匯出桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button></div>
           {isAdmin && (<><div className="settings-row"><span>匯入桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button></div><div className="settings-row"><span>新增桌遊資料庫</span><button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button></div></>)}
         </div>
-        <div className="mobile-version-badge">✨ Version 1.0.5</div>
+        <div className="mobile-version-badge">✨ Version 1.2.0</div>
       </div>
     </div>
   )
@@ -526,11 +1045,62 @@ export default function App() {
           </div>
         )}
 
+        {/* 🌟 3D 原生骰子控制區 */}
         {widgetTab === 'dice' && (
           <div>
             <div className="dice-sub-tabs"><button type="button" onClick={() => setDiceToolTab('dice')} className={`dice-sub-tab-btn ${diceToolTab === 'dice' ? 'active' : ''}`}>🎲 物理滾骰</button><button type="button" onClick={() => setDiceToolTab('coin')} className={`dice-sub-tab-btn ${diceToolTab === 'coin' ? 'active' : ''}`}>🪙 3D 拋硬幣</button></div>
             {diceToolTab === 'dice' ? (
-              <><div className="dice-custom-panel"><div className="dice-qty-row"><span>數量 (Max 20)</span><div className="dice-qty-control"><button type="button" className="dice-qty-btn" onClick={() => setDiceCount(Math.max(1, diceCount - 1))} disabled={isRollingDice}>-</button><input type="number" className="dice-qty-val-input" value={diceCount} min="1" max="20" onChange={(e) => setDiceCount(parseInt(e.target.value) || 1)} disabled={isRollingDice} /><button type="button" className="dice-qty-btn" onClick={() => setDiceCount(Math.min(20, diceCount + 1))} disabled={isRollingDice}>+</button></div></div><div className="dice-qty-row"><span>面數 (Max 100)</span><div className="dice-qty-control"><button type="button" className="dice-qty-btn" onClick={() => setDiceSides(Math.max(2, diceSides - 1))} disabled={isRollingDice}>-</button><input type="number" className="dice-qty-val-input" value={diceSides} min="2" max="100" onChange={(e) => setDiceSides(parseInt(e.target.value) || 6)} disabled={isRollingDice} /><button type="button" className="dice-qty-btn" onClick={() => setDiceSides(Math.min(100, diceSides + 1))} disabled={isRollingDice}>+</button></div></div></div><div className="dice-stage-box"><div className="dice-3d-canvas-container"><Canvas camera={{ position: [0, 8, 5], fov: 45 }}><ambientLight intensity={0.9} /><directionalLight position={[10, 20, 10]} intensity={1.5} /><Environment preset="city" /><Physics gravity={[0, -30, 0]}><PhysicsFloor /><PhysicsBorders />{Array.from({ length: diceCount }).map((_, i) => (<Die3D key={`${rollTrigger}-${i}`} sides={diceSides} index={i} rollTrigger={rollTrigger} isRolling={isRollingDice} onResult={handleDiceResult} />))}</Physics></Canvas></div><div className={`dice-results-overlay ${isRollingDice ? 'rolling' : ''}`}>{!isRollingDice && rollTrigger > 0 && (<><div className="dice-results-grid">{diceResults.map((num, i) => (<div key={i} className="modern-die-2d">{num === '?' ? '' : num}</div>))}</div>{diceCount > 1 && !diceResults.includes('?') && (<div className="dice-sum-badge">總和：{diceResults.reduce((a, b) => a + b, 0)}</div>)}</>)}</div></div><button type="button" onClick={executeCustomRoll} disabled={isRollingDice} className="dice-roll-action-btn">{isRollingDice ? '投擲中...' : '🎲 投擲'}</button></>
+              <>
+                <div className="dice-custom-panel">
+                  <div className="dice-qty-row">
+                    <span>數量 (Max 20)</span>
+                    <div className="dice-qty-control">
+                      <button type="button" className="dice-qty-btn" onClick={() => setDiceCount(Math.max(1, diceCount - 1))} disabled={isRollingDice}>-</button>
+                      <input type="number" className="dice-qty-val-input" value={diceCount} min="1" max="20" onChange={(e) => setDiceCount(parseInt(e.target.value) || 1)} disabled={isRollingDice} />
+                      <button type="button" className="dice-qty-btn" onClick={() => setDiceCount(Math.min(20, diceCount + 1))} disabled={isRollingDice}>+</button>
+                    </div>
+                  </div>
+                  <div className="dice-qty-row">
+                    <span>面數 (專屬正多面體)</span>
+                    <div className="dice-qty-control">
+                      <button type="button" className="dice-qty-btn" onClick={handlePrevSide} disabled={isRollingDice}>-</button>
+                      <div className="dice-qty-val-input" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', background: 'transparent' }}>
+                        D{diceSides}
+                      </div>
+                      <button type="button" className="dice-qty-btn" onClick={handleNextSide} disabled={isRollingDice}>+</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="dice-stage-box">
+                  <div className="dice-3d-canvas-container">
+                    <RawThreeDice 
+                      count={diceCount} 
+                      sides={diceSides} 
+                      theme={theme} 
+                      rollTrigger={rollTrigger} 
+                      onRollComplete={(total, details) => {
+                        setIsRollingDice(false);
+                        setDiceResults(details);
+                      }}
+                    />
+                  </div>
+                  <div className={`dice-results-overlay ${isRollingDice ? 'rolling' : ''}`}>
+                    {!isRollingDice && rollTrigger > 0 && (
+                      <>
+                        <div className="dice-results-grid">
+                          {diceResults.map((num, i) => (<div key={i} className="modern-die-2d">{num === '?' ? '' : num}</div>))}
+                        </div>
+                        {diceCount > 1 && !diceResults.includes('?') && (
+                          <div className="dice-sum-badge">總和：{diceResults.reduce((a, b) => a + b, 0)}</div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <button type="button" onClick={executeCustomRoll} disabled={isRollingDice} className="dice-roll-action-btn">{isRollingDice ? '投擲中...' : '🎲 投擲'}</button>
+              </>
             ) : (
               <><div className="coin-toss-stage" onClick={flipCoin} title="點擊拋擲硬幣"><div className={`coin-jump-box ${isFlippingCoin ? 'jumping' : ''}`}><div className="coin-spin-box" style={{ transform: `rotateX(${coinDegreeX}deg)` }}><div className="coin-face coin-front">👑</div><div className="coin-face coin-back">1</div></div></div><div className={`coin-shadow ${isFlippingCoin ? 'shrinking' : ''}`}></div><div className="coin-result-text" style={{ opacity: isFlippingCoin ? 0 : 1 }}>{coinSide}</div></div><button type="button" onClick={flipCoin} disabled={isFlippingCoin} className="coin-flip-action-btn">{isFlippingCoin ? '💫 拋擲空中...' : '🪙 拋擲硬幣'}</button></>
             )}
@@ -692,13 +1262,11 @@ export default function App() {
     <div className="app" data-tab={activeTab}>
       {renderHeader()}
       {renderMobileSettings()}
-      
       <main>
         {renderHeroAndTools()}
         {renderFilterPanel()}
         {renderGameGrid()}
       </main>
-
       {renderBottomNav()}
       {renderRandomModal()}
       {renderDetailModal()}
