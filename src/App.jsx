@@ -964,7 +964,7 @@ export default function App() {
               )}
             </div>
 
-            <div className="mobile-version-badge">✨ Version 1.0.0 完美版</div>
+            <div className="mobile-version-badge">✨ Version 1.0.5 </div>
           </div>
         </div>
       </header>
