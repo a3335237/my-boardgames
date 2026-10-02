@@ -129,7 +129,6 @@ body { margin: 0; padding: 0; font-family: 'jf-open-huninn', 'jf open 粉圓', -
 .hero-stat-card .stat-num { font-size: 1.18rem; font-weight: 900; line-height: 1.2; }
 .hero-stat-card .stat-unit { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-left: 1px; }
 
-/* ✅ 統計方塊選中狀態 */
 .hero-stat-card.active-all { border-color: var(--accent-blue); background: rgba(79, 70, 229, 0.06); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.18); transform: translateY(-2px); }
 .hero-stat-card.active-main { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.18); transform: translateY(-2px); }
 .hero-stat-card.active-expansion { border-color: #f59e0b; background: rgba(245, 158, 11, 0.06); box-shadow: 0 6px 16px rgba(245, 158, 11, 0.18); transform: translateY(-2px); }
@@ -372,28 +371,6 @@ body.dark-theme .custom-filter-dropdown, body.theme-dark .custom-filter-dropdown
   box-sizing: border-box;
 }
 
-/* 🌟 完美的 3D 盲盒抽卡 Modal */
-.random-reveal-modal-box { 
-  background: var(--bg-card); border-radius: 26px; width: 100%; max-width: 420px; 
-  padding: 2.2rem 1.8rem 1.8rem 1.8rem; box-sizing: border-box; text-align: center; position: relative; 
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); border: 1px solid var(--border-color); 
-  animation: popScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
-}
-@keyframes popScale { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-.random-reveal-modal-box > span { position: relative; z-index: 20; display: inline-block; }
-.card-reveal-scene { width: 100% !important; max-width: 360px !important; min-height: 350px !important; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
-
-.mystery-box-canvas-container { 
-  width: 100%; height: 350px; border-radius: 20px; overflow: hidden; 
-  background: transparent;
-}
-
-.card-reveal-box { width: 100%; background: var(--bg-card); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; box-sizing: border-box; animation: zoomInBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; position: relative; z-index: 10; }
-@keyframes zoomInBounce { 0% { transform: scale(0.6) translateY(20px); opacity: 0; } 60% { transform: scale(1.02); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.card-reveal-img-box { width: 100% !important; height: 240px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 12px !important; }
-.card-reveal-img-box img { max-width: 100% !important; max-height: 230px !important; object-fit: contain !important; display: block !important; filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25)) !important; }
-
 /* 詳細與編輯 Modal */
 .modal-content, .detail-modal-content { 
   background: var(--bg-card); border-radius: 24px; width: 100%; max-width: 680px; 
@@ -475,6 +452,81 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 .submit-btn { background: var(--accent-blue) !important; color: white !important; border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .cancel-btn { background: var(--border-color); color: var(--text-main); border: none; padding: 0.55rem 1.4rem; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
+
+/* ========================================================================= */
+/* 🌟 抽卡專屬：3D 畫布與 2D 結算 UI 樣式 (防破版修復) */
+/* ========================================================================= */
+
+.random-3d-modal {
+  background: var(--bg-main); 
+  border-radius: 26px; 
+  width: 100%; 
+  max-width: 380px; 
+  height: 520px; 
+  position: relative; 
+  overflow: hidden; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
+  border: 1px solid var(--border-color); 
+  animation: popScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+.random-3d-close-btn {
+  position: absolute; top: 16px; right: 16px; width: 34px; height: 34px;
+  border-radius: 50%; border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(4px);
+  color: var(--text-muted); font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; z-index: 50;
+}
+.random-3d-close-btn:hover { background: var(--pill-bg); color: var(--text-main); }
+
+.random-canvas-wrapper {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  transition: opacity 0.5s ease;
+  z-index: 5;
+}
+
+.random-final-ui {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: scale(0.97);
+  background: var(--bg-card);
+  z-index: 10;
+  padding: 30px 24px; box-sizing: border-box; text-align: center;
+}
+.random-final-ui.active { opacity: 1; pointer-events: auto; transform: scale(1); }
+
+.random-final-subtitle { font-size: 1.05rem; font-weight: 900; color: var(--accent-blue); margin-bottom: 25px; letter-spacing: 1px; }
+.random-final-img-box { width: 100%; height: 200px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+.random-final-img-box img { max-height: 100%; max-width: 100%; object-fit: contain; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.18)); }
+.random-final-emoji { font-size: 6rem; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.1)); }
+
+/* ⚡️ 強制單行不破版，超出部分顯示 ... */
+.random-final-title { 
+  font-size: 1.7rem; 
+  color: var(--text-main); 
+  margin: 0 0 4px 0; 
+  font-weight: 900; 
+  width: 100%;
+  padding: 0 10px;
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  box-sizing: border-box;
+}
+
+.random-final-eng { font-size: 0.95rem; color: var(--text-muted); margin: 0 0 18px 0; }
+.random-final-stats { display: flex; justify-content: center; gap: 14px; font-size: 0.92rem; color: var(--text-muted); font-weight: 700; margin-bottom: 28px; }
+.random-final-complex { color: #d946ef; font-weight: 800; }
+.random-final-actions { display: flex; gap: 12px; justify-content: center; width: 100%; }
+.random-final-btn { flex: 1; padding: 13px 0; border-radius: 50px; font-weight: 800; font-size: 1.05rem; cursor: pointer; border: none; color: white; display: flex; justify-content: center; align-items: center; gap: 6px; transition: transform 0.2s, box-shadow 0.2s; }
+.random-btn-reroll { background: #5a5ce6; box-shadow: 0 6px 18px rgba(90, 92, 230, 0.35); }
+.random-btn-detail { background: #10b981; box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35); }
+.random-final-btn:hover { transform: translateY(-2px); }
+
+
 /* ========================================================================= */
 /* 🌟 手機版專屬 RWD (嚴格限制在 768px 以下，電腦版絕對不會受到任何影響)       */
 /* ========================================================================= */
@@ -485,7 +537,6 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .logo { width: 100%; justify-content: center !important; font-size: 1.45rem !important; }
   .logo strong { font-size: 1.15rem !important; }
   
-  /* 🌟 手機版完全隱藏原本電腦版的右側按鈕群！設定頁會由專屬模組化儀表板接手 */
   .header-actions { display: none !important; }
   
   .hero { grid-template-columns: 1fr !important; padding: 1rem 0.8rem !important; margin-bottom: 1rem !important; gap: 12px !important; }
@@ -508,7 +559,6 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   .quick-pick-chip { height: 26px !important; font-size: 0.72rem !important; }
   .random-button { padding: 10px 14px !important; font-size: 0.92rem !important; border-radius: 12px !important; }
   
-  /* 針對網格或列表做寬度自適應 */
   .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; width: 100% !important; }
   .cover { height: 125px !important; }
   .card-fav-btn { width: 26px !important; height: 26px !important; font-size: 12px !important; top: 6px !important; left: 6px !important; }
@@ -521,7 +571,6 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
   
   .bottom-nav-bar { display: flex !important; }
   
-  /* 🌟 手機版隱藏上方雞肋編輯與刪除按鈕，開啟專屬下方按鈕列 */
   .detail-nav-right .detail-admin-btn { display: none !important; }
   .mobile-admin-bar { display: flex !important; }
 
@@ -535,41 +584,19 @@ body.dark-theme .detail-body-scrollable::-webkit-scrollbar-thumb, body.theme-dar
 
   @media screen and (max-width: 520px) { .detail-info-card { grid-template-columns: 1fr; gap: 10px; } }
 
-  /* ========================================================================= */
-  /* 🌟 手機版三分頁連動邏輯 (桌遊庫與大廳皆保留 4 個方塊供篩選)                 */
-  /* ========================================================================= */
-  
-  /* 📦 桌遊庫 Tab：保留 hero 裡的方塊，隱藏抽卡區、標題區與大廳工具。隱藏設定區 */
   .app[data-tab="collection"] .hero-title-block,
   .app[data-tab="collection"] .hero-random-picker,
   .app[data-tab="collection"] .starter-card,
   .app[data-tab="collection"] .mobile-section-settings { display: none !important; }
 
-  .app[data-tab="collection"] .hero {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin-bottom: 12px !important;
-  }
-
-  /* 🎲 聚會大廳 Tab：顯示大廳完整工具，隱藏過濾器、卡片網格與設定區 */
-  .app[data-tab="hall"] .filter-panel,
-  .app[data-tab="hall"] .collection,
-  .app[data-tab="hall"] .mobile-section-settings { display: none !important; }
-
-  /* ⚙ 設定 Tab：顯示精美的模組化卡片儀表板，隱藏大廳與桌遊庫 */
-  .app[data-tab="settings"] .hero,
-  .app[data-tab="settings"] .filter-panel,
-  .app[data-tab="settings"] .collection { display: none !important; }
-
+  .app[data-tab="collection"] .hero { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 12px !important; }
+  .app[data-tab="hall"] .filter-panel, .app[data-tab="hall"] .collection, .app[data-tab="hall"] .mobile-section-settings { display: none !important; }
+  .app[data-tab="settings"] .hero, .app[data-tab="settings"] .filter-panel, .app[data-tab="settings"] .collection { display: none !important; }
   .app[data-tab="settings"] .header { flex-direction: column !important; border-bottom: none; align-items: center !important; }
   .app[data-tab="settings"] .logo { justify-content: center !important; text-align: center !important; margin-bottom: 8px; }
   .app[data-tab="settings"] .mobile-section-settings { display: flex !important; flex-direction: column; }
   
-  /* 🎨 模組化設定頁面專屬 UI 設計 (iOS Settings Style) */
   .settings-dashboard-container { display: flex; flex-direction: column; gap: 1.2rem; width: 100%; padding: 4px 0 20px 0; }
-  
   .status-banner { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
   .status-banner.visitor { border-color: #cbd5e1; background: linear-gradient(135deg, var(--bg-card) 0%, #f8fafc 100%); }
   .status-banner.admin { border-color: #f59e0b; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(245, 158, 11, 0.06) 100%); }

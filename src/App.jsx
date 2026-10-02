@@ -35,7 +35,7 @@ const ADMIN_PASSWORD = '1234'
 const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '' }
 
 /* ========================================================================= */
-/* 🌟 3D 資源生成器 (D6白底黑點貼圖)                                          */
+/* 🌟 3D 資源生成器 (D6白底黑點貼圖) */
 /* ========================================================================= */
 let cachedD6Materials = null
 const getD6Materials = () => {
@@ -59,7 +59,7 @@ const getD6Materials = () => {
 }
 
 /* ========================================================================= */
-/* 🌟 3D 物理共用元件 (地板、透明牆壁)                                       */
+/* 🌟 3D 物理共用元件 (地板、透明牆壁) */
 /* ========================================================================= */
 function PhysicsFloor() { usePlane(() => ({ rotation: [-Math.PI / 2, 0, 0], position: [0, -1.2, 0] })); return null }
 function PhysicsBorders() {
@@ -68,7 +68,7 @@ function PhysicsBorders() {
   return null
 }
 
-/* 🌟 工具一：精準物理骰子 (四元數演算法) */
+/* 🌟 工具一：精準物理骰子 */
 function DieBox({ index, rollTrigger, isRolling, onResult }) {
   const [ref, api] = useBox(() => ({ mass: 1, args: [1.2, 1.2, 1.2], position: [(Math.random()-0.5)*2, 3+Math.random()*3, (Math.random()-0.5)*2] }))
   const quat = useRef([0, 0, 0, 1])
@@ -118,88 +118,219 @@ function Die3D({ sides, index, rollTrigger, isRolling, onResult }) {
   return <DiePoly sides={sides} index={index} rollTrigger={rollTrigger} isRolling={isRolling} onResult={onResult} />
 }
 
-/* 🌟 工具二：完美手工 3D 尋寶箱 (純木紋金邊，完全刪除假金光球體，僅保留真實物理光源) */
-function MysteryBox3D() {
-  const boxRef = useRef()
-  const lidRef = useRef()
-  const [isOpen, setIsOpen] = useState(false)
+/* ========================================================================= */
+/* 🌟 工具二：完美的 3D 沉穩放置開箱元件 (防 CORS 隱形修正版) */
+/* ========================================================================= */
+const ThickBoard = ({ w, h, d, faceMat, edgeMat, position, rotation, children }) => {
+  const materials = useMemo(() => {
+    const mats = [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat];
+    if (w === 0.05) { mats[4] = edgeMat; mats[5] = edgeMat; mats[0] = faceMat; mats[1] = faceMat; }
+    if (h === 0.05) { mats[4] = edgeMat; mats[5] = edgeMat; mats[2] = faceMat; mats[3] = faceMat; }
+    return mats;
+  }, [w, h, d, faceMat, edgeMat])
+  return (
+    <mesh position={position} rotation={rotation} castShadow receiveShadow material={materials}>
+      <boxGeometry args={[w, h, d]} />
+      {children}
+    </mesh>
+  )
+}
+
+function RealisticMysteryBox({ game, onComplete }) {
+  const boxGroupRef = useRef()
+  const flapLRef = useRef(); const flapRRef = useRef(); 
+  const flapFRef = useRef(); const flapBRef = useRef();
+  const gameMeshRef = useRef()
+  
   const timeRef = useRef(0)
+  const isCompletedRef = useRef(false)
 
-  // 🌟 材質安全宣告：強制開啟 DoubleSide 徹底防止破圖與背面剔除
-  const woodMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#5C4033", roughness: 0.9, side: THREE.DoubleSide }), [])
-  const goldMat = useMemo(() => new THREE.MeshStandardMaterial({ color: "#FFD700", metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }), [])
-  const blackMat = useMemo(() => new THREE.MeshBasicMaterial({ color: "#000000" }), [])
+  const [cardSize, setCardSize] = useState([2.5, 3.3])
+  const [useFallback, setUseFallback] = useState(false) // ⚡ 用來應對被阻擋的圖片
 
-  useEffect(() => {
-    const timer = setTimeout(() => setIsOpen(true), 1200) // 1.2秒後打開箱子
-    return () => clearTimeout(timer)
+  // 若切換遊戲，重置 fallback 狀態
+  useEffect(() => { setUseFallback(false) }, [game])
+
+  const { cardboardMat, edgeMat, tapeMat, labelMat } = useMemo(() => {
+    const nCanvas = document.createElement('canvas'); nCanvas.width = 512; nCanvas.height = 512; const nCtx = nCanvas.getContext('2d');
+    nCtx.fillStyle = '#cca883'; nCtx.fillRect(0, 0, 512, 512);
+    for(let i=0; i<15000; i++) { nCtx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.03)'; nCtx.fillRect(Math.random()*512, Math.random()*512, 2, 2); }
+    const cTex = new THREE.CanvasTexture(nCanvas);
+    
+    const tMat = new THREE.MeshStandardMaterial({ color: 0xe5d5bc, transparent: true, opacity: 0.7, roughness: 0.4, metalness: 0.1, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+    
+    const lCanvas = document.createElement('canvas'); lCanvas.width = 256; lCanvas.height = 256; const lCtx = lCanvas.getContext('2d');
+    lCtx.fillStyle = '#ffffff'; lCtx.fillRect(0, 0, 256, 256);
+    lCtx.fillStyle = '#0f172a';
+    for(let i=0; i<28; i++) lCtx.fillRect(20 + i*7 + Math.random()*4, 30, Math.random()*4+1, 70);
+    lCtx.font = 'bold 22px Arial'; lCtx.fillText('EXPRESS', 20, 130); lCtx.fillRect(20, 145, 216, 4);
+    lCtx.font = '16px Arial'; lCtx.fillText('TO: BOARD GAMER', 20, 175);
+    const lTex = new THREE.CanvasTexture(lCanvas);
+
+    return {
+      cardboardMat: new THREE.MeshStandardMaterial({ map: cTex, roughness: 0.9 }),
+      edgeMat: new THREE.MeshStandardMaterial({ color: 0xe6cda8, roughness: 1.0 }),
+      tapeMat: tMat,
+      labelMat: new THREE.MeshStandardMaterial({ map: lTex, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 })
+    }
   }, [])
 
+  // ⚡ 完美 CORS 防護載入器
+  const gameTexture = useMemo(() => {
+    if (game && game.imageUrl && !useFallback) {
+      const loader = new THREE.TextureLoader()
+      loader.setCrossOrigin('anonymous') // 解決 WebGL CORS 阻擋
+      return loader.load(
+        game.imageUrl,
+        (loadedTex) => {
+          if (loadedTex.image) {
+            const aspect = loadedTex.image.width / loadedTex.image.height;
+            let targetH = 3.4, targetW = targetH * aspect;
+            if (targetW > 2.8) { targetW = 2.8; targetH = targetW / aspect; }
+            setCardSize([targetW, targetH]);
+          }
+        },
+        undefined,
+        (err) => {
+          console.warn('WebGL 圖片載入失敗 (通常是被伺服器 CORS 阻擋)，自動切換為 3D 備用圖卡', err);
+          setUseFallback(true); // 觸發備用方案
+        }
+      )
+    } else {
+      // ⚡ 若沒有圖片或載入失敗，生成帶有桌遊名稱的專屬備用圖卡！
+      setCardSize([2.5, 3.3]); 
+      const gCanvas = document.createElement('canvas'); gCanvas.width = 300; gCanvas.height = 400; const gCtx = gCanvas.getContext('2d');
+      gCtx.clearRect(0, 0, 300, 400); 
+      gCtx.fillStyle = '#4f46e5'; gCtx.beginPath(); gCtx.roundRect(10, 10, 280, 380, 20); gCtx.fill();
+      gCtx.fillStyle = '#ffffff'; gCtx.font = 'bold 100px Arial'; gCtx.textAlign = 'center'; 
+      gCtx.fillText(game?.emoji || '🎲', 150, 180);
+      
+      // 畫上桌遊標題
+      gCtx.font = 'bold 32px "jf open 粉圓", sans-serif'; 
+      const name = game?.name || '神祕桌遊';
+      gCtx.fillText(name.length > 8 ? name.substring(0, 8) + '...' : name, 150, 280);
+      
+      return new THREE.CanvasTexture(gCanvas)
+    }
+  }, [game, useFallback])
+
+  const boxW = 2.8, boxD = 1.8, boxH = 1.4, thickness = 0.05, flapLen = boxD/2, pivotY = boxH + thickness;
+
   useFrame((state, delta) => {
-    timeRef.current += delta; const t = timeRef.current
+    if (isCompletedRef.current) return;
     
-    // 箱體物理掉落與阻尼彈跳效果
-    if (boxRef.current) {
-      if (t < 1.2) {
-        boxRef.current.position.y = Math.max(0, Math.abs(Math.cos(t * 10)) * 5 * Math.exp(-t * 4))
-      } else {
-        boxRef.current.position.y = 0
-      }
+    const box = boxGroupRef.current;
+    const fL = flapLRef.current; const fR = flapRRef.current;
+    const fF = flapFRef.current; const fB = flapBRef.current;
+    const gMesh = gameMeshRef.current;
+    if (!box || !fL || !fR || !fF || !fB || !gMesh) return;
+
+    timeRef.current += delta;
+    const t = timeRef.current - 0.3; // 延遲開場防舊畫面殘影
+
+    if (t < 0) {
+      box.position.y = 7;
+      box.rotation.x = 0.1;
+      gMesh.visible = false;
+      return;
+    }
+
+    if (t <= 0.3) {
+      const easeIn = Math.pow(t / 0.3, 3);
+      box.position.y = THREE.MathUtils.lerp(7, 0, easeIn);
+      box.rotation.x = THREE.MathUtils.lerp(0.1, 0, easeIn);
+    } 
+    else if (t <= 0.4) {
+      box.position.y = 0;
+      box.rotation.x = 0;
     }
     
-    // 蓋子打開動畫 (平滑向後掀開)
-    if (lidRef.current) {
-      lidRef.current.rotation.x = THREE.MathUtils.lerp(lidRef.current.rotation.x, isOpen ? -Math.PI * 0.55 : 0, delta * 6)
+    if (t > 0.4 && t <= 1.5) {
+      const openAngle = Math.PI * 0.72;
+      const tOut = Math.min(1, Math.max(0, (t - 0.4) / 0.5));
+      const easeOut = 1 - Math.pow(1 - tOut, 3); 
+      fF.rotation.x = THREE.MathUtils.lerp(0, openAngle, easeOut);
+      fB.rotation.x = THREE.MathUtils.lerp(0, -openAngle, easeOut);
+      
+      const tIn = Math.min(1, Math.max(0, (t - 0.6) / 0.5));
+      const easeInFlap = 1 - Math.pow(1 - tIn, 3);
+      fL.rotation.z = THREE.MathUtils.lerp(0, openAngle, easeInFlap);
+      fR.rotation.z = THREE.MathUtils.lerp(0, -openAngle, easeInFlap);
+    }
+
+    if (t > 0.8 && t <= 2.2) {
+      gMesh.visible = true;
+      const actTime = Math.min(1, Math.max(0, (t - 0.8) / 1.2)); 
+      
+      if (actTime <= 0.35) { 
+        const liftProgress = actTime / 0.35;
+        const liftEase = 1 - Math.pow(1 - liftProgress, 2); 
+        gMesh.position.y = THREE.MathUtils.lerp(0.5, 4.2, liftEase);
+        gMesh.position.z = 0;
+        gMesh.scale.setScalar(THREE.MathUtils.lerp(0.1, 0.75, liftEase));
+        gMesh.rotation.x = THREE.MathUtils.lerp(0, -0.15, liftEase);
+      } else { 
+        const placeProgress = (actTime - 0.35) / 0.65;
+        const placeEase = placeProgress < 0.5 ? 4 * Math.pow(placeProgress, 3) : 1 - Math.pow(-2 * placeProgress + 2, 3) / 2;
+        gMesh.position.y = THREE.MathUtils.lerp(4.2, 2.5, placeEase);
+        gMesh.position.z = THREE.MathUtils.lerp(0, 4.5, placeEase);
+        gMesh.scale.setScalar(THREE.MathUtils.lerp(0.75, 1.25, placeEase));
+        gMesh.rotation.x = THREE.MathUtils.lerp(-0.15, 0, placeEase);
+      }
+    }
+
+    if (t > 2.0 && t <= 2.8) {
+      const exitTime = Math.min(1, (t - 2.0) / 0.6);
+      box.position.y = THREE.MathUtils.lerp(0, -8, exitTime * exitTime);
+      if (t > 2.2 && !isCompletedRef.current) {
+        isCompletedRef.current = true;
+        onComplete();
+      }
     }
   })
 
   return (
-    <group position={[0, -1, 0]}>
-      <group ref={boxRef}>
-        
-        {/* === 寶箱下半部 === */}
-        {/* 木質主體 */}
-        <mesh position={[0, 0.75, 0]} material={woodMat}><boxGeometry args={[2, 1.5, 1.5]} /></mesh>
-        {/* 底部與頂部金邊 */}
-        <mesh position={[0, 0.1, 0]} material={goldMat}><boxGeometry args={[2.1, 0.2, 1.6]} /></mesh>
-        <mesh position={[0, 1.4, 0]} material={goldMat}><boxGeometry args={[2.1, 0.2, 1.6]} /></mesh>
-        {/* 四周角柱金邊 */}
-        <mesh position={[0.95, 0.75, 0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
-        <mesh position={[-0.95, 0.75, 0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
-        <mesh position={[0.95, 0.75, -0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
-        <mesh position={[-0.95, 0.75, -0.7]} material={goldMat}><boxGeometry args={[0.2, 1.5, 0.2]} /></mesh>
+    <group>
+      <group ref={boxGroupRef} position={[0, 7, 0]} rotation={[0.1, 0, 0]}>
+        <ThickBoard w={boxW} h={thickness} d={boxD} faceMat={cardboardMat} edgeMat={edgeMat} position={[0, thickness/2, 0]} />
+        <ThickBoard w={boxW} h={boxH} d={thickness} faceMat={cardboardMat} edgeMat={edgeMat} position={[0, boxH/2 + thickness, boxD/2 - thickness/2]} />
+        <ThickBoard w={boxW} h={boxH} d={thickness} faceMat={cardboardMat} edgeMat={edgeMat} position={[0, boxH/2 + thickness, -boxD/2 + thickness/2]} />
+        <ThickBoard w={thickness} h={boxH} d={boxD - thickness*2} faceMat={cardboardMat} edgeMat={edgeMat} position={[-boxW/2 + thickness/2, boxH/2 + thickness, 0]} />
+        <ThickBoard w={thickness} h={boxH} d={boxD - thickness*2} faceMat={cardboardMat} edgeMat={edgeMat} position={[boxW/2 - thickness/2, boxH/2 + thickness, 0]} />
+        <mesh position={[0, thickness + 0.1, 0]}><boxGeometry args={[boxW - 0.25, 0.1, boxD - 0.25]} /><meshStandardMaterial color={0x111111} /></mesh>
 
-        {/* === 寶箱上半部 (蓋子) === */}
-        {/* 將蓋子的軸心移到後方邊緣，實現真實的開合效果 */}
-        <group ref={lidRef} position={[0, 1.2, -0.8]}>
-          <group position={[0, 0, 0.8]}>
-            {/* 木質半圓蓋 (已使用 DoubleSide 避免剔除隱形) */}
-            <mesh rotation={[0, 0, Math.PI / 2]} material={woodMat}>
-              <cylinderGeometry args={[0.75, 0.75, 2, 32, 1, false, 0, Math.PI]} />
-            </mesh>
-            {/* 蓋子左右與中央金邊 */}
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[0.9, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
-            </mesh>
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[-0.9, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
-            </mesh>
-            <mesh rotation={[0, 0, Math.PI / 2]} position={[0, 0, 0]} material={goldMat}>
-              <cylinderGeometry args={[0.8, 0.8, 0.2, 32, 1, false, 0, Math.PI]} />
-            </mesh>
-            {/* 鎖扣與黑洞 */}
-            <mesh position={[0, -0.2, 0.8]} material={goldMat}>
-              <boxGeometry args={[0.4, 0.6, 0.1]} />
-            </mesh>
-            <mesh position={[0, -0.2, 0.86]} material={blackMat}>
-              <boxGeometry args={[0.06, 0.2, 0.05]} />
-            </mesh>
-          </group>
+        <group ref={flapLRef} position={[-boxW/2 + thickness/2, pivotY - 0.005, 0]}>
+          <ThickBoard w={flapLen} h={thickness} d={boxD - thickness*2} faceMat={cardboardMat} edgeMat={edgeMat} position={[flapLen/2, thickness/2, 0]} />
+        </group>
+        <group ref={flapRRef} position={[boxW/2 - thickness/2, pivotY - 0.005, 0]}>
+          <ThickBoard w={flapLen} h={thickness} d={boxD - thickness*2} faceMat={cardboardMat} edgeMat={edgeMat} position={[-flapLen/2, thickness/2, 0]} />
         </group>
         
-        {/* 🌟 隱藏式真實內部照明，沒有醜陋假球體色塊 */}
-        <pointLight position={[0, 1.5, 0]} intensity={isOpen ? 8 : 0} color="#FFD700" distance={10} />
+        <group ref={flapFRef} position={[0, pivotY, boxD/2 - thickness/2]}>
+          <ThickBoard w={boxW} h={thickness} d={flapLen} faceMat={cardboardMat} edgeMat={edgeMat} position={[0, thickness/2, -flapLen/2]} />
+          <mesh material={tapeMat} rotation={[-Math.PI/2, 0, 0]} position={[0, thickness + 0.002, -flapLen + 0.16/2]}>
+            <planeGeometry args={[boxW, 0.32/2]} />
+          </mesh>
+          <mesh material={labelMat} rotation={[-Math.PI/2, 0, 0]} position={[-0.6, thickness + 0.003, -flapLen/2]}>
+            <planeGeometry args={[0.8, 0.6]} />
+          </mesh>
+        </group>
+        <group ref={flapBRef} position={[0, pivotY, -boxD/2 + thickness/2]}>
+          <ThickBoard w={boxW} h={thickness} d={flapLen} faceMat={cardboardMat} edgeMat={edgeMat} position={[0, thickness/2, flapLen/2]} />
+          <mesh material={tapeMat} rotation={[-Math.PI/2, 0, 0]} position={[0, thickness + 0.002, flapLen - 0.16/2]}>
+            <planeGeometry args={[boxW, 0.32/2]} />
+          </mesh>
+        </group>
+
+        <mesh material={tapeMat} position={[-boxW/2 - 0.001, pivotY - 0.25, 0]} rotation={[0, -Math.PI/2, 0]}><planeGeometry args={[0.32, 0.5]} /></mesh>
+        <mesh material={tapeMat} position={[boxW/2 + 0.001, pivotY - 0.25, 0]} rotation={[0, Math.PI/2, 0]}><planeGeometry args={[0.32, 0.5]} /></mesh>
       </group>
+
+      <mesh ref={gameMeshRef} position={[0, 0, 0]} visible={false}>
+        <planeGeometry args={[cardSize[0], cardSize[1]]} />
+        {/* 加上底色以防透明 PNG 失真，確保即使 CORS 載入延遲也不會消失 */}
+        <meshBasicMaterial map={gameTexture} transparent={true} side={THREE.DoubleSide} color="#ffffff" />
+      </mesh>
     </group>
   )
 }
@@ -218,11 +349,9 @@ export default function App() {
   const [bestPlayerFilter, setBestPlayerFilter] = useState('all')
   const [maxTimeFilter, setMaxTimeFilter] = useState('all')
   
-  // 🌟 預設排序邏輯：從 localStorage 讀取
   const [sortBy, setSortBy] = useState(() => localStorage.getItem('app_sort_by') || 'rating-desc')
   const [expansionFilter, setExpansionFilter] = useState('all')
 
-  // 🌟 手機版 Tab 控制狀態與 View 模式
   const [activeTab, setActiveTab] = useState('collection')
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('app_view_mode') || 'grid')
 
@@ -230,7 +359,6 @@ export default function App() {
   const filterRowRef = useRef(null)
   const [isUploadingImg, setIsUploadingImg] = useState(false)
 
-  // 🌟 牌咖群組管理
   const [playerGroups, setPlayerGroups] = useState(() => {
     try { return JSON.parse(localStorage.getItem('app_player_groups')) || [] } catch(e){ return [] }
   })
@@ -305,9 +433,15 @@ export default function App() {
   const [starterWinner, setStarterWinner] = useState(null)
   const [isPickingStarter, setIsPickingStarter] = useState(false)
 
-  const [randomGame, setRandomGame] = useState(null)
+  // 🌟 抽卡專屬狀態
+  const [randomGame, setRandomGame] = useState(null) // 只給 3D 箱子用
+  const [finalGame, setFinalGame] = useState(null)   // 只給 2D 結算畫面用
+  
   const [isRevealed, setIsRevealed] = useState(false)
-  const [isShuffling, setIsShuffling] = useState(false)
+  const [showFinalUI, setShowFinalUI] = useState(false)
+  const [isShuffling, setIsShuffling] = useState(false) 
+  const [drawKey, setDrawKey] = useState(0) 
+
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [formData, setFormData] = useState(emptyForm)
@@ -323,12 +457,12 @@ export default function App() {
         if (activeDropdown) setActiveDropdown(null)
         else if (showModal) setShowModal(false)
         else if (viewDetailGame) setViewDetailGame(null)
-        else if (randomGame) setRandomGame(null)
+        else if (isRevealed) { setIsRevealed(false); setIsShuffling(false); }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeDropdown, showModal, viewDetailGame, randomGame])
+  }, [activeDropdown, showModal, viewDetailGame, isRevealed])
 
   useEffect(() => { fetchGamesFromSupabase() }, [])
 
@@ -436,7 +570,6 @@ export default function App() {
     return pool.length
   }, [filteredGames, games, quickPickPlayers])
 
-  // 🌟 各種設定專屬操作 Function
   function handleClearFavorites() {
     triggerHaptic('medium')
     if (window.confirm('確定要清除所有加入最愛的桌遊嗎？')) setFavorites([])
@@ -598,24 +731,52 @@ export default function App() {
     setTimeout(() => { setAssignedTeams(buckets); setIsShufflingTeams(false); playSound('victory'); triggerHaptic('heavy') }, 280)
   }
 
+  // =========================================================================
+  // 🌟 輔助函數：計算長標題的字體大小
+  // =========================================================================
+  const getDynamicTitleSize = (name) => {
+    if (!name) return '1.7rem';
+    const len = name.length;
+    if (len >= 16) return '1.15rem';
+    if (len >= 12) return '1.35rem';
+    if (len >= 8) return '1.5rem';
+    return '1.7rem';
+  }
+
+  // =========================================================================
+  // 🌟 核心修復：防連續抽中同款的偽隨機邏輯 (Spotify Shuffle)
+  // =========================================================================
   function chooseRandomWithAnimation() {
+    if (isShuffling) return; 
+
     let pool = filteredGames.length > 0 ? filteredGames : games
     if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) }
     if (pool.length === 0) return alert(`⚠️ 目前沒有適合的桌遊可抽取！`)
     
-    setIsRevealed(false)
-    setIsShuffling(true) 
-    triggerHaptic('medium')
-    
-    setRandomGame(pool[Math.floor(Math.random() * pool.length)])
+    // ⚡ 防連續抽中同一款機制 (如果彩池大於 1 款，暫時把「目前畫面上顯示的那款」從抽獎箱裡拿掉)
+    if (pool.length > 1 && randomGame) {
+      pool = pool.filter(g => g.id !== randomGame.id)
+    }
 
-    setTimeout(() => { 
-      setIsShuffling(false) 
-      setIsRevealed(true)
-      playSound('victory')
-      triggerHaptic('heavy') 
-    }, 2500)
+    setIsShuffling(true) 
+    const nextGame = pool[Math.floor(Math.random() * pool.length)]
+
+    setIsRevealed(true)
+    setShowFinalUI(false) 
+    setRandomGame(nextGame)
+    
+    setDrawKey(prev => prev + 1)
+    triggerHaptic('medium')
   }
+
+  function handleRandomComplete() {
+    setFinalGame(randomGame)
+    setShowFinalUI(true)
+    setIsShuffling(false) 
+    playSound('victory')
+    triggerHaptic('heavy')
+  }
+  // =========================================================================
 
   function handleAdminToggle() {
     triggerHaptic('light'); if (isAdmin) { setIsAdmin(false); return alert('🔒 已退出管理模式！') }
@@ -706,7 +867,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* ⚙️ 正常電腦版按鈕區（維持原本第二張圖的乾淨俐落） */}
         <div className="header-actions">
           <select className="theme-selector" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
             <option value="default">☀️ 淺色簡約</option>
@@ -727,11 +887,8 @@ export default function App() {
           {isAdmin && (<button type="button" className="add-game-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>)}
         </div>
 
-        {/* 🌟 手機版專屬設定面板（只在手機設定頁顯示，完全不影響電腦版） */}
         <div className="mobile-section-settings" style={{ display: 'none' }}>
           <div className="settings-dashboard-container">
-            
-            {/* 👑 狀態橫幅 */}
             <div className={`status-banner ${isAdmin ? 'admin' : 'visitor'}`}>
               <div className="status-info">
                 <span className="status-avatar">{isAdmin ? '👑' : '👤'}</span>
@@ -740,22 +897,15 @@ export default function App() {
                   <p>{isAdmin ? '已解鎖所有編輯與管理權限' : '僅提供瀏覽與聚會輔助功能'}</p>
                 </div>
               </div>
-              <button className="status-login-btn" onClick={handleAdminToggle}>
-                {isAdmin ? '登出' : '站長登入'}
-              </button>
+              <button className="status-login-btn" onClick={handleAdminToggle}>{isAdmin ? '登出' : '站長登入'}</button>
             </div>
 
-            {/* 🎨 模組卡片 1：外觀與檢視 */}
             <div className="settings-card">
               <h3 className="settings-card-title">🎨 外觀與檢視</h3>
               <div className="settings-row">
                 <span>外觀主題</span>
                 <select className="settings-select" value={theme} onChange={(e) => { triggerHaptic('light'); setTheme(e.target.value); }}>
-                  <option value="default">☀️ 淺色簡約</option>
-                  <option value="dark">🌙 柔和暗黑</option>
-                  <option value="forest">🌲 森之木質</option>
-                  <option value="medieval">🏰 中古世紀</option>
-                  <option value="cyberpunk">🌌 賽博龐克</option>
+                  <option value="default">☀️ 淺色簡約</option><option value="dark">🌙 柔和暗黑</option><option value="forest">🌲 森之木質</option><option value="medieval">🏰 中古世紀</option><option value="cyberpunk">🌌 賽博龐克</option>
                 </select>
               </div>
               <div className="settings-row">
@@ -779,7 +929,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* 👥 模組卡片 2：牌咖群組管理 */}
             <div className="settings-card">
               <h3 className="settings-card-title">👥 牌咖群組管理</h3>
               <p className="settings-desc">將聚會大廳目前的玩家名單儲存為群組，方便日後一鍵載入，免去重複打字的麻煩。</p>
@@ -802,31 +951,15 @@ export default function App() {
               )}
             </div>
 
-            {/* 💾 模組卡片 3：資料與進階管理 */}
             <div className="settings-card">
               <h3 className="settings-card-title">💾 資料與進階管理</h3>
-              <div className="settings-row">
-                <span>清除所有最愛</span>
-                <button type="button" className="settings-danger-btn" onClick={handleClearFavorites}>🗑️ 清除最愛</button>
-              </div>
-              <div className="settings-row">
-                <span>重置玩家名單與分數</span>
-                <button type="button" className="settings-danger-btn" onClick={handleResetPlayersData}>🔄 重置大廳</button>
-              </div>
-              <div className="settings-row">
-                <span>匯出桌遊資料 (JSON)</span>
-                <button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button>
-              </div>
+              <div className="settings-row"><span>清除所有最愛</span><button type="button" className="settings-danger-btn" onClick={handleClearFavorites}>🗑️ 清除最愛</button></div>
+              <div className="settings-row"><span>重置玩家名單與分數</span><button type="button" className="settings-danger-btn" onClick={handleResetPlayersData}>🔄 重置大廳</button></div>
+              <div className="settings-row"><span>匯出桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button></div>
               {isAdmin && (
                 <>
-                  <div className="settings-row">
-                    <span>匯入桌遊資料 (JSON)</span>
-                    <button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button>
-                  </div>
-                  <div className="settings-row">
-                    <span>新增桌遊資料庫</span>
-                    <button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button>
-                  </div>
+                  <div className="settings-row"><span>匯入桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button></div>
+                  <div className="settings-row"><span>新增桌遊資料庫</span><button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button></div>
                 </>
               )}
             </div>
@@ -837,7 +970,7 @@ export default function App() {
       </header>
 
       <main>
-        {/* 🎲 聚會大廳 (包含 4 個可用於點擊篩選的統計方塊與抽卡工具) */}
+        {/* 🎲 聚會大廳 */}
         <section className="hero" id="hero-sec">
           <div className="hero-dashboard-left">
             <div className="hero-title-block">
@@ -873,8 +1006,8 @@ export default function App() {
                   ))}
                 </div>
               </div>
-              <button type="button" className={`random-button ${isShuffling ? 'spinning' : ''}`} onClick={chooseRandomWithAnimation} disabled={isShuffling || availableRandomPoolCount === 0} style={{ margin: 0 }}>
-                <span className="random-dice-icon">🎲</span><span>{isShuffling ? '命運寶箱降落中...' : (quickPickPlayers === 'all' ? '幫我選一款桌遊' : `幫我選 ${quickPickPlayers} 人桌遊`)}</span>
+              <button type="button" className={`random-button ${isRevealed && !showFinalUI ? 'spinning' : ''}`} onClick={chooseRandomWithAnimation} disabled={isShuffling || availableRandomPoolCount === 0} style={{ margin: 0 }}>
+                <span className="random-dice-icon">🎲</span><span>幫我選一盒桌遊</span>
               </button>
               <div className={`random-pool-counter ${availableRandomPoolCount === 0 ? 'empty' : ''}`}>
                 {availableRandomPoolCount > 0 ? (<>🎯 符合條件共 <strong>{availableRandomPoolCount}</strong> 款桌遊準備就緒</>) : (<>⚠️ 目前篩選條件下沒有符合的桌遊可抽</>)}
@@ -885,11 +1018,8 @@ export default function App() {
           <div className="starter-card" style={{ background: 'var(--bg-card)', borderRadius: '24px', padding: '1.4rem', border: '1px solid var(--border-color)', position: 'relative', overflowX: 'hidden' }}>
             <div className="tool-tab-track">
               {[
-                { key: 'starter', label: '👑 先攻' },
-                { key: 'scoreboard', label: '📝 計分' },
-                { key: 'timer', label: '⏱️ 倒數' },
-                { key: 'dice', label: '🎲 骰子' },
-                { key: 'team', label: '⚔️ 分隊' }
+                { key: 'starter', label: '👑 先攻' }, { key: 'scoreboard', label: '📝 計分' },
+                { key: 'timer', label: '⏱️ 倒數' }, { key: 'dice', label: '🎲 骰子' }, { key: 'team', label: '⚔️ 分隊' }
               ].map(tab => (
                 <button key={tab.key} type="button" onClick={() => { triggerHaptic('light'); setWidgetTab(tab.key); }} className={`tool-tab-btn ${widgetTab === tab.key ? 'active' : ''}`}>{tab.label}</button>
               ))}
@@ -938,7 +1068,6 @@ export default function App() {
                     </div>
                   )}
                 </div>
-
                 <button type="button" onClick={pickStarterPlayer} disabled={isPickingStarter} className="starter-action-btn">{isPickingStarter ? '⚡ 命運抉擇中...' : '🎯 抽出起始玩家'}</button>
               </>
             )}
@@ -986,7 +1115,6 @@ export default function App() {
                     )
                   })}
                 </div>
-
                 <form onSubmit={handleAddSharedPlayer} className="integrated-input-group">
                   <input type="text" placeholder="新增玩家 (兩邊同步)..." value={inputPlayerName} onChange={(e) => setInputPlayerName(e.target.value)} />
                   <button type="submit" className="integrated-input-btn">+ 新增</button>
@@ -1210,7 +1338,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* 🌟 根據 viewMode 決定是否套用 list-view 樣式 (預設為網格 grid) */}
         <section className="collection">
           <div className={`game-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
             {loading ? (
@@ -1226,7 +1353,6 @@ export default function App() {
                     <div className="cover">
                       {game.imageUrl ? ( <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" /> ) : ( <span className="cover-emoji">{game.emoji}</span> )}
                       
-                      {/* List View 時徹底隱藏圖片上的所有徽章與標籤，還原 100% 乾淨封面 */}
                       {viewMode !== 'list' && (
                         <>
                           <div className="badge-container">
@@ -1239,16 +1365,13 @@ export default function App() {
                     </div>
                     
                     <div className="game-info">
-                      {/* 🌟 完美融合排版魔法：動態切換渲染邏輯 */}
                       {viewMode === 'list' ? (
                         <>
-                          {/* 標題與徽章並排，利用 Flex 保證高度不變，字太長自動 ... */}
                           <div className="list-title-row">
                             <h3>{game.name}</h3>
                             {game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}
                             {game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}
                           </div>
-                          {/* 分類標籤化為前綴，與英文名稱無縫連接 */}
                           <p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p>
                         </>
                       ) : (
@@ -1290,44 +1413,59 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 🌟 3D 盲盒抽卡 Modal */}
-      {randomGame && (
+      {/* ========================================================================= */
+        /* 🌟 極致 3D 沉穩放置與 2D 轉場抽卡 Modal (防文字破版 & 防圖破圖) */
+      /* ========================================================================= */}
+      {isRevealed && (
         <div className="modal-overlay">
-          <div className="random-reveal-modal-box">
-            <button className="detail-close-icon-btn" style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 50 }} onClick={() => setRandomGame(null)} disabled={isShuffling}>✕</button>
-            
-            <span style={{ position: 'relative', zIndex: 20, display: 'inline-block', fontSize: '13px', fontWeight: 'bold', color: 'var(--accent-blue)', letterSpacing: '1px' }}>
-              {isShuffling ? '🎴 命運寶箱降落中...' : '✨ 命中注定就是它！'}
-            </span>
-            
-            <div className={`card-reveal-scene ${isShuffling ? 'shuffle-shake' : ''}`}>
-              {isShuffling ? (
-                <div className="mystery-box-canvas-container">
-                  <Canvas camera={{ position: [0, 4, 7], fov: 45 }}>
-                    <ambientLight intensity={1.2} />
-                    <directionalLight position={[5, 10, 5]} intensity={2.5} />
-                    <Environment preset="city" />
-                    <MysteryBox3D />
-                  </Canvas>
-                </div>
-              ) : (
-                <div className="card-reveal-box">
-                  <div className="card-reveal-img-box">{randomGame.imageUrl ? ( <img src={randomGame.imageUrl} alt={randomGame.name} /> ) : ( <span style={{ fontSize: '3.8rem' }}>{randomGame.emoji || '🎲'}</span> )}</div>
-                  <h3 style={{ fontSize: '1.25rem', margin: '4px 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>{randomGame.name}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0 0 6px 0', width: '100%' }}>{randomGame.englishName}</p>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap', width: '100%' }}>
-                    <span>👥 {randomGame.minPlayers}–{randomGame.maxPlayers}人</span><span>⏱️ {randomGame.time}分</span>
-                    <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {randomGame.complexity != null && randomGame.complexity !== '' ? Number(randomGame.complexity).toFixed(2) : '--'}</span>
-                  </div>
-                </div>
-              )}
+          
+          <div className="random-3d-modal">
+            <button className="random-3d-close-btn" onClick={() => { setIsRevealed(false); setIsShuffling(false); }}>✕</button>
+
+            <div className="random-canvas-wrapper" style={{ opacity: showFinalUI ? 0 : 1, pointerEvents: showFinalUI ? 'none' : 'auto' }}>
+              <Canvas key={drawKey} camera={{ position: [0, 5, 13], fov: 40 }}>
+                <ambientLight intensity={0.85} />
+                <directionalLight position={[5, 12, 6]} intensity={0.7} castShadow />
+                <mesh rotation={[-Math.PI/2, 0, 0]} receiveShadow><planeGeometry args={[100, 100]} /><shadowMaterial opacity={0.04} /></mesh>
+                
+                <RealisticMysteryBox game={randomGame} onComplete={handleRandomComplete} />
+              </Canvas>
             </div>
 
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '1rem' }}>
-              <button type="button" onClick={chooseRandomWithAnimation} disabled={isShuffling} style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>{isShuffling ? '抽卡中...' : '🎲 再抽一次'}</button>
-              <button type="button" onClick={() => { triggerHaptic('light'); const target = randomGame; setRandomGame(null); setDetailTab('info'); setViewDetailGame(target) }} disabled={isShuffling} style={{ background: '#10B981', color: '#fff', border: 'none', borderRadius: '25px', padding: '9px 18px', fontWeight: 'bold', fontSize: '0.88rem', cursor: isShuffling ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}>📖 查看詳情</button>
+            <div className={`random-final-ui ${showFinalUI ? 'active' : ''}`}>
+              {finalGame && (
+                <>
+                  <div className="random-final-subtitle">✨ 命中注定就是它！</div>
+                  
+                  <div className="random-final-img-box">
+                    {finalGame.imageUrl ? (
+                      <img src={finalGame.imageUrl} alt={finalGame.name} />
+                    ) : (
+                      <span className="random-final-emoji">{finalGame.emoji || '🎲'}</span>
+                    )}
+                  </div>
+                  
+                  {/* ⚡ 使用動態計算字體大小的輔助函數，確保長標題不換行破版 */}
+                  <h2 className="random-final-title" style={{ fontSize: getDynamicTitleSize(finalGame.name) }}>
+                    {finalGame.name}
+                  </h2>
+                  <p className="random-final-eng">{finalGame.englishName || ' '}</p>
+                  
+                  <div className="random-final-stats">
+                    <span>👥 {finalGame.minPlayers}-{finalGame.maxPlayers}人</span>
+                    <span>⏱ {finalGame.time}分</span>
+                    <span className="random-final-complex">🧠 {finalGame.complexity ? Number(finalGame.complexity).toFixed(2) : '--'}</span>
+                  </div>
+                  
+                  <div className="random-final-actions">
+                    <button className="random-final-btn random-btn-reroll" onClick={chooseRandomWithAnimation} disabled={isShuffling}>🎲 再抽一次</button>
+                    <button className="random-final-btn random-btn-detail" onClick={() => { setIsRevealed(false); setDetailTab('info'); setViewDetailGame(finalGame); }}>📖 查看詳情</button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
+          
         </div>
       )}
 
@@ -1341,7 +1479,6 @@ export default function App() {
                 <button type="button" onClick={() => { triggerHaptic('light'); setDetailTab('cheatSheet'); }} className={`detail-tab-btn ${detailTab === 'cheatSheet' ? 'active-cheat' : ''}`}>⚡ 快速規則 / 提示卡</button>
               </div>
               <div className="detail-nav-right">
-                {/* 🌟 電腦版編輯與刪除按鈕 (手機版透過 CSS 隱藏並於下方顯示) */}
                 {isAdmin && (
                   <>
                     <button type="button" className="detail-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
@@ -1430,7 +1567,6 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  {/* 🌟 手機版下方專屬管理列 (預設隱藏，小螢幕顯示) */}
                   {isAdmin && (
                     <div className="mobile-admin-bar">
                       <button type="button" className="mobile-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button>
