@@ -32,7 +32,7 @@ const ADMIN_PASSWORD = '1234'
 const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '' }
 
 // =========================================================================
-// 🌟 真實搖骰音效 (請確保 shake.m4a 放置於專案的 public 資料夾中)
+// 🌟 真實搖骰音效
 // =========================================================================
 const shakeSound = new Audio('/shake.m4a'); 
 shakeSound.preload = 'auto';
@@ -41,16 +41,12 @@ let fadeInterval = null;
 const playShakeSound = () => {
   try {
     if (fadeInterval) clearInterval(fadeInterval);
-    if (shakeSound.readyState >= 2) { 
-      shakeSound.currentTime = 0; 
-    }
+    if (shakeSound.readyState >= 2) { shakeSound.currentTime = 0; }
     shakeSound.volume = 1.0; 
     const playPromise = shakeSound.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(e => console.warn("需要互動才能播放音效:", e));
-    }
+    if (playPromise !== undefined) { playPromise.catch(e => console.warn("音效播放受阻:", e)); }
   } catch (err) {
-    console.warn("Audio playback issue:", err);
+    console.warn("Audio error:", err);
   }
 };
 
@@ -64,18 +60,18 @@ const fadeOutShakeSound = () => {
 };
 
 /* ========================================================================= */
-/* 🌟 3D 原生骰子與材質引擎 (4K 高解析度與零重疊排版) */
+/* 🌟 3D 原生骰子與材質引擎 (行動端效能優化版) */
 /* ========================================================================= */
 const AVAILABLE_DICE_SIDES = [6, 8, 12, 20];
 
 const createLeatherTextures = () => {
   const cvs = document.createElement('canvas'); const bumpCvs = document.createElement('canvas');
-  cvs.width = bumpCvs.width = 512; cvs.height = bumpCvs.height = 512;
+  cvs.width = bumpCvs.width = 256; cvs.height = bumpCvs.height = 256; // 行動端優化：降低為 256 避免記憶體溢出
   const ctx = cvs.getContext('2d'); const bCtx = bumpCvs.getContext('2d');
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,512,512); 
-  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,512,512);
-  for(let i=0; i<80000; i++) {
-     let x = Math.random()*512; let y = Math.random()*512; let r = Math.random()*1.5 + 0.5; 
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,256,256); 
+  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,256,256);
+  for(let i=0; i<15000; i++) {
+     let x = Math.random()*256; let y = Math.random()*256; let r = Math.random()*1.5 + 0.5; 
      bCtx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)';
      bCtx.beginPath(); bCtx.arc(x, y, r, 0, Math.PI*2); bCtx.fill();
      ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.05})`;
@@ -83,195 +79,134 @@ const createLeatherTextures = () => {
   }
   const map = new THREE.CanvasTexture(cvs); const bump = new THREE.CanvasTexture(bumpCvs);
   map.wrapS = map.wrapT = bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(4, 4); bump.repeat.set(4, 4); map.anisotropy = 16; bump.anisotropy = 16;
-  return { map, bump };
+  map.repeat.set(4, 4); bump.repeat.set(4, 4); return { map, bump };
 };
 
 const createWoodTextures = () => {
   const cvs = document.createElement('canvas'); const bumpCvs = document.createElement('canvas');
-  cvs.width = bumpCvs.width = 1024; cvs.height = bumpCvs.height = 1024;
+  cvs.width = bumpCvs.width = 512; cvs.height = bumpCvs.height = 512;
   const ctx = cvs.getContext('2d'); const bCtx = bumpCvs.getContext('2d');
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,1024,1024);
-  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,1024,1024);
-  for(let i=0; i<600; i++) {
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,512,512);
+  bCtx.fillStyle = '#888888'; bCtx.fillRect(0,0,512,512);
+  for(let i=0; i<300; i++) {
      ctx.beginPath(); bCtx.beginPath();
-     let startY = Math.random() * 1024; let endY = startY + (Math.random() - 0.5) * 100;
+     let startY = Math.random() * 512; let endY = startY + (Math.random() - 0.5) * 50;
      ctx.moveTo(0, startY); bCtx.moveTo(0, startY);
-     ctx.bezierCurveTo(340, startY + (Math.random()-0.5)*50, 680, endY + (Math.random()-0.5)*50, 1024, endY);
-     bCtx.bezierCurveTo(340, startY + (Math.random()-0.5)*50, 680, endY + (Math.random()-0.5)*50, 1024, endY);
+     ctx.bezierCurveTo(170, startY + (Math.random()-0.5)*25, 340, endY + (Math.random()-0.5)*25, 512, endY);
+     bCtx.bezierCurveTo(170, startY + (Math.random()-0.5)*25, 340, endY + (Math.random()-0.5)*25, 512, endY);
      let op = Math.random() * 0.15 + 0.05;
-     ctx.strokeStyle = `rgba(0,0,0,${op})`; ctx.lineWidth = Math.random() * 3 + 1; ctx.stroke();
+     ctx.strokeStyle = `rgba(0,0,0,${op})`; ctx.lineWidth = Math.random() * 2 + 1; ctx.stroke();
      bCtx.strokeStyle = `rgba(0,0,0,${op * 0.5})`; bCtx.lineWidth = ctx.lineWidth; bCtx.stroke();
   }
   const map = new THREE.CanvasTexture(cvs); const bump = new THREE.CanvasTexture(bumpCvs);
   map.wrapS = map.wrapT = bump.wrapS = bump.wrapT = THREE.RepeatWrapping;
-  map.repeat.set(1, 3); bump.repeat.set(1, 3); map.anisotropy = 16; bump.anisotropy = 16;
-  return { map, bump };
+  map.repeat.set(1, 3); bump.repeat.set(1, 3); return { map, bump };
 };
 
 const createFeltBump = () => {
-  const cvs = document.createElement('canvas'); cvs.width = 512; cvs.height = 512; const ctx = cvs.getContext('2d');
-  ctx.fillStyle = '#888888'; ctx.fillRect(0,0,512,512);
-  for(let i=0; i<150000; i++) {
+  const cvs = document.createElement('canvas'); cvs.width = 256; cvs.height = 256; const ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#888888'; ctx.fillRect(0,0,256,256);
+  for(let i=0; i<30000; i++) {
      ctx.fillStyle = Math.random()>0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-     ctx.fillRect(Math.random()*512, Math.random()*512, 1.5, 1.5);
+     ctx.fillRect(Math.random()*256, Math.random()*256, 1.5, 1.5);
   }
   const tex = new THREE.CanvasTexture(cvs);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(6, 6); tex.anisotropy = 16; return tex;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(6, 6); return tex;
 };
 
-// ⚡ 4K 級別解析度 (1024x1024)
 const createPremiumMats = (sides) => {
   const mats = [];
-  const SIZE = 1024;
-  const CENTER = SIZE / 2;
-  
+  const SIZE = 512; const CENTER = SIZE / 2;
   for (let i = 1; i <= sides; i++) {
     const cvs = document.createElement('canvas'); cvs.width = SIZE; cvs.height = SIZE; const ctx = cvs.getContext('2d');
     const bumpCvs = document.createElement('canvas'); bumpCvs.width = SIZE; bumpCvs.height = SIZE; const bumpCtx = bumpCvs.getContext('2d');
-    
     ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, 0, SIZE, SIZE); 
     bumpCtx.fillStyle = '#000000'; bumpCtx.fillRect(0, 0, SIZE, SIZE); 
-    
     const grad = bumpCtx.createRadialGradient(CENTER, CENTER, SIZE * 0.25, CENTER, CENTER, CENTER);
     grad.addColorStop(0, '#888888'); grad.addColorStop(0.8, '#888888'); grad.addColorStop(1, '#000000');
     bumpCtx.fillStyle = grad; bumpCtx.fillRect(0, 0, SIZE, SIZE);
-
-    ctx.fillStyle = i === sides ? '#ef4444' : '#1e293b'; 
-    bumpCtx.fillStyle = '#000000';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; 
-    bumpCtx.textAlign = 'center'; bumpCtx.textBaseline = 'middle';
-    
-    let fontSize = 400;
-    if (sides === 12) fontSize = 320; 
-    if (sides === 20) fontSize = 280;
+    ctx.fillStyle = i === sides ? '#ef4444' : '#1e293b'; bumpCtx.fillStyle = '#000000';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; bumpCtx.textAlign = 'center'; bumpCtx.textBaseline = 'middle';
+    let fontSize = 200;
+    if (sides === 12) fontSize = 160; if (sides === 20) fontSize = 140;
     if (i > 9) fontSize *= 0.85; 
-    
-    ctx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`; 
-    bumpCtx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`;
-    
+    ctx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`; bumpCtx.font = `900 ${fontSize}px "Segoe UI", Arial, sans-serif`;
     const yOffset = CENTER; const text = i.toString();
-    ctx.fillText(text, CENTER, yOffset); 
-    bumpCtx.fillText(text, CENTER, yOffset);
-
-    // 專屬防呆底線
+    ctx.fillText(text, CENTER, yOffset); bumpCtx.fillText(text, CENTER, yOffset);
     if (sides >= 12 && (i === 6 || i === 9)) {
-       const lineY = yOffset + fontSize * 0.45; 
-       const lineW = fontSize * 0.6; 
-       const lineH = fontSize * 0.1;
-       ctx.fillRect(CENTER - lineW/2, lineY, lineW, lineH); 
-       bumpCtx.fillRect(CENTER - lineW/2, lineY, lineW, lineH);
+       const lineY = yOffset + fontSize * 0.45; const lineW = fontSize * 0.6; const lineH = fontSize * 0.1;
+       ctx.fillRect(CENTER - lineW/2, lineY, lineW, lineH); bumpCtx.fillRect(CENTER - lineW/2, lineY, lineW, lineH);
     }
-    
     const tex = new THREE.CanvasTexture(cvs); 
-    tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
     const bumpTex = new THREE.CanvasTexture(bumpCvs); 
-    bumpTex.anisotropy = 16; bumpTex.generateMipmaps = true; bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
-    
     mats.push(new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: 0.04, roughness: 0.1, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.1, side: THREE.DoubleSide }));
   }
   return mats;
 };
 
-// ⚡ 終極 D6 貼圖引擎：加入立體凹陷陰影與極緻深藍色
 const createPremiumD6Mats = () => {
   const mats = [];
-  const SIZE = 1024;
-  const CENTER = SIZE / 2;
-  
+  const SIZE = 512; const CENTER = SIZE / 2;
   for (let i = 1; i <= 6; i++) {
     const cvs = document.createElement('canvas'); cvs.width = SIZE; cvs.height = SIZE; const ctx = cvs.getContext('2d');
     const bumpCvs = document.createElement('canvas'); bumpCvs.width = SIZE; bumpCvs.height = SIZE; const bumpCtx = bumpCvs.getContext('2d');
-    
-    // 骰面底色
     ctx.fillStyle = '#fcfcfc'; ctx.fillRect(0, 0, SIZE, SIZE); 
     bumpCtx.fillStyle = '#888888'; bumpCtx.fillRect(0, 0, SIZE, SIZE); 
-    
-    // 微弱的放射漸層讓表面有自然的凸起感
     const grad = bumpCtx.createRadialGradient(CENTER, CENTER, SIZE * 0.3, CENTER, CENTER, SIZE * 0.55);
     grad.addColorStop(0, '#aaaaaa'); grad.addColorStop(1, '#888888');
     bumpCtx.fillStyle = grad; bumpCtx.fillRect(0, 0, SIZE, SIZE);
-    
-    // 畫具有凹陷立體感與深色質感的點數
     const drawDot = (x, y) => { 
-        ctx.fillStyle = '#2c3e50'; // 深灰藍色
-        ctx.beginPath(); ctx.arc(x, y, 65, 0, Math.PI*2); ctx.fill(); 
-        
-        // 強烈的陰影邊緣營造凹陷感
-        const dotBumpGrad = bumpCtx.createRadialGradient(x, y, 0, x, y, 75);
-        dotBumpGrad.addColorStop(0, '#000000'); // 中心最深
-        dotBumpGrad.addColorStop(0.7, '#555555'); // 邊緣漸層
-        dotBumpGrad.addColorStop(1, 'rgba(136, 136, 136, 0)'); // 完美融合表面
-        bumpCtx.fillStyle = dotBumpGrad;
-        bumpCtx.beginPath(); bumpCtx.arc(x, y, 75, 0, Math.PI*2); bumpCtx.fill(); 
+        ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.arc(x, y, 32, 0, Math.PI*2); ctx.fill(); 
+        const dotBumpGrad = bumpCtx.createRadialGradient(x, y, 0, x, y, 38);
+        dotBumpGrad.addColorStop(0, '#000000'); dotBumpGrad.addColorStop(0.7, '#555555'); dotBumpGrad.addColorStop(1, 'rgba(136, 136, 136, 0)');
+        bumpCtx.fillStyle = dotBumpGrad; bumpCtx.beginPath(); bumpCtx.arc(x, y, 38, 0, Math.PI*2); bumpCtx.fill(); 
     }
-    
-    const c = CENTER, o = 230; 
+    const c = CENTER, o = 115; 
     if ([1,3,5].includes(i)) drawDot(c, c);
     if ([2,3,4,5,6].includes(i)) { drawDot(c-o, c-o); drawDot(c+o, c+o); }
     if ([4,5,6].includes(i)) { drawDot(c-o, c+o); drawDot(c+o, c-o); }
     if (i === 6) { drawDot(c-o, c); drawDot(c+o, c); }
-    
     const tex = new THREE.CanvasTexture(cvs); 
-    tex.anisotropy = 16; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter;
     const bumpTex = new THREE.CanvasTexture(bumpCvs); 
-    bumpTex.anisotropy = 16; bumpTex.generateMipmaps = true; bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
-    
     mats.push(new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: 0.045, roughness: 0.12, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.05 }));
   }
-  
-  // 對應 BoxGeometry 預設面順序
   return [mats[0], mats[5], mats[1], mats[4], mats[2], mats[3]]; 
 };
 
-// ⚡ 防彈級幾何智能重組引擎 (確保物理圓角與 6 面獨立貼圖完美融合，絕不白屏)
 const createGroupedRoundedBox = (size, radius, segments) => {
   try {
     const geom = new RoundedBoxGeometry(size, size, size, segments, radius);
-    
-    // 確保擁有 Index 緩衝區防崩潰
     if (!geom.index) {
       const count = geom.attributes.position.count;
       const indices = new Uint16Array(count);
       for(let i=0; i<count; i++) indices[i] = i;
       geom.setIndex(new THREE.BufferAttribute(indices, 1));
     }
-    
     geom.clearGroups();
     const pos = geom.attributes.position;
     const index = geom.index;
     const groups = { 0:[], 1:[], 2:[], 3:[], 4:[], 5:[] };
-    
-    // 精準面相掃描
     for(let i=0; i < index.count; i+=3) {
         const a = index.getX(i); const b = index.getX(i+1); const c = index.getX(i+2);
         const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c))/3;
         const cy = (pos.getY(a) + pos.getY(b) + pos.getY(c))/3;
         const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c))/3;
         const absX = Math.abs(cx); const absY = Math.abs(cy); const absZ = Math.abs(cz);
-        
         let faceIndex = 0;
         if (absX >= absY && absX >= absZ) faceIndex = cx > 0 ? 0 : 1;
         else if (absY >= absX && absY >= absZ) faceIndex = cy > 0 ? 2 : 3;
         else faceIndex = cz > 0 ? 4 : 5;
-        
         groups[faceIndex].push(a, b, c);
     }
-    
-    const newIndices = [];
-    let start = 0;
+    const newIndices = []; let start = 0;
     for(let i=0; i<6; i++) {
-        const g = groups[i];
-        newIndices.push(...g);
-        geom.addGroup(start, g.length, i);
-        start += g.length;
+        const g = groups[i]; newIndices.push(...g);
+        geom.addGroup(start, g.length, i); start += g.length;
     }
-    
     geom.setIndex(new THREE.BufferAttribute(new Uint16Array(newIndices), 1));
     geom.computeVertexNormals();
     return geom;
   } catch (err) {
-    console.error("幾何體生成安全降級:", err);
     return new THREE.BoxGeometry(size, size, size);
   }
 }
@@ -292,13 +227,11 @@ const buildTRPGGeometry = (type, radius) => {
     const centroid = new THREE.Vector3();
     for (let t = 0; t < trisPerFace * 3; t++) centroid.add(new THREE.Vector3().fromBufferAttribute(pos, f * trisPerFace * 3 + t));
     centroid.divideScalar(trisPerFace * 3);
-    
     const normal = centroid.clone().normalize();
     const vFirst = new THREE.Vector3().fromBufferAttribute(pos, f * trisPerFace * 3);
     let upLocal = new THREE.Vector3().subVectors(vFirst, centroid).normalize();
     let rightLocal = new THREE.Vector3().crossVectors(upLocal, normal).normalize();
     upLocal.crossVectors(normal, rightLocal).normalize();
-
     const projected = [];
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (let i = 0; i < trisPerFace * 3; i++) {
@@ -310,7 +243,6 @@ const buildTRPGGeometry = (type, radius) => {
       if (y < minY) minY = y; if (y > maxY) maxY = y;
     }
     const scale = Math.max(maxX - minX, maxY - minY) * 1.35; 
-    
     for (let i = 0; i < trisPerFace * 3; i++) {
       uv[(f * trisPerFace * 3 + i) * 2] = 0.5 + (projected[i].x / scale);
       uv[(f * trisPerFace * 3 + i) * 2 + 1] = 0.5 + (projected[i].y / scale);
@@ -351,9 +283,16 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
   const applyLayout = useCallback((c, s) => {
     if (!sceneRef.current) return;
     const { activeDiceGroup, diceGroups, res } = sceneRef.current;
-    
-    // 安全卸載舊幾何體，防記憶體洩漏
-    diceGroups.forEach(g => { activeDiceGroup.remove(g.pivot); if (g.mesh.geometry) g.mesh.geometry.dispose(); });
+    diceGroups.forEach(g => { 
+        activeDiceGroup.remove(g.pivot); 
+        if (g.mesh.geometry) g.mesh.geometry.dispose(); 
+        // 釋放材質記憶體防止手機 Crash
+        if (Array.isArray(g.mesh.material)) {
+            g.mesh.material.forEach(m => { if (m.map) m.map.dispose(); if (m.bumpMap) m.bumpMap.dispose(); m.dispose(); });
+        } else if (g.mesh.material) {
+            g.mesh.material.dispose();
+        }
+    });
     sceneRef.current.diceGroups = [];
 
     const maxTrayRadius = 1.45; let sizeMult = 1.0;
@@ -400,7 +339,6 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
 
       let geometry, mats;
       if (s === 6) {
-        // ⚡ 套用全新物理圓角重組引擎
         geometry = createGroupedRoundedBox(dieSize, dieSize * 0.18, 5); 
         mats = res.mats[6];
       } else {
@@ -459,7 +397,6 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
     const currentMount = mountRef.current;
     if (!currentMount) return;
     
-    // ⚡ 強制清空，防呆防護，絕對沒有第二個重疊的畫布
     currentMount.innerHTML = ''; 
 
     const res = {
@@ -478,7 +415,7 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
     camera.position.set(0, 7.5, 11.5); camera.lookAt(0, -0.2, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 限制最高為 2，防止手機 GPU 爆掉
     renderer.setSize(width, height, false); 
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';
@@ -505,7 +442,6 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
     
     const trayPts = [ new THREE.Vector2(0, 0.0), new THREE.Vector2(3.0, 0.0), new THREE.Vector2(3.3, 0.3), new THREE.Vector2(3.3, 0.6), new THREE.Vector2(2.9, 0.6), new THREE.Vector2(2.7, 0.1), new THREE.Vector2(0, 0.1) ];
     const trayBorderMat = new THREE.MeshPhysicalMaterial({ color: 0x080808, roughness: 0.8, metalness: 0.05, map: res.leatherTex.map, bumpMap: res.leatherTex.bump, bumpScale: 0.005 });
-    // ⚡ 修正：確保是 THREE.Mesh (上一個白屏 Bug 的禍首)
     const trayBorder = new THREE.Mesh(new THREE.LatheGeometry(trayPts, 128), trayBorderMat); trayBorder.receiveShadow = true; trayBorder.castShadow = true; trayGroup.add(trayBorder);
 
     const trayFeltMat = new THREE.MeshPhysicalMaterial({ color: 0x0a8f60, roughness: 0.95, metalness: 0.0, bumpMap: res.feltBump, bumpScale: 0.01 });
@@ -524,7 +460,7 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
       const { clientWidth, clientHeight } = currentMount;
       if (clientWidth === 0 || clientHeight === 0) return;
       renderer.setSize(clientWidth, clientHeight, false);
-      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       camera.aspect = clientWidth / clientHeight;
       camera.updateProjectionMatrix();
       if(!state.current.isAnimating) renderer.render(scene, camera);
@@ -598,7 +534,6 @@ const RawThreeDice = ({ count, sides, theme, rollTrigger, onRollComplete }) => {
       if (currentMount && currentMount.contains(renderer.domElement)) {
           currentMount.removeChild(renderer.domElement);
       }
-      // ⚡ 清空內部，保證嚴格模式不留幽靈節點
       currentMount.innerHTML = ''; 
     };
   }, [applyLayout, applyTheme]); 
@@ -879,7 +814,7 @@ export default function App() {
   function handleDeletePlayerGroup(groupName) { triggerHaptic('light'); if (window.confirm(`確定要刪除「${groupName}」這個群組嗎？`)) { setPlayerGroups(playerGroups.filter(g => g.name !== groupName)) } }
   function handleExportJSON() { const cleanGames = games.map(g => ({ ...g, imageUrl: g.imageUrl && g.imageUrl.startsWith('data:') ? '' : (g.imageUrl || '') })); const jsonString = JSON.stringify(cleanGames, null, 2); const blob = new Blob([jsonString], { type: 'application/json' }); const url = URL.createObjectURL(blob); const downloadAnchor = document.createElement('a'); downloadAnchor.href = url; downloadAnchor.download = `boardgames_export_${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(downloadAnchor); downloadAnchor.click(); document.body.removeChild(downloadAnchor); URL.revokeObjectURL(url) }
   function handleImportJSON(e) { const file = e.target.files && e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (event) => { try { const importedData = JSON.parse(event.target.result); if (!Array.isArray(importedData)) return alert('❌ 檔案格式不正確！'); if (!window.confirm(`確定要將 ${importedData.length} 款桌遊同步到資料庫嗎？`)) return; const { data: dbGames, error: fetchErr } = await supabase.from('boardgames').select('*'); if (fetchErr) throw new Error('讀取失敗：' + fetchErr.message); const dbMap = new Map(); (dbGames || []).forEach(g => { if (g.name) dbMap.set(g.name.trim(), g) }); const toInsert = []; const toUpdate = []; importedData.forEach(item => { if (!item.name || !item.name.trim()) return; const cleanName = item.name.trim(); const existing = dbMap.get(cleanName); let finalImage = (item.imageUrl && item.imageUrl.trim()) || ''; if (!finalImage && existing && existing.imageUrl) finalImage = existing.imageUrl; const payload = { name: cleanName, englishName: item.englishName || '', minPlayers: parseInt(item.minPlayers, 10) || 1, maxPlayers: parseInt(item.maxPlayers, 10) || 4, bestPlayers: item.bestPlayers ? String(item.bestPlayers) : `${item.minPlayers || 1}-${item.maxPlayers || 4}`, time: parseInt(item.time, 10) || 30, category: item.category || '未分類', rating: item.rating ? parseFloat(item.rating) : null, complexity: item.complexity ? parseFloat(item.complexity) : null, emoji: item.emoji || '🎲', imageUrl: finalImage, tags: Array.isArray(item.tags) ? item.tags : (typeof item.tags === 'string' ? item.tags.split(',').map(t => t.trim()) : []), description: item.description || '', cheatSheet: item.cheatSheet || '', videoUrl: item.videoUrl || '', bggUrl: item.bggUrl || '', sleeveSize: item.sleeveSize || '', isExpansion: !!item.isExpansion, isSequel: !!item.isSequel, parentId: item.parentId ? parseInt(item.parentId, 10) : null }; if (existing) toUpdate.push({ id: existing.id, ...payload }); else toInsert.push(payload) }); for (const item of toUpdate) { const { id, ...data } = item; await supabase.from('boardgames').update(data).eq('id', id) } if (toInsert.length > 0) { const { error: insErr } = await supabase.from('boardgames').insert(toInsert); if (insErr) throw insErr } alert(`✅ 同步完成！更新 ${toUpdate.length} 款，新增 ${toInsert.length} 款`); fetchGamesFromSupabase() } catch (err) { alert('❌ 匯入同步失敗：' + err.message) } }; reader.readAsText(file); e.target.value = '' }
-  async function handleCroppedImageUpload(e) { const file = e.target.files && e.target.files[0]; if (!file) return; setIsUploadingImg(true); const reader = new FileReader(); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const maxSize = 600; let width = img.width, height = img.height; if (width > height) { if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize } } else { if (height > maxSize) { width = Math.round((width * maxSize) / height); height = maxSize } } canvas.width = width; canvas.height = height; ctx.clearRect(0, 0, width, height); ctx.drawImage(img, 0, 0, width, height); canvas.toBlob(async (blob) => { try { const fileName = `cover_${Date.now()}_${Math.floor(Math.random()*1000)}.png`; const { error } = await supabase.storage.from('boardgame-covers').upload(fileName, blob, { contentType: 'image/png', cacheControl: '3600', upsert: false }); if (error) throw error; const { data } = supabase.storage.from('boardgame-covers').getPublicUrl(fileName); setFormData(prev => ({ ...prev, imageUrl: data.publicUrl })) } catch (err) { alert('❌ 圖片上傳失敗：' + err.message) } finally { setIsUploadingImg(false) } }, 'image/png', 0.85) } }; reader.readAsDataURL(file) }
+  async function handleCroppedImageUpload(e) { const file = e.target.files && e.target.files[0]; if (!file) return; setIsUploadingImg(true); const reader = new FileReader(); reader.onload = (event) => { const img = new Image(); img.src = event.target.result; img.onload = () => { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const maxSize = 600; let width = img.width, height = img.height; if (width > height) { if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize } } else { if (height > maxSize) { width = Math.round((height * maxSize) / height); height = maxSize } } canvas.width = width; canvas.height = height; ctx.clearRect(0, 0, width, height); ctx.drawImage(img, 0, 0, width, height); canvas.toBlob(async (blob) => { try { const fileName = `cover_${Date.now()}_${Math.floor(Math.random()*1000)}.png`; const { error } = await supabase.storage.from('boardgame-covers').upload(fileName, blob, { contentType: 'image/png', cacheControl: '3600', upsert: false }); if (error) throw error; const { data } = supabase.storage.from('boardgame-covers').getPublicUrl(fileName); setFormData(prev => ({ ...prev, imageUrl: data.publicUrl })) } catch (err) { alert('❌ 圖片上傳失敗：' + err.message) } finally { setIsUploadingImg(false) } }, 'image/png', 0.85) } }; reader.readAsDataURL(file) }
   function handleAddSharedPlayer(e) { if (e) e.preventDefault(); triggerHaptic('light'); const name = inputPlayerName.trim(); if (!name) return; if (sharedPlayers.some(p => p.name === name)) return alert('玩家已存在！'); const newId = sharedPlayers.length > 0 ? Math.max(...sharedPlayers.map(p => p.id)) + 1 : 1; setSharedPlayers([...sharedPlayers, { id: newId, name, score: 0 }]); setInputPlayerName('') }
   function handleQuickAddPlayer() { triggerHaptic('light'); const newId = sharedPlayers.length > 0 ? Math.max(...sharedPlayers.map(p => p.id)) + 1 : 1; setSharedPlayers([...sharedPlayers, { id: newId, name: `玩家 ${newId}`, score: 0 }]) }
   function handleRemoveSharedPlayer(idToRemove) { triggerHaptic('light'); if (sharedPlayers.length <= 1) return alert('至少保留 1 位玩家！'); setSharedPlayers(sharedPlayers.filter(p => p.id !== idToRemove)) }
@@ -984,7 +919,7 @@ export default function App() {
           <div className="settings-row"><span>匯出桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button></div>
           {isAdmin && (<><div className="settings-row"><span>匯入桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button></div><div className="settings-row"><span>新增桌遊資料庫</span><button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button></div></>)}
         </div>
-        <div className="mobile-version-badge">✨ Version 1.2.0</div>
+        <div className="mobile-version-badge">✨ Version 1.0.5</div>
       </div>
     </div>
   )
@@ -1145,7 +1080,7 @@ export default function App() {
                   {viewMode !== 'list' && (<><div className="badge-container">{game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}{game.isSequel && <span className="sequel-badge">✨ 續作</span>}</div><span className="category-tag">{game.category}</span></>)}
                 </div>
                 <div className="game-info">
-                  {viewMode === 'list' ? (<><div className="list-title-row"><h3>{game.name}</h3>{game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}{game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}</div><p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p></>) : (<><h3>{game.name}</h3><p className="english">{game.englishName}</p></>)}
+                  {viewMode === 'list' ? (<><div className="list-title-row"><h3>{game.name}</h3>{game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}{game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}</div><p className="english"><span className="list-cat-tag">🏷️️ {game.category}</span> ‧ {game.englishName || game.name}</p></>) : (<><h3>{game.name}</h3><p className="english">{game.englishName}</p></>)}
                   {Array.isArray(game.tags) && game.tags.length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
                   <div className="pill-badges-row"><span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>{game.bestPlayers && <span className="pill-badge best">👑 {viewMode === 'list' ? game.bestPlayers : `最佳${game.bestPlayers}`}人</span>}<span className="pill-badge">⏱️ {game.time}分</span></div>
                   <div className="rating-complexity-row"><div className="rating">⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '--'}</strong></div><div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {viewMode === 'list' ? '' : '燒腦: '}{game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}</div></div>
@@ -1239,7 +1174,7 @@ export default function App() {
           <div className="form-group"><label>中文名稱 *</label><input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
           <div className="form-group"><label>英文名稱</label><input type="text" value={formData.englishName} onChange={(e) => setFormData({...formData, englishName: e.target.value})} /></div>
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}><div><label>最小人數</label><input type="number" min="1" value={formData.minPlayers} onChange={(e) => setFormData({...formData, minPlayers: e.target.value})} /></div><div><label>最大人數</label><input type="number" min="1" value={formData.maxPlayers} onChange={(e) => setFormData({...formData, maxPlayers: e.target.value})} /></div><div><label>👑 最佳人數</label><input type="text" placeholder="例: 4 或 4-6" value={formData.bestPlayers} onChange={(e) => setFormData({...formData, bestPlayers: e.target.value})} /></div></div>
-          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}><div><label>遊戲時間 (分鐘)</label><input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} /></div><div><label>⭐ 評分 (留空代表無)</label><input type="number" step="0.01" min="0.00" max="10.00" placeholder="可留空" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} /></div><div><label>🧠 燒腦度</label><input type="number" step="0.01" min="1.00" max="5.00" placeholder="可留空" value={formData.complexity} onChange={(e) => setFormData({...formData, complexity: e.target.value})} /></div></div>
+          <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}><div><label>遊戲時間 (分鐘)</label><input type="number" step="5" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} /></div><div><label>⭐ 評分 (留空代表無)</label><input type="number" step="0.01" min="0.00" max="10.00" placeholder="可留空" value={formData.rating} onChange={(e) => setFormData({...formData, rating: e.target.value})} /></div><div><label>🧠 燒腦度</label><input type="number" step="0.01" min="1.00" max="5.00" placeholder="可留空" value={formData.complexity} onChange={(e) => setformData({...formData, complexity: e.target.value})} /></div></div>
           <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}><div><label>分類 (可手動輸入)</label><input type="text" list="category-options" placeholder="選擇或自由輸入類型" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} /><datalist id="category-options">{categories.filter(c => c !== '全部').map(cat => ( <option key={cat} value={cat} /> ))}</datalist></div><div><label>Emoji 圖示</label><input type="text" value={formData.emoji} onChange={(e) => setFormData({...formData, emoji: e.target.value})} /></div></div>
           <div className="sleeve-manager-box"><label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '0.92rem' }}>🃏 牌套規格管理（棋寶常用尺寸 + 張數）：</label>{sleeveList.map((item, idx) => (<div key={idx} className="sleeve-row-item"><select value={item.size} onChange={(e) => updateSleeveRow(idx, 'size', e.target.value)}>{CHESURE_SLEEVE_OPTIONS.map(opt => ( <option key={opt} value={opt}>{opt}</option> ))}</select><input type="number" placeholder="張數 (例: 110)" value={item.count} onChange={(e) => updateSleeveRow(idx, 'count', e.target.value)} />{sleeveList.length > 1 && ( <button type="button" className="sleeve-remove-btn" onClick={() => removeSleeveRow(idx)}>✕</button> )}</div>))}<button type="button" className="sleeve-add-btn" onClick={addSleeveRow}>+ 新增另一種牌套尺寸</button></div>
           <div className="form-group"><label>📷 封面圖片網址 (Image URL)</label><input type="url" placeholder="https://example.com/image.jpg" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} /></div>
