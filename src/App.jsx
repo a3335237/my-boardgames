@@ -29,14 +29,21 @@ const initialGames = [
   { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 6.80, complexity: 1.06, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，靠感覺出牌！', cheatSheet: '1. 牌面由小到大打出。\n2. 全程絕對不能溝通。', videoUrl: '', bggUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm (120張)' }
 ]
 const ADMIN_PASSWORD = '1234'
-const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '' }
+const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '', isNewArrival: 'auto' }
 
 // =========================================================================
-// 判斷是否為 14 天內新加入的桌遊 (Auto-Expiring Badge 邏輯)
+// 判斷是否為 14 天內新加入的桌遊 (加入站長隱藏覆蓋邏輯)
 // =========================================================================
-const isNewGame = (createdAt) => {
-  if (!createdAt) return false;
-  const createdDate = new Date(createdAt);
+const isNewGame = (game) => {
+  if (!game) return false;
+  // 檢查是否帶有隱藏標籤 (完全免改資料庫的妙招)
+  if (Array.isArray(game.tags)) {
+    if (game.tags.includes('__FORCE_NEW__')) return true;
+    if (game.tags.includes('__FORCE_OLD__')) return false;
+  }
+  // 預設 14 天判斷邏輯
+  if (!game.created_at) return false;
+  const createdDate = new Date(game.created_at);
   const now = new Date();
   const diffTime = now.getTime() - createdDate.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
@@ -727,7 +734,6 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => { try { const saved = localStorage.getItem('bg_favorite_ids'); if (saved) return JSON.parse(saved) } catch (e) {} return [] })
   const [sleeveList, setSleeveList] = useState([{ size: '63.5x88 mm', count: '' }])
   
-  // 🌟 新功能：過濾出 14 天內新加入的桌遊
   const [showOnlyNew, setShowOnlyNew] = useState(false)
   
   const [widgetTab, setWidgetTab] = useState('starter')
@@ -833,8 +839,7 @@ export default function App() {
       let matchTime = true; if (maxTimeFilter !== 'all') matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
       let matchExp = true; if (expansionFilter === 'main') matchExp = !game.isExpansion; else if (expansionFilter === 'expansion') matchExp = !!game.isExpansion; else if (expansionFilter === 'favorite') matchExp = favorites.includes(game.id)
       
-      // ✨ 判斷是否開啟「僅顯示新入庫」過濾
-      let matchNew = true; if (showOnlyNew) matchNew = isNewGame(game.created_at);
+      let matchNew = true; if (showOnlyNew) matchNew = isNewGame(game);
       
       return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp && matchNew
     }).sort((a, b) => {
@@ -845,8 +850,7 @@ export default function App() {
   const availableRandomPoolCount = useMemo(() => { let pool = filteredGames.length > 0 ? filteredGames : games; if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) } return pool.length }, [filteredGames, games, quickPickPlayers])
   const totalCount = games.length; const mainCount = games.filter(g => !g.isExpansion).length; const expansionCount = games.filter(g => g.isExpansion).length; const favoriteCount = games.filter(g => favorites.includes(g.id)).length
   
-  // 計算新入庫桌遊數量
-  const newGamesCount = useMemo(() => games.filter(g => isNewGame(g.created_at)).length, [games])
+  const newGamesCount = useMemo(() => games.filter(g => isNewGame(g)).length, [games])
 
   function toggleFavorite(e, gameId) { e.stopPropagation(); triggerHaptic('light'); setFavorites(prev => prev.includes(gameId) ? prev.filter(id => id !== gameId) : [...prev, gameId]) }
   function addSleeveRow() { setSleeveList([...sleeveList, { size: '63.5x88 mm', count: '' }]) }
@@ -898,16 +902,56 @@ export default function App() {
   function handleRandomComplete() { setFinalGame(randomGame); setShowFinalUI(true); setIsShuffling(false); playSound('victory'); triggerHaptic('heavy') }
 
   function handleAdminToggle() { triggerHaptic('light'); if (isAdmin) { setIsAdmin(false); return alert('🔒 已退出管理模式！') }; const inputPass = prompt('🔑 請輸入管理者密碼：'); if (inputPass === ADMIN_PASSWORD) { setIsAdmin(true); alert('🔓 驗證成功！') } else if (inputPass !== null) alert('❌ 密碼錯誤！') }
-  function handleOpenAddModal() { if (!isAdmin) return; triggerHaptic('light'); setEditingId(null); setFormData(emptyForm); setSleeveList([{ size: '63.5x88 mm', count: '' }]); setParentSearchInput(''); setShowModal(true) }
-  function handleOpenEditModal(game) {
-    if (!isAdmin) return; triggerHaptic('light'); setEditingId(game.id); let gType = 'main'; if (game.isExpansion) gType = 'expansion'; else if (game.isSequel) gType = 'sequel'; const parentGame = games.find(g => g.id === game.parentId)
-    if (game.sleeveSize) { const parsed = game.sleeveSize.split(',').map(s => { const item = s.trim(); const countMatch = item.match(/\((.*?)\)/); const sizeOnly = item.replace(/\s*\(.*?\)/, '').trim(); return { size: sizeOnly || '63.5x88 mm', count: countMatch ? countMatch[1].replace('張', '') : '' } }); setSleeveList(parsed.length > 0 ? parsed : [{ size: '63.5x88 mm', count: '' }]) } else { setSleeveList([{ size: '63.5x88 mm', count: '' }]) }
-    setFormData({ name: game.name || '', englishName: game.englishName || '', minPlayers: game.minPlayers || 2, maxPlayers: game.maxPlayers || 4, bestPlayers: game.bestPlayers || '', time: game.time || 30, category: game.category || '派對', rating: game.rating != null ? String(game.rating) : '', complexity: game.complexity != null ? String(game.complexity) : '', emoji: game.emoji || '🎲', imageUrl: game.imageUrl || '', tagsInput: Array.isArray(game.tags) ? game.tags.join(', ') : '', description: game.description || '', cheatSheet: game.cheatSheet || '', videoUrl: game.videoUrl || '', bggUrl: game.bggUrl || '', gameType: gType, parentId: game.parentId || '' }); setParentSearchInput(parentGame ? parentGame.name : ''); setShowModal(true)
+  
+  function handleOpenAddModal() { 
+    if (!isAdmin) return; 
+    triggerHaptic('light'); 
+    setEditingId(null); 
+    setFormData(emptyForm); 
+    setSleeveList([{ size: '63.5x88 mm', count: '' }]); 
+    setParentSearchInput(''); 
+    setShowModal(true); 
   }
+  
+  function handleOpenEditModal(game) {
+    if (!isAdmin) return; 
+    triggerHaptic('light'); 
+    setEditingId(game.id); 
+    let gType = 'main'; if (game.isExpansion) gType = 'expansion'; else if (game.isSequel) gType = 'sequel'; 
+    const parentGame = games.find(g => g.id === game.parentId)
+    if (game.sleeveSize) { const parsed = game.sleeveSize.split(',').map(s => { const item = s.trim(); const countMatch = item.match(/\((.*?)\)/); const sizeOnly = item.replace(/\s*\(.*?\)/, '').trim(); return { size: sizeOnly || '63.5x88 mm', count: countMatch ? countMatch[1].replace('張', '') : '' } }); setSleeveList(parsed.length > 0 ? parsed : [{ size: '63.5x88 mm', count: '' }]) } else { setSleeveList([{ size: '63.5x88 mm', count: '' }]) }
+    
+    let arrivalStatus = 'auto';
+    let cleanedTags = [];
+    if (Array.isArray(game.tags)) {
+        if (game.tags.includes('__FORCE_NEW__')) arrivalStatus = 'true';
+        else if (game.tags.includes('__FORCE_OLD__')) arrivalStatus = 'false';
+        cleanedTags = game.tags.filter(t => !t.startsWith('__FORCE_'));
+    }
+
+    setFormData({ 
+      name: game.name || '', englishName: game.englishName || '', 
+      minPlayers: game.minPlayers || 2, maxPlayers: game.maxPlayers || 4, bestPlayers: game.bestPlayers || '', time: game.time || 30, category: game.category || '派對', 
+      rating: game.rating != null ? String(game.rating) : '', complexity: game.complexity != null ? String(game.complexity) : '', emoji: game.emoji || '🎲', imageUrl: game.imageUrl || '', 
+      tagsInput: cleanedTags.join(', '), 
+      description: game.description || '', cheatSheet: game.cheatSheet || '', videoUrl: game.videoUrl || '', bggUrl: game.bggUrl || '', gameType: gType, parentId: game.parentId || '',
+      isNewArrival: arrivalStatus
+    }); 
+    setParentSearchInput(parentGame ? parentGame.name : ''); 
+    setShowModal(true)
+  }
+  
   async function handleSubmitForm(e) {
     e.preventDefault(); triggerHaptic('medium'); if (!formData.name.trim()) return alert('請填寫名稱！')
-    const formattedSleeve = sleeveList.filter(s => s.size && s.size !== '').map(s => s.count ? `${s.size} (${s.count}張)` : s.size).join(', '); const tagsArray = formData.tagsInput.split(',').map(t => t.trim()).filter(t => t !== ''); const isExpansion = formData.gameType === 'expansion'; const isSequel = formData.gameType === 'sequel'; const parsedRating = formData.rating.trim() !== '' ? parseFloat(formData.rating) : null; const parsedComplexity = formData.complexity.trim() !== '' ? parseFloat(formData.complexity) : null
+    const formattedSleeve = sleeveList.filter(s => s.size && s.size !== '').map(s => s.count ? `${s.size} (${s.count}張)` : s.size).join(', '); 
+    let tagsArray = formData.tagsInput.split(',').map(t => t.trim()).filter(t => t !== ''); 
+    tagsArray = tagsArray.filter(t => !t.startsWith('__FORCE_')); // 確保不重複
+    if (formData.isNewArrival === 'true') tagsArray.push('__FORCE_NEW__');
+    else if (formData.isNewArrival === 'false') tagsArray.push('__FORCE_OLD__');
+
+    const isExpansion = formData.gameType === 'expansion'; const isSequel = formData.gameType === 'sequel'; const parsedRating = formData.rating.trim() !== '' ? parseFloat(formData.rating) : null; const parsedComplexity = formData.complexity.trim() !== '' ? parseFloat(formData.complexity) : null
     const gamePayload = { name: formData.name, englishName: formData.englishName, minPlayers: parseInt(formData.minPlayers, 10) || 1, maxPlayers: parseInt(formData.maxPlayers, 10) || 4, bestPlayers: formData.bestPlayers.trim() || `${formData.minPlayers}-${formData.maxPlayers}`, time: parseInt(formData.time, 10) || 30, category: formData.category.trim() || '未分類', rating: parsedRating != null && !isNaN(parsedRating) ? parsedRating : null, complexity: parsedComplexity != null && !isNaN(parsedComplexity) ? parsedComplexity : null, emoji: formData.emoji, imageUrl: formData.imageUrl, tags: tagsArray, description: formData.description, cheatSheet: formData.cheatSheet, videoUrl: formData.videoUrl, bggUrl: formData.bggUrl, isExpansion, isSequel, parentId: (isExpansion || isSequel) ? (parseInt(formData.parentId, 10) || null) : null, sleeveSize: formattedSleeve }
+    
     if (editingId) { const { error } = await supabase.from('boardgames').update(gamePayload).eq('id', editingId); if (error) alert('更新失敗：' + error.message); else { setGames(games.map(g => g.id === editingId ? { ...g, ...gamePayload } : g)); if (viewDetailGame && viewDetailGame.id === editingId) setViewDetailGame({ ...viewDetailGame, ...gamePayload }); setShowModal(false) } } 
     else { const { data, error } = await supabase.from('boardgames').insert([gamePayload]).select(); if (error) alert('新增失敗：' + error.message); else { setGames([data[0], ...games]); setShowModal(false) } }
   }
@@ -979,7 +1023,6 @@ export default function App() {
           <div className="hero-subtitle-hint">
              ⚡ 目前共有 <strong>{totalCount}</strong> 款精選桌遊準備就緒
           </div>
-          {/* ✨ 新增 Dashboard Whisper 提示 */}
           {newGamesCount > 0 && (
             <div 
               className="dashboard-whisper"
@@ -1000,7 +1043,7 @@ export default function App() {
                 border: `1px solid ${showOnlyNew ? '#059669' : 'rgba(16, 185, 129, 0.25)'}` 
               }}
             >
-              {showOnlyNew ? `✅ 正在顯示 ${newGamesCount} 款新桌遊 (點擊取消)` : `✨ 最近 14 天內新增了 ${newGamesCount} 款新桌遊`}
+              {showOnlyNew ? `✅ 正在顯示 ${newGamesCount} 款新桌遊 (點擊取消)` : `✨ 近期新增了 ${newGamesCount} 款新桌遊`}
             </div>
           )}
         </div>
@@ -1055,7 +1098,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 🌟 3D 原生骰子控制區 */}
         {widgetTab === 'dice' && (
           <div>
             <div className="dice-sub-tabs"><button type="button" onClick={() => setDiceToolTab('dice')} className={`dice-sub-tab-btn ${diceToolTab === 'dice' ? 'active' : ''}`}>🎲 物理滾骰</button><button type="button" onClick={() => setDiceToolTab('coin')} className={`dice-sub-tab-btn ${diceToolTab === 'coin' ? 'active' : ''}`}>🪙 3D 拋硬幣</button></div>
@@ -1154,8 +1196,7 @@ export default function App() {
                 <div className="cover">{game.imageUrl ? ( <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" /> ) : ( <span className="cover-emoji">{game.emoji}</span> )}
                   {viewMode !== 'list' && (<>
                     <div className="badge-container">
-                      {/* ✨ 新增入庫徽章：採用原擴充包相同的樣式結構，改用毛玻璃低調質感 */}
-                      {isNewGame(game.created_at) && <span className="expansion-badge new-badge">✨ 新入庫</span>}
+                      {isNewGame(game) && <span className="expansion-badge" style={{ background: '#ef4444', color: '#ffffff' }}>✨ 新入庫</span>}
                       {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
                       {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
                     </div>
@@ -1167,15 +1208,14 @@ export default function App() {
                     <>
                       <div className="list-title-row">
                         <h3>{game.name}</h3>
-                        {/* ✨ 新增清單檢視入庫徽章 */}
-                        {isNewGame(game.created_at) && <span className="expansion-badge list-badge new-badge">✨ 新入庫</span>}
+                        {isNewGame(game) && <span className="expansion-badge list-badge" style={{ background: '#ef4444', color: '#ffffff' }}>✨ 新入庫</span>}
                         {game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}
                         {game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}
                       </div>
                       <p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p>
                     </>
                   ) : (<><h3>{game.name}</h3><p className="english">{game.englishName}</p></>)}
-                  {Array.isArray(game.tags) && game.tags.length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
+                  {Array.isArray(game.tags) && game.tags.filter(t => !t.startsWith('__FORCE_')).length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.filter(t => !t.startsWith('__FORCE_')).map(t => ( <span key={t}>#{t}</span> ))}</div> )}
                   <div className="pill-badges-row"><span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>{game.bestPlayers && <span className="pill-badge best">👑 {viewMode === 'list' ? game.bestPlayers : `最佳${game.bestPlayers}`}人</span>}<span className="pill-badge">⏱️ {game.time}分</span></div>
                   <div className="rating-complexity-row"><div className="rating">⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '--'}</strong></div><div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {viewMode === 'list' ? '' : '燒腦: '}{game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}</div></div>
                 </div>
@@ -1246,7 +1286,7 @@ export default function App() {
               {viewDetailGame.videoUrl && ( <a href={viewDetailGame.videoUrl} target="_blank" rel="noopener noreferrer" className="video-banner-btn"><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{ fontSize: '1.2rem' }}>🎬</span><span>觀看教學影片</span></div><span style={{ fontSize: '0.8rem', opacity: 0.8 }}>前往 YouTube ↗</span></a> )}
               {viewDetailGame.isExpansion && viewDetailGame.parentId && ( <div style={{ margin: '14px 0', padding: '12px 16px', background: 'rgba(245, 158, 11, 0.08)', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}><span style={{ fontSize: '0.88rem', color: '#B45309', fontWeight: 'bold' }}>🧩 此為擴充包，需搭配主遊戲遊玩</span>{games.find(g => g.id === viewDetailGame.parentId) && ( <button type="button" onClick={() => { triggerHaptic('light'); setViewDetailGame(games.find(g => g.id === viewDetailGame.parentId)); }} style={{ border: 'none', background: '#F59E0B', color: '#fff', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 'bold' }}>📦 查看主遊戲：{games.find(g => g.id === viewDetailGame.parentId).name} →</button> )}</div> )}
               {viewDetailGame.isSequel && ( <div style={{ margin: '14px 0', padding: '12px 16px', background: 'rgba(14, 165, 233, 0.08)', borderRadius: '12px', border: '1px solid rgba(14, 165, 233, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}><span style={{ fontSize: '0.88rem', color: '#0369A1', fontWeight: 'bold' }}>✨ 獨立續作：可單獨遊玩，亦可與前作混合！</span>{viewDetailGame.parentId && games.find(g => g.id === viewDetailGame.parentId) && ( <button type="button" onClick={() => { triggerHaptic('light'); setViewDetailGame(games.find(g => g.id === viewDetailGame.parentId)); }} style={{ border: 'none', background: '#0EA5E9', color: '#fff', padding: '6px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 'bold' }}>📦 查看關聯前作：{games.find(g => g.id === viewDetailGame.parentId).name} →</button> )}</div> )}
-              {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.length > 0 && ( <div className="detail-tags-row">{viewDetailGame.tags.map(t => ( <span key={t} className="detail-tag-pill">#{t}</span> ))}</div> )}
+              {Array.isArray(viewDetailGame.tags) && viewDetailGame.tags.filter(t => !t.startsWith('__FORCE_')).length > 0 && ( <div className="detail-tags-row">{viewDetailGame.tags.filter(t => !t.startsWith('__FORCE_')).map(t => ( <span key={t} className="detail-tag-pill">#{t}</span> ))}</div> )}
               <p style={{ lineHeight: '1.7', margin: '16px 0', color: 'var(--text-main)', fontSize: '0.95rem' }}>{viewDetailGame.description || '暫無詳細描述。'}</p>
               {games.filter(g => g.parentId === viewDetailGame.id).length > 0 && ( <div className="expansion-list" style={{ marginTop: '18px', borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}><h4 style={{ margin: '0 0 10px 0', fontSize: '0.95rem' }}>🧩 關聯作品 / 擴充包：</h4><div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>{games.filter(g => g.parentId === viewDetailGame.id).map(exp => ( <button key={exp.id} type="button" onClick={() => { triggerHaptic('light'); setViewDetailGame(exp); }} style={{ border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'inherit', padding: '7px 14px', borderRadius: '10px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600', boxShadow: '0 2px 5px rgba(0,0,0,0.04)' }}>{exp.isSequel ? '✨' : '🧩'} {exp.name} →</button> ))}</div></div> )}
               {isAdmin && ( <div className="mobile-admin-bar"><button type="button" className="mobile-admin-btn" onClick={() => handleOpenEditModal(viewDetailGame)} style={{ background: 'var(--accent-blue)' }}>✏️ 編輯</button><button type="button" className="mobile-admin-btn" onClick={() => handleDeleteGame(viewDetailGame.id, viewDetailGame.name)} style={{ background: '#EF4444' }}>🗑 刪除</button></div> )}
@@ -1280,6 +1320,18 @@ export default function App() {
           <div className="form-group"><label>📝 遊戲介紹 / 玩法簡介</label><textarea rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea></div>
           <div className="form-group"><label>⚡ 快速規則 / 提示卡重點</label><textarea rows="4" placeholder="每行輸入一條開局重點或關鍵規則..." value={formData.cheatSheet} onChange={(e) => setFormData({...formData, cheatSheet: e.target.value})} style={{ border: '1px solid #10B981', background: 'rgba(16, 185, 129, 0.02)' }}></textarea></div>
           <div className="form-group" style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '10px' }}><label style={{ fontWeight: 'bold', marginBottom: '6px' }}>📦 遊戲本體類型：</label><select value={formData.gameType} onChange={(e) => { const val = e.target.value; setFormData(prev => ({ ...prev, gameType: val, parentId: val === 'main' ? '' : prev.parentId })); if (val === 'main') setParentSearchInput('') }} style={{ marginBottom: '8px' }}><option value="main">🎮 獨立主遊戲</option><option value="sequel">✨ 獨立續作 / 衍生作（可單獨玩）</option><option value="expansion">🧩 純擴充包（需搭配前作）</option></select>{(formData.gameType === 'expansion' || formData.gameType === 'sequel') && (<div><label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>{formData.gameType === 'expansion' ? '🔍 搜尋並選擇所屬主遊戲 *：' : '🔍 搜尋並選擇關聯前作（可選）：'}</label><input type="text" list="parent-games-list" placeholder="輸入遊戲名稱關鍵字..." value={parentSearchInput} onChange={(e) => { const val = e.target.value; setParentSearchInput(val); const matched = games.find(g => g.name === val); if (matched) { setFormData(prev => ({ ...prev, parentId: matched.id })) } else if (!val) { setFormData(prev => ({ ...prev, parentId: '' })) } }} /><datalist id="parent-games-list">{games.filter(g => !g.isExpansion && g.id !== editingId).map(g => ( <option key={g.id} value={g.name} /> ))}</datalist></div>)}</div>
+          
+          {/* ✨ 新入庫標籤設定下拉選單 */}
+          <div className="form-group" style={{ background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '10px', marginTop: '4px' }}>
+            <label style={{ fontWeight: 'bold', marginBottom: '6px' }}>✨ 新入庫標籤設定：</label>
+            <select value={formData.isNewArrival} onChange={(e) => setFormData({...formData, isNewArrival: e.target.value})} style={{ marginBottom: '8px' }}>
+              <option value="auto">⏱️ 自動判斷 (新增後 14 天內顯示)</option>
+              <option value="true">🌟 強制顯示為「新入庫」</option>
+              <option value="false">隱藏徽章 (這是舊收藏，補登用)</option>
+            </select>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.4', display: 'block' }}>若這款桌遊其實早就買了，只是現在才補建檔，請選擇「隱藏徽章」，避免被誤認為新買的。</span>
+          </div>
+
           <div className="modal-actions"><button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>取消</button><button type="submit" className="submit-btn" disabled={isUploadingImg}>{isUploadingImg ? '上傳中...' : '儲存'}</button></div>
         </form>
       </div>

@@ -25,23 +25,11 @@ const BEST_PLAYER_OPTIONS = [{ key: 'all', label: '不限' }, { key: '2', label:
 const TIME_OPTIONS = [{ key: 'all', label: '不限' }, { key: '15', label: '15分內' }, { key: '30', label: '30分內' }]
 const SORT_OPTIONS = [{ key: 'rating-desc', label: '⭐ 評分最高' }, { key: 'time-asc', label: '⏱ 時間最短' }, { key: 'time-desc', label: '⏳ 時間最長' }, { key: 'complexity-desc', label: '🔥 燒腦硬核' }, { key: 'name-asc', label: '🔤 名稱順序' }]
 const initialGames = [
-  { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲！', cheatSheet: '1. 每回合抽2張牌。\n2. 攻擊對手血量，歸零者淘汰。', videoUrl: '', bggUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (120張)', created_at: new Date().toISOString() },
+  { id: 1, name: '地城無雙 Dungeon Mayhem', englishName: 'Dungeon Mayhem', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 15, category: '卡牌對戰', rating: 8.00, complexity: 1.50, emoji: '⚔️', imageUrl: '', tags: ['新手推薦', '快節奏'], description: '極度爽快的卡牌對戰遊戲！', cheatSheet: '1. 每回合抽2張牌。\n2. 攻擊對手血量，歸零者淘汰。', videoUrl: '', bggUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '63.5x88 mm (120張)' },
   { id: 2, name: '心靈同步', englishName: 'The Mind', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 20, category: '合作', rating: 6.80, complexity: 1.06, emoji: '🧠', imageUrl: '', tags: ['默契考驗', '靜音遊戲'], description: '不能說話、不能打手勢，靠感覺出牌！', cheatSheet: '1. 牌面由小到大打出。\n2. 全程絕對不能溝通。', videoUrl: '', bggUrl: '', isExpansion: false, isSequel: false, parentId: null, sleeveSize: '56x87 mm (120張)' }
 ]
 const ADMIN_PASSWORD = '1234'
 const emptyForm = { name: '', englishName: '', minPlayers: 2, maxPlayers: 4, bestPlayers: '4', time: 30, category: '派對', rating: '', complexity: '', emoji: '🎲', imageUrl: '', tagsInput: '', description: '', cheatSheet: '', videoUrl: '', bggUrl: '', gameType: 'main', parentId: '' }
-
-// =========================================================================
-// 判斷是否為 14 天內新加入的桌遊 (Auto-Expiring Badge 邏輯)
-// =========================================================================
-const isNewGame = (createdAt) => {
-  if (!createdAt) return false;
-  const createdDate = new Date(createdAt);
-  const now = new Date();
-  const diffTime = now.getTime() - createdDate.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return diffDays >= 0 && diffDays <= 14;
-};
 
 // =========================================================================
 // 🌟 真實搖骰音效
@@ -727,9 +715,6 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => { try { const saved = localStorage.getItem('bg_favorite_ids'); if (saved) return JSON.parse(saved) } catch (e) {} return [] })
   const [sleeveList, setSleeveList] = useState([{ size: '63.5x88 mm', count: '' }])
   
-  // 🌟 新功能：過濾出 14 天內新加入的桌遊
-  const [showOnlyNew, setShowOnlyNew] = useState(false)
-  
   const [widgetTab, setWidgetTab] = useState('starter')
   const [sharedPlayers, setSharedPlayers] = useState(() => { try { const saved = localStorage.getItem('bg_shared_players'); if (saved) return JSON.parse(saved) } catch (e) {} return [{ id: 1, name: '玩家 1', score: 0 }, { id: 2, name: '玩家 2', score: 0 }, { id: 3, name: '玩家 3', score: 0 }, { id: 4, name: '玩家 4', score: 0 }] })
   const [roundCount, setRoundCount] = useState(1)
@@ -822,7 +807,6 @@ export default function App() {
 
   const isBestPlayerMatch = (bestStr, targetNum) => { if (!bestStr) return false; const cleanStr = String(bestStr).replace(/人/g, '').trim(); if (cleanStr.includes('-')) { const [minStr, maxStr] = cleanStr.split('-'); return targetNum >= parseInt(minStr, 10) && targetNum <= parseInt(maxStr, 10) } return parseInt(cleanStr, 10) === targetNum }
   const categories = useMemo(() => { const base = ['派對', '陣營', '吹牛', '合作', '策略', '輕策略', '卡牌對戰']; const catSet = new Set(base); games.forEach(g => { if (g.category) catSet.add(g.category.trim()) }); return ['全部', ...Array.from(catSet)] }, [games])
-  
   const filteredGames = useMemo(() => {
     const keyword = search.trim().toLowerCase()
     return games.filter((game) => {
@@ -832,21 +816,13 @@ export default function App() {
       let matchBest = true; if (bestPlayerFilter !== 'all') matchBest = isBestPlayerMatch(game.bestPlayers, parseInt(bestPlayerFilter, 10))
       let matchTime = true; if (maxTimeFilter !== 'all') matchTime = (game.time || 0) <= parseInt(maxTimeFilter, 10)
       let matchExp = true; if (expansionFilter === 'main') matchExp = !game.isExpansion; else if (expansionFilter === 'expansion') matchExp = !!game.isExpansion; else if (expansionFilter === 'favorite') matchExp = favorites.includes(game.id)
-      
-      // ✨ 判斷是否開啟「僅顯示新入庫」過濾
-      let matchNew = true; if (showOnlyNew) matchNew = isNewGame(game.created_at);
-      
-      return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp && matchNew
+      return matchSearch && matchCat && matchP && matchBest && matchTime && matchExp
     }).sort((a, b) => {
       if (sortBy === 'rating-desc') return (b.rating || -1) - (a.rating || -1); if (sortBy === 'time-asc') return (a.time || 0) - (b.time || 0); if (sortBy === 'time-desc') return (b.time || 0) - (a.time || 0); if (sortBy === 'complexity-desc') return (b.complexity || -1) - (a.complexity || -1); if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '', 'zh-Hant'); return 0
     })
-  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites, showOnlyNew])
-  
+  }, [games, search, category, playerFilter, bestPlayerFilter, maxTimeFilter, sortBy, expansionFilter, favorites])
   const availableRandomPoolCount = useMemo(() => { let pool = filteredGames.length > 0 ? filteredGames : games; if (quickPickPlayers !== 'all') { const p = parseInt(quickPickPlayers, 10); pool = pool.filter(g => p >= (g.minPlayers || 1) && p <= (g.maxPlayers || 99)) } return pool.length }, [filteredGames, games, quickPickPlayers])
   const totalCount = games.length; const mainCount = games.filter(g => !g.isExpansion).length; const expansionCount = games.filter(g => g.isExpansion).length; const favoriteCount = games.filter(g => favorites.includes(g.id)).length
-  
-  // 計算新入庫桌遊數量
-  const newGamesCount = useMemo(() => games.filter(g => isNewGame(g.created_at)).length, [games])
 
   function toggleFavorite(e, gameId) { e.stopPropagation(); triggerHaptic('light'); setFavorites(prev => prev.includes(gameId) ? prev.filter(id => id !== gameId) : [...prev, gameId]) }
   function addSleeveRow() { setSleeveList([...sleeveList, { size: '63.5x88 mm', count: '' }]) }
@@ -973,37 +949,7 @@ export default function App() {
     <section className="hero" id="hero-sec">
       {/* Dashboard Left */}
       <div className="hero-dashboard-left">
-        <div className="hero-title-block">
-          <span className="hero-tagline">✨ 聚會推薦助手</span>
-          <h1>今天聚會，<br /><span>玩哪一款？</span></h1>
-          <div className="hero-subtitle-hint">
-             ⚡ 目前共有 <strong>{totalCount}</strong> 款精選桌遊準備就緒
-          </div>
-          {/* ✨ 新增 Dashboard Whisper 提示 */}
-          {newGamesCount > 0 && (
-            <div 
-              className="dashboard-whisper"
-              onClick={() => { triggerHaptic('light'); setShowOnlyNew(!showOnlyNew); }}
-              style={{ 
-                marginTop: '10px', 
-                fontSize: '0.82rem', 
-                color: showOnlyNew ? '#fff' : '#10b981', 
-                cursor: 'pointer', 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '4px', 
-                background: showOnlyNew ? '#10b981' : 'rgba(16, 185, 129, 0.1)', 
-                padding: '5px 12px', 
-                borderRadius: '12px', 
-                fontWeight: 'bold', 
-                transition: 'all 0.2s', 
-                border: `1px solid ${showOnlyNew ? '#059669' : 'rgba(16, 185, 129, 0.25)'}` 
-              }}
-            >
-              {showOnlyNew ? `✅ 正在顯示 ${newGamesCount} 款新桌遊 (點擊取消)` : `✨ 最近 14 天內新增了 ${newGamesCount} 款新桌遊`}
-            </div>
-          )}
-        </div>
+        <div className="hero-title-block"><span className="hero-tagline">✨ 聚會推薦助手</span><h1>今天聚會，<br /><span>玩哪一款？</span></h1><div className="hero-subtitle-hint">⚡ 目前共有 <strong>{totalCount}</strong> 款精選桌遊準備就緒</div></div>
         <div className="hero-stats-grid">
           <div className={`hero-stat-card ${expansionFilter === 'all' ? 'active-all' : ''}`} onClick={() => { triggerHaptic('light'); setExpansionFilter('all'); }}><span className="stat-icon">📦</span><span className="stat-title">總收藏</span><span className="stat-num" style={{ color: 'var(--accent-blue)' }}>{totalCount}<span className="stat-unit">款</span></span></div>
           <div className={`hero-stat-card ${expansionFilter === 'main' ? 'active-main' : ''}`} onClick={() => { triggerHaptic('light'); setExpansionFilter(expansionFilter === 'main' ? 'all' : 'main'); }}><span className="stat-icon">🎮</span><span className="stat-title">主遊戲</span><span className="stat-num" style={{ color: '#10b981' }}>{mainCount}<span className="stat-unit">款</span></span></div>
@@ -1152,29 +1098,10 @@ export default function App() {
               <article className={`game-card box-3d-card ${viewMode === 'list' ? 'list-view' : ''}`} key={game.id} onClick={() => { triggerHaptic('light'); setDetailTab('info'); setViewDetailGame(game); }}>
                 <button type="button" className="card-fav-btn" onClick={(e) => toggleFavorite(e, game.id)} title={isFav ? "取消收藏" : "加入我的最愛"}>{isFav ? '❤️' : '🤍'}</button>
                 <div className="cover">{game.imageUrl ? ( <img src={game.imageUrl} alt={game.name} className="cover-img box-cover-img" /> ) : ( <span className="cover-emoji">{game.emoji}</span> )}
-                  {viewMode !== 'list' && (<>
-                    <div className="badge-container">
-                      {/* ✨ 新增入庫徽章：採用原擴充包相同的樣式結構 */}
-                      {isNewGame(game.created_at) && <span className="expansion-badge" style={{ background: '#ef4444', color: '#ffffff' }}>✨ 新入庫</span>}
-                      {game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}
-                      {game.isSequel && <span className="sequel-badge">✨ 續作</span>}
-                    </div>
-                    <span className="category-tag">{game.category}</span>
-                  </>)}
+                  {viewMode !== 'list' && (<><div className="badge-container">{game.isExpansion && <span className="expansion-badge">🧩 擴充</span>}{game.isSequel && <span className="sequel-badge">✨ 續作</span>}</div><span className="category-tag">{game.category}</span></>)}
                 </div>
                 <div className="game-info">
-                  {viewMode === 'list' ? (
-                    <>
-                      <div className="list-title-row">
-                        <h3>{game.name}</h3>
-                        {/* ✨ 新增清單檢視入庫徽章 */}
-                        {isNewGame(game.created_at) && <span className="expansion-badge list-badge" style={{ background: '#ef4444', color: '#ffffff' }}>✨ 新入庫</span>}
-                        {game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}
-                        {game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}
-                      </div>
-                      <p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p>
-                    </>
-                  ) : (<><h3>{game.name}</h3><p className="english">{game.englishName}</p></>)}
+                  {viewMode === 'list' ? (<><div className="list-title-row"><h3>{game.name}</h3>{game.isExpansion && <span className="expansion-badge list-badge">🧩 擴充</span>}{game.isSequel && <span className="sequel-badge list-badge">✨ 續作</span>}</div><p className="english"><span className="list-cat-tag">🏷️ {game.category}</span> ‧ {game.englishName || game.name}</p></>) : (<><h3>{game.name}</h3><p className="english">{game.englishName}</p></>)}
                   {Array.isArray(game.tags) && game.tags.length > 0 && viewMode !== 'list' && ( <div className="card-tags">{game.tags.map(t => ( <span key={t}>#{t}</span> ))}</div> )}
                   <div className="pill-badges-row"><span className="pill-badge">👥 {game.minPlayers}–{game.maxPlayers}人</span>{game.bestPlayers && <span className="pill-badge best">👑 {viewMode === 'list' ? game.bestPlayers : `最佳${game.bestPlayers}`}人</span>}<span className="pill-badge">⏱️ {game.time}分</span></div>
                   <div className="rating-complexity-row"><div className="rating">⭐ <strong>{game.rating != null && game.rating !== '' ? Number(game.rating).toFixed(2) : '--'}</strong></div><div className="complexity-badge" style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>🧠 {viewMode === 'list' ? '' : '燒腦: '}{game.complexity != null && game.complexity !== '' ? Number(game.complexity).toFixed(2) : '--'}</div></div>
