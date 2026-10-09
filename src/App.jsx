@@ -1008,7 +1008,7 @@ export default function App() {
           <div className="settings-row"><span>匯出桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={handleExportJSON}>📤 匯出備份</button></div>
           {isAdmin && (<><div className="settings-row"><span>匯入桌遊資料 (JSON)</span><button type="button" className="settings-action-btn" onClick={() => fileInputRef.current && fileInputRef.current.click()}>📥 匯入還原</button></div><div className="settings-row"><span>新增桌遊資料庫</span><button type="button" className="settings-primary-btn" onClick={handleOpenAddModal}>➕ 新增桌遊</button></div></>)}
         </div>
-        <div className="mobile-version-badge">✨ Version 1.0.5</div>
+        <div className="mobile-version-badge">✨ Version 1.2.0</div>
       </div>
     </div>
   )
@@ -1025,7 +1025,7 @@ export default function App() {
           </div>
           {newGamesCount > 0 && (
             <div 
-              className="dashboard-whisper"
+              className="dashboard-whisper desktop-only-whisper"
               onClick={() => { triggerHaptic('light'); setShowOnlyNew(!showOnlyNew); }}
               style={{ 
                 marginTop: '10px', 
@@ -1173,6 +1173,32 @@ export default function App() {
 
   const renderFilterPanel = () => (
     <section className="filter-panel" id="collection-sec">
+      <style>{`
+        .mobile-new-game-banner { display: none; }
+        @media screen and (max-width: 768px) {
+          .desktop-only-whisper { display: none !important; }
+          .mobile-new-game-banner {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%); color: white;
+            padding: 12px 16px; border-radius: 14px; margin-bottom: 16px;
+            font-weight: 800; font-size: 0.95rem; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3); transition: all 0.2s;
+          }
+          .mobile-new-game-banner:active { transform: scale(0.98); }
+          .mobile-new-game-banner.active-banner { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+        }
+      `}</style>
+      
+      {newGamesCount > 0 && (
+        <div 
+          className={`mobile-new-game-banner ${showOnlyNew ? 'active-banner' : ''}`}
+          onClick={() => { triggerHaptic('light'); setShowOnlyNew(!showOnlyNew); }}
+        >
+          <span style={{ fontSize: '1.2rem' }}>✨</span>
+          <span>{showOnlyNew ? `✅ 正在顯示 ${newGamesCount} 款新桌遊 (點擊取消)` : `最近新增了 ${newGamesCount} 款遊戲，點擊查看！`}</span>
+        </div>
+      )}
+
       <div className="filter-row" ref={filterRowRef}>
         <div className="search-box"><span>🔍</span><input type="text" placeholder="搜尋桌遊名稱/英文..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
         <div className="custom-filter-dropdown-wrapper"><button type="button" className={`custom-filter-trigger ${activeDropdown === 'player' ? 'active' : ''}`} onClick={() => { triggerHaptic('light'); setActiveDropdown(activeDropdown === 'player' ? null : 'player') }}><span className="custom-filter-label">👥 人數:</span><span className="custom-filter-value">{currentPlayerLabel}</span><span className={`custom-filter-arrow ${activeDropdown === 'player' ? 'open' : ''}`}>▼</span></button>{activeDropdown === 'player' && (<div className="custom-filter-dropdown">{PLAYER_OPTIONS.map(opt => ( <button key={opt.key} type="button" className={`custom-filter-item ${playerFilter === opt.key ? 'selected' : ''}`} onClick={() => { triggerHaptic('light'); setPlayerFilter(opt.key); setActiveDropdown(null) }}><span>{opt.label}</span>{playerFilter === opt.key && <span className="custom-filter-check">✓</span>}</button> ))}</div>)}</div>
@@ -1314,7 +1340,7 @@ export default function App() {
           <div className="form-group"><label>📷 封面圖片網址 (Image URL)</label><input type="url" placeholder="https://example.com/image.jpg" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} /></div>
           <div className="form-group"><label>或 上傳本機圖片 (自動壓縮並上傳雲端)</label><input type="file" accept="image/*" onChange={handleCroppedImageUpload} disabled={isUploadingImg} />{isUploadingImg && <span style={{fontSize: '0.8rem', color: 'var(--accent-blue)', marginTop: '4px'}}>⏳ 圖片壓縮與上傳中，請稍候...</span>}</div>
           {formData.imageUrl && (<div style={{ padding: '10px', background: 'var(--bg-card)', borderRadius: '12px', textAlign: 'center', margin: '8px 0', border: '1px solid var(--border-color)' }}><span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>封面預覽</span><img src={formData.imageUrl} alt="預覽" style={{ maxHeight: '140px', maxWidth: '100%', objectFit: 'contain', borderRadius: '8px' }} /></div>)}
-          <div className="form-group"><label>🏷️ 標籤 (以逗號分隔，例如: 新手推薦, 快節奏)</label><input type="text" placeholder="例如: 派對, 爆笑, 雙人首選" value={formData.tagsInput} onChange={(e) => setFormData({...formData, tagsInput: e.target.value})} /></div>
+          <div className="form-group"><label>🏷️ 標籤 (以逗號分隔，例如: 新手推薦, 快節奏)</label><input type="text" placeholder="例如: 派驚, 爆笑, 雙人首選" value={formData.tagsInput} onChange={(e) => setFormData({...formData, tagsInput: e.target.value})} /></div>
           <div className="form-group"><label>🌐 BGG 專屬頁面網址</label><input type="url" placeholder="https://boardgamegeek.com/boardgame/..." value={formData.bggUrl} onChange={(e) => setFormData({...formData, bggUrl: e.target.value})} /></div>
           <div className="form-group"><label>🎬 教學影片連結 (YouTube 網址)</label><input type="url" placeholder="https://www.youtube.com/..." value={formData.videoUrl} onChange={(e) => setFormData({...formData, videoUrl: e.target.value})} /></div>
           <div className="form-group"><label>📝 遊戲介紹 / 玩法簡介</label><textarea rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea></div>
